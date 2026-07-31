@@ -1,0 +1,12 @@
+\begin{table}[t]\centering
+\caption{Cost comparison (large model, batch 4, seq 512): training vs inference, torch vs torch-free ONNX. Memory = peak.}
+\begin{tabular}{llrrrrr}
+\hline
+Run & Runtime & GPU VRAM (MB) & GPU host fw (MB) & CPU host (MB) & GPU step & CPU step \\
+\hline
+A2 training & torch & 25424 & 473 & 33040 & 739 ms & 113.5 s \\
+B2 inference & torch & 5266 & 475 & 5245 & 227 ms & 36.2 s \\
+C inference & ONNX (torch-free) & 4566 & 225 & 3918 & 83 ms & 8.9 s \\
+\hline
+\end{tabular}
+\end{table}

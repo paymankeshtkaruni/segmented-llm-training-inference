@@ -1,0 +1,87 @@
+{
+  "run": "segmented_training",
+  "preset": "small_8x2x2x8",
+  "device": "cuda",
+  "model_config": {
+    "vocab_size": 2000,
+    "max_seq_len": 128,
+    "n_layers": 4,
+    "d_model": 64,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "architecture": "gpt_decoder",
+    "pad_token_id": null,
+    "eos_token_id": null
+  },
+  "seg_config": {
+    "embedding_segments": 8,
+    "attention_segments": 2,
+    "mlp_chunks": 2,
+    "output_head_segments": 8,
+    "attention_axis": "head_groups",
+    "mlp_axis": "feedforward_hidden_dimension",
+    "embedding_axis": "d_model",
+    "output_head_axis": "vocab"
+  },
+  "batch_size": 64,
+  "epochs": 5,
+  "optimizer": "segmentwise_adamw",
+  "lr": 0.0003,
+  "weight_decay": 0.1,
+  "grad_clip": 1.0,
+  "accuracy_aggregation": "headline=global; example also reported",
+  "epochs_detail": [
+    {
+      "epoch": 1,
+      "train_loss": 3.3263538156604953,
+      "train_acc": 0.7110793894806193,
+      "val_loss": 0.5659651966972483,
+      "val_acc": 0.8931858383241598,
+      "val_acc_global": 0.8931858383241598,
+      "val_acc_example": 0.8936418326078837
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.2371271137360388,
+      "train_acc": 0.9546941912814318,
+      "val_loss": 0.1681101321022854,
+      "val_acc": 0.964075028508319,
+      "val_acc_global": 0.964075028508319,
+      "val_acc_example": 0.9655912525823405
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.09365084096752765,
+      "train_acc": 0.9814804938116677,
+      "val_loss": 0.10381932267175419,
+      "val_acc": 0.9802910991191602,
+      "val_acc_global": 0.9802910991191602,
+      "val_acc_example": 0.9815056794072097
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.06683395772052596,
+      "train_acc": 0.9873315659853488,
+      "val_loss": 0.08615150597340997,
+      "val_acc": 0.9839724883497499,
+      "val_acc_global": 0.9839724883497499,
+      "val_acc_example": 0.9850486639312682
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.06008292380756971,
+      "train_acc": 0.9888813942179485,
+      "val_loss": 0.08372982364154369,
+      "val_acc": 0.9848075351752251,
+      "val_acc_global": 0.9848075351752251,
+      "val_acc_example": 0.9858761735468218
+    }
+  ],
+  "best_val_loss": 0.08372982364154369,
+  "test_loss": 0.10053735687315109,
+  "test_acc": 0.9817487529791173,
+  "test_acc_global": 0.9817487529791173,
+  "test_acc_example": 0.9826845921332736,
+  "total_time_s": 27677.988373041153
+}

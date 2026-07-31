@@ -1,0 +1,155 @@
+Issue,level,issue_level_key,test,train_before_balancing,validation,train,excluded_rare_issue_level,total
+Acpi Pci Root Bridge,Information,Acpi Pci Root Bridge :: Information,1,6,1,0,0,8
+Anacron Job Schedule,Information,Anacron Job Schedule :: Information,1,8,1,0,0,10
+Anacron Sequential,Information,Anacron Sequential :: Information,1,6,1,0,0,8
+Anacron Started,Information,Anacron Started :: Information,4,24,3,0,0,31
+Audit Bpf Load,Information,Audit Bpf Load :: Information,4,26,3,0,0,33
+Audit Bpf Unload,Information,Audit Bpf Unload :: Information,4,26,3,0,0,33
+Audit Config Change,Information,Audit Config Change :: Information,5,34,4,0,0,43
+Audit Cwd,Information,Audit Cwd :: Information,5,29,3,0,0,37
+Audit Execve Su,Information,Audit Execve Su :: Information,3,15,1,0,0,19
+Audit Proctitle,Information,Audit Proctitle :: Information,7,44,5,0,0,56
+Audit Syscall Logins,Information,Audit Syscall Logins :: Information,6,41,5,0,0,52
+Audit Syscall Su,Information,Audit Syscall Su :: Information,6,41,5,0,0,52
+Batch Job Launch,Information,Batch Job Launch :: Information,8,53,6,0,0,67
+Beegfs Mount Config Error,Error,Beegfs Mount Config Error :: Error,1,1,1,0,0,3
+Beegfs No Nvfs Rdma,Information,Beegfs No Nvfs Rdma :: Information,1,2,1,0,0,4
+Beegfs Unsafe Rkey,Warning,Beegfs Unsafe Rkey :: Warning,4,20,2,0,0,26
+Connection Closed,Information,Connection Closed :: Information,203,1612,201,0,0,2016
+Connection Closed,Warning,Connection Closed :: Warning,30,230,28,0,0,288
+Created User Slice,Information,Created User Slice :: Information,7,52,6,0,0,65
+Dhcp Activation Begin,Information,Dhcp Activation Begin :: Information,144,1152,144,0,0,1440
+Dhcp State Changed,Information,Dhcp State Changed :: Information,72,576,72,0,0,720
+Dhcp Transaction Canceled,Information,Dhcp Transaction Canceled :: Information,72,576,72,0,0,720
+Email Failed,Warning,Email Failed :: Warning,7,52,6,0,0,65
+Email Runtime Dir Missing,Warning,Email Runtime Dir Missing :: Warning,7,52,6,0,0,65
+Email Succeeded,Information,Email Succeeded :: Information,8,52,6,0,0,66
+Energy Report,Information,Energy Report :: Information,1172,9372,1171,0,0,11715
+Energy Task Blank,Warning,Energy Task Blank :: Warning,601,4804,600,0,0,6005
+Failed To Start User,Error,Failed To Start User :: Error,7,52,6,0,0,65
+Filesystem Failed,Error,Filesystem Failed :: Error,72,576,72,0,0,720
+Filesystem Name Check,Information,Filesystem Name Check :: Information,42,336,42,0,0,420
+Filesystem Remount Attempt,Warning,Filesystem Remount Attempt :: Warning,72,576,72,0,0,720
+Firewalld Nft Register Rule,Information,Firewalld Nft Register Rule :: Information,216,1728,216,0,0,2160
+Fss No Fss Registered,Warning,Fss No Fss Registered :: Warning,2,16,2,0,0,20
+Fss Reconnect Successful,Information,Fss Reconnect Successful :: Information,3,16,2,0,0,21
+Fss Reconnecting,Information,Fss Reconnecting :: Information,3,16,2,0,0,21
+Fss Using V3 Readdir,Information,Fss Using V3 Readdir :: Information,3,16,2,0,0,21
+Ib0 Mtu Failure,Warning,Ib0 Mtu Failure :: Warning,288,2304,288,0,0,2880
+Init Mounting,Information,Init Mounting :: Information,45,352,44,0,0,441
+Init Remount Failed,Warning,Init Remount Failed :: Warning,53,420,52,0,0,525
+Init User Stopped,Information,Init User Stopped :: Information,6,39,4,0,0,49
+Ipmi Error,Error,Ipmi Error :: Error,395,3148,393,0,0,3936
+Ipmi Invalid Response,Error,Ipmi Invalid Response :: Error,601,4804,600,0,0,6005
+Ipmi Read Error,Error,Ipmi Read Error :: Error,995,7952,994,0,0,9941
+Journal Write Error,Warning,Journal Write Error :: Warning,1,3,1,0,0,5
+Kernel Drop Caches,Information,Kernel Drop Caches :: Information,4,28,3,0,0,35
+Kernel Module,Information,Kernel Module :: Information,130,1030,128,0,0,1288
+Link Config Autonegotiation,Warning,Link Config Autonegotiation :: Warning,1,1,1,0,0,3
+Lnet Error,Error,Lnet Error :: Error,69,542,67,0,0,678
+Lnet Recovery,Warning,Lnet Recovery :: Warning,20,153,19,0,0,192
+Lnet Route Inconsistency,Warning,Lnet Route Inconsistency :: Warning,58,458,57,0,0,573
+Lnet Skipped Messages,Information,Lnet Skipped Messages :: Information,58,458,57,0,0,573
+Lustre Error,Error,Lustre Error :: Error,172,1367,170,0,0,1709
+Lustre Error Communication,Error,Lustre Error Communication :: Error,29,225,28,0,0,282
+Lustre Mount Exited,Error,Lustre Mount Exited :: Error,14,112,14,0,0,140
+Lustre Mount Failed Exitcode,Error,Lustre Mount Failed Exitcode :: Error,15,112,14,0,0,141
+Lustre Mount Failed Result,Error,Lustre Mount Failed Result :: Error,15,112,14,0,0,141
+Lustre Mount General Failure,Error,Lustre Mount General Failure :: Error,71,568,71,0,0,710
+Lustre Skipped Message,Information,Lustre Skipped Message :: Information,28,224,28,0,0,280
+Lustre Unmounted,Information,Lustre Unmounted :: Information,29,225,28,0,0,282
+Mgs Running Check,Information,Mgs Running Check :: Information,28,224,28,0,0,280
+Mgs Spec Check,Information,Mgs Spec Check :: Information,42,336,42,0,0,420
+Module Inserted,Information,Module Inserted :: Information,1,5,1,0,0,7
+Mount Failed Exit Code,Error,Mount Failed Exit Code :: Error,44,342,42,0,0,428
+Mount Lustre Failed,Error,Mount Lustre Failed :: Error,71,564,70,0,0,705
+Mount Process Exited,Warning,Mount Process Exited :: Warning,57,456,57,0,0,570
+Mounting Path,Information,Mounting Path :: Information,30,233,29,0,0,292
+Net Protocol Registered,Information,Net Protocol Registered :: Information,1,5,1,0,0,7
+Netfilter Cfg,Information,Netfilter Cfg :: Information,4,21,2,0,0,27
+Netfilter Register,Information,Netfilter Register :: Information,1,4,1,0,0,6
+Netfilter Unregister,Information,Netfilter Unregister :: Information,1,1,1,0,0,3
+Netfilter Unregister Rule,Information,Netfilter Unregister Rule :: Information,216,1728,216,0,0,2160
+Netfilter Unregister Table,Information,Netfilter Unregister Table :: Information,1,1,1,0,0,3
+Network Activation Failed,Warning,Network Activation Failed :: Warning,72,576,72,0,0,720
+Network Connection Auto Activate,Information,Network Connection Auto Activate :: Information,72,576,72,0,0,720
+Network Device Activation Start,Information,Network Device Activation Start :: Information,72,576,72,0,0,720
+Network Interface Namepolicy,Warning,Network Interface Namepolicy :: Warning,1,1,1,0,0,3
+Network State Change Config To Ipconfig,Information,Network State Change Config To Ipconfig :: Information,72,576,72,0,0,720
+Network State Change Disconnected To Prepare,Information,Network State Change Disconnected To Prepare :: Information,72,576,72,0,0,720
+Network State Change Failed To Disconnected,Information,Network State Change Failed To Disconnected :: Information,72,576,72,0,0,720
+Network State Change Ipconfig To Failed,Warning,Network State Change Ipconfig To Failed :: Warning,72,576,72,0,0,720
+Network State Change Prepare To Config,Information,Network State Change Prepare To Config :: Information,72,576,72,0,0,720
+Pam Session Closed,Information,Pam Session Closed :: Information,7,56,7,0,0,70
+Pam Session Opened,Information,Pam Session Opened :: Information,4,26,3,0,0,33
+Pam Unix Session Opened,Information,Pam Unix Session Opened :: Information,8,54,6,0,0,68
+Path Created,Information,Path Created :: Information,14,108,13,0,0,135
+Path Does Not Exist,Warning,Path Does Not Exist :: Warning,14,104,13,0,0,131
+Path Mounted,Information,Path Mounted :: Information,1,3,1,0,0,5
+Path Permissions Done,Information,Path Permissions Done :: Information,15,108,13,0,0,136
+Pci Bus Numa,Information,Pci Bus Numa :: Information,1,6,1,0,0,8
+Pci Device Info,Information,Pci Device Info :: Information,1,6,1,0,0,8
+Ping Name Resolution Failed,Warning,Ping Name Resolution Failed :: Warning,1,6,1,0,0,8
+Prometheus Collector Start,Information,Prometheus Collector Start :: Information,144,1152,144,0,0,1440
+Remount Failed,Error,Remount Failed :: Error,15,114,14,0,0,143
+Remount Failed,Information,Remount Failed :: Information,32,250,31,0,0,313
+Root Command Executed,Information,Root Command Executed :: Information,2,10,1,0,0,13
+Root On None,Information,Root On None :: Information,5,32,4,0,0,41
+Run User Mount Succeeded,Information,Run User Mount Succeeded :: Information,7,52,6,0,0,65
+Server Listening Ip,Information,Server Listening Ip :: Information,1,4,1,0,0,6
+Server Listening Ipv6,Information,Server Listening Ipv6 :: Information,1,4,1,0,0,6
+Service Batch Bind Final,Information,Service Batch Bind Final :: Information,4,25,3,0,0,32
+Service Batch Bind Input,Information,Service Batch Bind Input :: Information,4,22,2,0,0,28
+Service Exited,Information,Service Exited :: Information,15,114,14,0,0,143
+Service Failed Exit Code,Error,Service Failed Exit Code :: Error,15,114,14,0,0,143
+Service Finished,Information,Service Finished :: Information,19,143,17,0,0,179
+Service Job Credential,Information,Service Job Credential :: Information,2,12,1,0,0,15
+Service Leftover Process,Warning,Service Leftover Process :: Warning,3,17,2,0,0,22
+Service Normal Exit,Information,Service Normal Exit :: Information,2,9,1,0,0,12
+Service Root On None,Information,Service Root On None :: Information,3,15,1,0,0,19
+Service Run Parts,Information,Service Run Parts :: Information,18,144,18,0,0,180
+Service Slurmd Batch Request,Information,Service Slurmd Batch Request :: Information,6,41,5,0,0,52
+Service Starting,Information,Service Starting :: Information,18,144,18,0,0,180
+Service Succeeded,Information,Service Succeeded :: Information,1278,10215,1276,0,0,12769
+Service Terminating,Information,Service Terminating :: Information,1,3,1,0,0,5
+Slurm Job File,Information,Slurm Job File :: Information,3,17,2,0,0,22
+Slurm Job Runtime,Information,Slurm Job Runtime :: Information,48,372,46,0,0,466
+Slurm Memcg Job,Information,Slurm Memcg Job :: Information,8,53,6,0,0,67
+Slurm Memcg Job Init,Information,Slurm Memcg Job Init :: Information,3,15,1,0,0,19
+Slurm Memcg Step,Information,Slurm Memcg Step :: Information,8,53,6,0,0,67
+Slurm Memcg Step Init,Information,Slurm Memcg Step Init :: Information,3,15,1,0,0,19
+Slurm Step Done,Information,Slurm Step Done :: Information,7,50,6,0,0,63
+Slurm Stepmgr Done,Information,Slurm Stepmgr Done :: Information,5,40,5,0,0,50
+Slurm X11 Shutdown,Information,Slurm X11 Shutdown :: Information,8,55,6,0,0,69
+Sockaddr,Information,Sockaddr :: Information,152,1210,151,0,0,1513
+Srat Apic Mapping,Information,Srat Apic Mapping :: Information,8,64,8,0,0,80
+Ssh Disconnect User,Information,Ssh Disconnect User :: Information,6,37,4,0,0,47
+Ssh Disconnected,Information,Ssh Disconnected :: Information,6,37,4,0,0,47
+Ssh Publickey Accepted,Information,Ssh Publickey Accepted :: Information,5,36,4,0,0,45
+Ssh Session Closed,Information,Ssh Session Closed :: Information,6,37,4,0,0,47
+Ssh Session Opened,Information,Ssh Session Opened :: Information,6,38,4,0,0,48
+Started User Directory,Information,Started User Directory :: Information,7,52,6,0,0,65
+Starting User Directory,Information,Starting User Directory :: Information,7,52,6,0,0,65
+Starting User Uid,Information,Starting User Uid :: Information,7,52,6,0,0,65
+Stopping User Directory,Information,Stopping User Directory :: Information,7,52,6,0,0,65
+Sudo Session Closed,Information,Sudo Session Closed :: Information,2,12,1,0,0,15
+Sudo Session Opened,Information,Sudo Session Opened :: Information,2,12,1,0,0,15
+Syscall Failure,Error,Syscall Failure :: Error,115,920,115,0,0,1150
+Syscall Firewalld,Information,Syscall Firewalld :: Information,144,1152,144,0,0,1440
+Syscall Modprobe,Information,Syscall Modprobe :: Information,3,19,2,0,0,24
+Syscall Privileged Sudo,Warning,Syscall Privileged Sudo :: Warning,3,14,1,0,0,18
+Syscall Success,Information,Syscall Success :: Information,9,63,7,0,0,79
+Syslog Job Runtime,Information,Syslog Job Runtime :: Information,11,77,9,0,0,97
+System Update,Information,System Update :: Information,11,76,9,0,0,96
+System Updating,Information,System Updating :: Information,71,556,69,0,0,696
+Target Reached,Information,Target Reached :: Information,1,5,1,0,0,7
+Target Stopped,Information,Target Stopped :: Information,1,3,1,0,0,5
+Target Stopping,Information,Target Stopping :: Information,1,3,1,0,0,5
+Task Cpu Hw Mask,Information,Task Cpu Hw Mask :: Information,1,7,1,0,0,9
+Task Cpu Input Mask,Information,Task Cpu Input Mask :: Information,1,7,1,0,0,9
+Task Ran Seconds,Information,Task Ran Seconds :: Information,6,43,5,0,0,54
+Textfile Collector Start,Information,Textfile Collector Start :: Information,1231,9838,1229,0,0,12298
+Textfile Collector Started,Information,Textfile Collector Started :: Information,1087,8686,1085,0,0,10858
+Udevd Syscall,Information,Udevd Syscall :: Information,4,24,3,0,0,31
+Unclean Termination,Warning,Unclean Termination :: Warning,3,17,2,0,0,22
+Xstate Offset Sizes,Information,Xstate Offset Sizes :: Information,1,5,1,0,0,7

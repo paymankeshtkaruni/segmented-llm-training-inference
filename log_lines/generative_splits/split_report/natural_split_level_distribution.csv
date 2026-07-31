@@ -1,0 +1,4 @@
+level,test,train_before_balancing,validation,train,excluded_rare_issue_level,total
+Error,2716,21625,2699,0,0,27040
+Information,7568,59912,7466,0,0,74946
+Warning,1370,10856,1355,0,0,13581

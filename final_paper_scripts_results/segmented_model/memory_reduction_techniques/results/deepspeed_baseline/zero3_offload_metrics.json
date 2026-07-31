@@ -1,0 +1,38 @@
+{
+  "run": "deepspeed_baseline",
+  "mode": "zero3_offload",
+  "device": "cuda",
+  "model_config": {
+    "vocab_size": 50257,
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1
+  },
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "fp32": true,
+  "deepspeed_version": "0.19.2",
+  "torch_version": "2.7.0+cu128",
+  "device_total_mb": 40442.4,
+  "optimizer": "torch.optim.AdamW (zero_force_ds_cpu_optimizer=false)",
+  "measurement": "same conventions as the scale runs: no-miss allocator high-water + CUDA context; sampled RSS/smi peaks",
+  "oom": false,
+  "params_million": 837.1,
+  "avg_step_time_s": 4.352518376661465,
+  "step_times_s": [
+    5.225,
+    3.895,
+    3.938
+  ],
+  "overall": {
+    "cuda_context_mb": 490.0,
+    "vram_hw_reserved_peak_mb": 23152.0,
+    "vram_hw_total_peak_mb": 23642.0,
+    "vram_smi_peak_mb": 24504.0,
+    "rss_peak_mb": 34043.3
+  }
+}

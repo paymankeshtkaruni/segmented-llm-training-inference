@@ -1,0 +1,40 @@
+{
+  "GPU train": {
+    "cuda": true,
+    "full_mem": 25424.0,
+    "seg_mem": 964.0,
+    "full_time": 0.7392733250744641,
+    "seg_time": 125.07017393379162
+  },
+  "CPU train": {
+    "cuda": false,
+    "full_mem": 33039.8,
+    "seg_mem": 1174.7,
+    "full_time": 113.52539495937526,
+    "seg_time": 245.69255094323307
+  },
+  "GPU infer": {
+    "cuda": true,
+    "full_mem": 5266.0,
+    "seg_mem": 700.0,
+    "full_time": 0.22730946214869618,
+    "seg_time": null
+  },
+  "CPU infer": {
+    "cuda": false,
+    "full_mem": 5245.4,
+    "seg_mem": 4357.8,
+    "full_time": 36.152525290846825,
+    "seg_time": null
+  },
+  "onnx_GPU": {
+    "torch": 5266.0,
+    "onnx": 4566.0,
+    "cuda": true
+  },
+  "onnx_CPU": {
+    "torch": 5245.4,
+    "onnx": 3918.0,
+    "cuda": false
+  }
+}

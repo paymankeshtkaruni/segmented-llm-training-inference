@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --job-name=seg_c_cons_gpu
+#SBATCH --partition=grete:shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=48G
+#SBATCH --gres=gpu:A100:1
+#SBATCH --time=00:30:00
+#SBATCH --output=final_paper_scripts_results/segmented_model/outputs/logs/seg_c_cons_gpu_%j.out
+#SBATCH --error=final_paper_scripts_results/segmented_model/outputs/logs/seg_c_cons_gpu_%j.err
+# Site-independent: export PROJECT_ROOT=<path to this repository> and, if the
+# interpreter is not on PATH, PYTHON=<interpreter> before submitting. Submit from
+# the repository root so the relative --output/--error log paths resolve.
+set -euo pipefail
+cd "${PROJECT_ROOT:?set PROJECT_ROOT to the repo root}"
+module load gcc/13.2.0 cuda/12.8.2
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8
+PYTHON="${PYTHON:-python}"
+echo "Node: $(hostname)  Start: $(date)"
+echo "[1] export large consolidated onnx (torch)"
+"$PYTHON" final_paper_scripts_results/segmented_model/scripts/seg_c_export.py --preset large_8x2x2x8 --out final_paper_scripts_results/segmented_model/onnx/c/large_consolidated.onnx
+echo "[2] torch-free CUDA cost"
+"$PYTHON" final_paper_scripts_results/segmented_model/scripts/seg_c_onnx_cost.py --onnx final_paper_scripts_results/segmented_model/onnx/c/large_consolidated.onnx --provider cuda     --batch 4 --seq 512 --vocab 50257 --n-steps 3 --out-dir final_paper_scripts_results/segmented_model/outputs/c_consolidated_gpu --prefix c_onnx
+echo "Done: $(date)"

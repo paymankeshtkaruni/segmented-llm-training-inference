@@ -1,0 +1,12 @@
+{
+  "run": "segmented_infer_accuracy",
+  "preset": "small_8x2x2x8",
+  "device": "cuda",
+  "n_test": 11654,
+  "batch_size": 64,
+  "max_new_tokens": 40,
+  "exact_match": 0.9237171786511069,
+  "issue_acc": 0.9238029860991934,
+  "level_acc": 0.9828385103827012,
+  "elapsed_s": 4936.6
+}

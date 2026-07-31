@@ -1,0 +1,21 @@
+{
+  "run": "C_onnx_inference_cost",
+  "mode": "infer",
+  "runtime": "onnxruntime",
+  "torch_free": true,
+  "device": "cpu",
+  "provider": "CPUExecutionProvider",
+  "model": "large",
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "profile_memory": false,
+  "step_times_s": [
+    8.854205,
+    8.927523,
+    9.041346
+  ],
+  "avg_step_time_s": 8.98443436648813,
+  "throughput_samples_per_s": 0.4452144494393513,
+  "memory": {}
+}

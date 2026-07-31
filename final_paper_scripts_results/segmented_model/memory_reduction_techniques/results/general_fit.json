@@ -1,0 +1,148 @@
+{
+  "run": "general_fit",
+  "protocol": "GPU train, all techniques ON, batch 4, seq 512",
+  "time_fit": {
+    "c0_s": -53.6,
+    "c1_s_per_bparam": 72.6,
+    "c2_s_per_segment": 0.83,
+    "node_class": "A100-40GB",
+    "note": "additive first-order law; +-10% along each calibrated axis; conservative (upper bound) off-axis \u2014 see validation"
+  },
+  "memory_fit": {
+    "ctx_mb": 508.0,
+    "a4_smax": 3.42,
+    "a1_dmodel": 13.9,
+    "a2_ffchunk": 5.88,
+    "a3_ceslice": 2.3,
+    "unit_mb": 0.00819
+  },
+  "points": [
+    {
+      "point": "0.84B@2x1x1x2",
+      "node": "A100-40GB",
+      "P": 0.83710208,
+      "N": 112,
+      "s_max_mb": 128.7,
+      "T_meas": 107.35,
+      "T_pred": 100.2,
+      "M_meas": 1830.0,
+      "M_pred": 1814.2
+    },
+    {
+      "point": "0.84B@4x2x2x4",
+      "node": "A100-40GB",
+      "P": 0.83710208,
+      "N": 188,
+      "s_max_mb": 64.3,
+      "T_meas": 171.55,
+      "T_pred": 163.2,
+      "M_meas": 1226.0,
+      "M_pred": 1234.0
+    },
+    {
+      "point": "0.84B@8x2x2x8",
+      "node": "A100-40GB",
+      "P": 0.83710208,
+      "N": 196,
+      "s_max_mb": 32.2,
+      "T_meas": 175.02,
+      "T_pred": 169.9,
+      "M_meas": 976.0,
+      "M_pred": 1005.6
+    },
+    {
+      "point": "0.84B@16x4x4x16",
+      "node": "A100-40GB",
+      "P": 0.83710208,
+      "N": 356,
+      "s_max_mb": 16.1,
+      "T_meas": 300.09,
+      "T_pred": 302.6,
+      "M_meas": 826.0,
+      "M_pred": 829.7
+    },
+    {
+      "point": "0.84B@20x5x5x20",
+      "node": "A100-40GB",
+      "P": 0.83710208,
+      "N": 436,
+      "s_max_mb": 12.9,
+      "T_meas": 374.43,
+      "T_pred": 369.0,
+      "M_meas": 824.0,
+      "M_pred": 794.5
+    },
+    {
+      "point": "0.837B@8x2x2x8",
+      "node": "A100-40GB",
+      "P": 0.837,
+      "N": 196,
+      "s_max_mb": 32.2,
+      "T_meas": 164.53,
+      "T_pred": 169.9,
+      "M_meas": 956.0,
+      "M_pred": 1005.6
+    },
+    {
+      "point": "3.09B@8x2x2x8",
+      "node": "A100-40GB",
+      "P": 3.09,
+      "N": 196,
+      "s_max_mb": 104.9,
+      "T_meas": 304.343,
+      "T_pred": 333.4,
+      "M_meas": 1528.0,
+      "M_pred": 1523.6
+    },
+    {
+      "point": "6.856B@8x2x2x8",
+      "node": "A100-40GB",
+      "P": 6.856,
+      "N": 176,
+      "s_max_mb": 268.4,
+      "T_meas": 601.167,
+      "T_pred": 590.3,
+      "M_meas": 2338.0,
+      "M_pred": 2406.6
+    },
+    {
+      "point": "1.568B@8x2x2x8",
+      "node": "A100-80GB",
+      "P": 1.568,
+      "N": 196,
+      "s_max_mb": 51.4,
+      "T_meas": 154.019,
+      "T_pred": null,
+      "M_meas": 1152.0,
+      "M_pred": 1179.0
+    },
+    {
+      "point": "5.121B@8x2x2x8",
+      "node": "A100-80GB",
+      "P": 5.121,
+      "N": 196,
+      "s_max_mb": 177.2,
+      "T_meas": 300.921,
+      "T_pred": null,
+      "M_meas": 2046.0,
+      "M_pred": 1932.8
+    }
+  ],
+  "preregistered_prediction": {
+    "cell": "xl3b @ 16x4x4x16",
+    "P_billion": 3.09,
+    "N": 356,
+    "s_max_mb": 52.4,
+    "T_pred_s": 466.2,
+    "M_pred_mb": 1161.6,
+    "registered_before_running": true
+  },
+  "validation": {
+    "cell": "xl3b @ 16x4x4x16",
+    "T_measured_s": 351.0,
+    "M_measured_mb": 1190.0,
+    "T_error_pct": 32.8,
+    "M_error_pct": -2.4,
+    "verdict": "memory law VALIDATED out-of-sample (within its residual band); additive time law is an UPPER BOUND off its calibrated axes: the marginal per-segment cost falls from ~0.81 s (0.84B) to ~0.29 s (3B) \u2014 a favorable size-granularity interaction"
+  }
+}

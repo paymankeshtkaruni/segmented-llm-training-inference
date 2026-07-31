@@ -1,0 +1,68 @@
+{
+  "run": "loo_infer",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "reference_all_on": {
+    "mem_mb": 656.0,
+    "time_s": 20.391
+  },
+  "note": "recompute excluded (prerequisite for streaming); saves_mem = memory the technique removes vs all-on; costs_time = time it adds; ranked by efficiency",
+  "techniques": [
+    {
+      "technique": "no_kv_cache",
+      "saves_mem_mb": 118.0,
+      "costs_time_s": -2.53,
+      "efficiency_mb_per_s": 2360.0,
+      "mem_without_mb": 774.0,
+      "time_without_s": 22.921
+    },
+    {
+      "technique": "mlp_running_sum",
+      "saves_mem_mb": 14.0,
+      "costs_time_s": -8.422,
+      "efficiency_mb_per_s": 280.0,
+      "mem_without_mb": 670.0,
+      "time_without_s": 28.813
+    },
+    {
+      "technique": "stream_segments",
+      "saves_mem_mb": 3354.0,
+      "costs_time_s": 20.121,
+      "efficiency_mb_per_s": 166.7,
+      "mem_without_mb": 4010.0,
+      "time_without_s": 0.27
+    },
+    {
+      "technique": "segment_wo",
+      "saves_mem_mb": 240.0,
+      "costs_time_s": 3.035,
+      "efficiency_mb_per_s": 79.1,
+      "mem_without_mb": 896.0,
+      "time_without_s": 17.356
+    },
+    {
+      "technique": "free_device",
+      "saves_mem_mb": 204.0,
+      "costs_time_s": 16.163,
+      "efficiency_mb_per_s": 12.6,
+      "mem_without_mb": 860.0,
+      "time_without_s": 4.228
+    },
+    {
+      "technique": "sdpa",
+      "saves_mem_mb": 0.0,
+      "costs_time_s": -0.092,
+      "efficiency_mb_per_s": 0.0,
+      "mem_without_mb": 656.0,
+      "time_without_s": 20.483
+    },
+    {
+      "technique": "chunked_ce",
+      "saves_mem_mb": 0.0,
+      "costs_time_s": -0.074,
+      "efficiency_mb_per_s": 0.0,
+      "mem_without_mb": 656.0,
+      "time_without_s": 20.465
+    }
+  ]
+}

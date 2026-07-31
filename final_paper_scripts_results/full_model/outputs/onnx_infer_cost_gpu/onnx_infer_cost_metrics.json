@@ -1,0 +1,21 @@
+{
+  "run": "C_onnx_inference_cost",
+  "mode": "infer",
+  "runtime": "onnxruntime",
+  "torch_free": true,
+  "device": "cuda",
+  "provider": "CUDAExecutionProvider",
+  "model": "large",
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "profile_memory": false,
+  "step_times_s": [
+    0.091504,
+    0.091624,
+    0.085605
+  ],
+  "avg_step_time_s": 0.0886145124968607,
+  "throughput_samples_per_s": 45.13933313283991,
+  "memory": {}
+}

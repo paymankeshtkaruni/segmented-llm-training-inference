@@ -1,0 +1,84 @@
+{
+  "run": "loo_train",
+  "preset": "large_8x2x2x8",
+  "device": "cpu",
+  "reference_all_on": {
+    "mem_mb": 1176.1,
+    "time_s": 244.985
+  },
+  "note": "recompute excluded (prerequisite for streaming); saves_mem = memory the technique removes vs all-on; costs_time = time it adds; ranked by efficiency",
+  "techniques": [
+    {
+      "technique": "chunked_ce",
+      "saves_mem_mb": 779.5,
+      "costs_time_s": -120.638,
+      "efficiency_mb_per_s": 15590.0,
+      "mem_without_mb": 1955.6,
+      "time_without_s": 365.623
+    },
+    {
+      "technique": "offload_records",
+      "saves_mem_mb": 652.3,
+      "costs_time_s": -114.221,
+      "efficiency_mb_per_s": 13046.0,
+      "mem_without_mb": 1828.4,
+      "time_without_s": 359.206
+    },
+    {
+      "technique": "segment_wo",
+      "saves_mem_mb": 598.6,
+      "costs_time_s": -89.514,
+      "efficiency_mb_per_s": 11972.0,
+      "mem_without_mb": 1774.7,
+      "time_without_s": 334.499
+    },
+    {
+      "technique": "offload_adam",
+      "saves_mem_mb": 353.4,
+      "costs_time_s": -133.103,
+      "efficiency_mb_per_s": 7068.0,
+      "mem_without_mb": 1529.5,
+      "time_without_s": 378.088
+    },
+    {
+      "technique": "park_grads_host",
+      "saves_mem_mb": 351.3,
+      "costs_time_s": -132.197,
+      "efficiency_mb_per_s": 7026.0,
+      "mem_without_mb": 1527.4,
+      "time_without_s": 377.182
+    },
+    {
+      "technique": "mlp_running_sum",
+      "saves_mem_mb": 339.6,
+      "costs_time_s": -157.302,
+      "efficiency_mb_per_s": 6792.0,
+      "mem_without_mb": 1515.7,
+      "time_without_s": 402.288
+    },
+    {
+      "technique": "sdpa",
+      "saves_mem_mb": 171.3,
+      "costs_time_s": -64.596,
+      "efficiency_mb_per_s": 3426.0,
+      "mem_without_mb": 1347.4,
+      "time_without_s": 309.581
+    },
+    {
+      "technique": "stream_segments",
+      "saves_mem_mb": 4201.8,
+      "costs_time_s": 130.686,
+      "efficiency_mb_per_s": 32.2,
+      "mem_without_mb": 5377.9,
+      "time_without_s": 114.299
+    },
+    {
+      "technique": "free_device",
+      "saves_mem_mb": 628.9,
+      "costs_time_s": 99.332,
+      "efficiency_mb_per_s": 6.3,
+      "mem_without_mb": 1805.0,
+      "time_without_s": 145.653
+    }
+  ]
+}

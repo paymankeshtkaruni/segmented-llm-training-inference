@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "sequential-segmented-llm-training-inference"
+version = "0.1.0"
+description = "Sequential training and inference of segmented LLMs with strict single-segment execution"
+authors = ["Sadegh Keshtkar <keshtkar.sadegh@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "sequential_segmented_llm_training_inference", from = "src" }]
+
+[[tool.poetry.source]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+priority = "explicit"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+pyyaml = ">=6.0"
+numpy = ">=1.24"
+tqdm = ">=4.66"
+transformers = "^5.12.0"
+psutil = "^7.2.2"
+matplotlib = ">=3.7"
+torch = {version = "2.7.0+cu128", source = "pytorch-cu128"}
+onnx = "^1.22.0"
+# onnxruntime-gpu provides BOTH CPU and CUDA execution providers (do NOT also
+# install plain onnxruntime — they conflict). At runtime the CUDA provider needs
+# cuDNN9/cuBLAS12 on LD_LIBRARY_PATH; torch (cu128) bundles them under
+# site-packages/nvidia/*/lib (see final_paper_scripts_results/full_model/
+# slurm/onnx_infer_cost.sbatch for the wiring).
+onnxruntime-gpu = "^1.23.2"
+
+# OPTIONAL, NOT LOCKED: the DeepSpeed ZeRO-Offload baseline of the paper needs
+# deepspeed==0.19.2. It is deliberately kept out of this dependency set (and out
+# of poetry.lock) because it pulls a large CUDA/JIT toolchain and is imported by
+# exactly one script (memory_reduction_techniques/deepspeed_cost.py). Install it
+# into a SEPARATE virtualenv on the same torch 2.7.0+cu128 build and point the
+# job at that interpreter with PYTHON=... — see the README, section 1.
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0"
+ruff = ">=0.5.0"
+mypy = ">=1.8"
+
+[tool.poetry.scripts]
+segllm = "sequential_segmented_llm_training_inference.cli.train:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

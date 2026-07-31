@@ -1,0 +1,295 @@
+{
+  "run": "scale_summary",
+  "protocol": "cost-only: batch 4, seq 512, warmup + measured steps; infer = 256-token prompt, 8 greedy tokens; techniques all ON; 8x2x2x8",
+  "gpu_node": "main scales: NVIDIA A100 40 GB (device_total 40442 MB); fit points: A100 80 GB variant (81154 MB); validation: H100 94 GB (95330 MB); all grete:shared / grete-h100:shared",
+  "scales": [
+    {
+      "preset": "large_8x2x2x8",
+      "params_billion": 0.837,
+      "d_model": 1280,
+      "n_layers": 36,
+      "s_max_mb": 32.2,
+      "n_segments": 196,
+      "gpu": {
+        "full_train": {
+          "oom": false,
+          "mem_mb": 25424.0,
+          "time_s": 0.739,
+          "estimated_required_mb": 25400.0,
+          "estimate_method": "16 B/param optimizer states (exact) + activations scaled from measured 0.84B by L*d_model + context"
+        },
+        "full_infer": {
+          "oom": false,
+          "mem_mb": 5266.0,
+          "time_s": 0.227
+        },
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 956.0,
+          "time_s": 164.53
+        },
+        "seg_infer": {
+          "oom": false,
+          "mem_mb": 634.0,
+          "per_token_s": 22.39
+        }
+      },
+      "cpu": {
+        "full_train": {
+          "oom": false,
+          "mem_mb": 26928.1,
+          "time_s": 32.996
+        },
+        "full_infer": {
+          "oom": false,
+          "mem_mb": 4908.8,
+          "time_s": 5.997
+        },
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 996.6,
+          "time_s": 247.223
+        },
+        "seg_infer": {
+          "oom": false,
+          "mem_mb": 799.9,
+          "per_token_s": 24.746
+        }
+      },
+      "node": "A100-40GB"
+    },
+    {
+      "gpu": {
+        "full_train": {
+          "oom": true,
+          "oom_stage": "warmup",
+          "device_total_mb": 40442.4,
+          "vram_alloc_at_oom_mb": 39120.8,
+          "estimated_required_mb": 73000.0,
+          "estimate_method": "16 B/param optimizer states (exact) + activations scaled from measured 0.84B by L*d_model + context",
+          "exceeds_device_by": 1.8
+        },
+        "full_infer": {
+          "oom": false,
+          "mem_mb": 13860.0,
+          "time_s": 0.711
+        },
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 1528.0,
+          "time_s": 304.343,
+          "cuda_context_mb": 508.0
+        },
+        "seg_infer": {
+          "oom": false,
+          "mem_mb": 814.0,
+          "per_token_s": 41.435
+        },
+        "full_train_h100": {
+          "oom": false,
+          "mem_mb": 67624.0,
+          "time_s": 1.019,
+          "device_total_mb": 95329.8
+        }
+      },
+      "cpu": {
+        "full_train": {
+          "oom": false,
+          "mem_mb": 59390.6,
+          "time_s": 67.895
+        },
+        "full_infer": {
+          "oom": false,
+          "mem_mb": 13623.2,
+          "time_s": 18.708
+        },
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 1848.1,
+          "time_s": 447.671,
+          "cuda_context_mb": 0.0
+        },
+        "seg_infer": {
+          "oom": false,
+          "mem_mb": 1121.2,
+          "per_token_s": 36.206
+        }
+      },
+      "preset": "xl3b_8x2x2x8",
+      "params_billion": 3.09,
+      "d_model": 2560,
+      "n_layers": 36,
+      "s_max_mb": 104.9,
+      "n_segments": 196,
+      "node": "A100-40GB"
+    },
+    {
+      "gpu": {
+        "full_train": {
+          "oom": true,
+          "oom_stage": "warmup",
+          "device_total_mb": 40442.4,
+          "vram_alloc_at_oom_mb": 39883.2,
+          "estimated_required_mb": 143000.0,
+          "estimate_method": "16 B/param optimizer states (exact) + activations scaled from measured 0.84B by L*d_model + context",
+          "exceeds_device_by": 3.5
+        },
+        "full_infer": {
+          "oom": false,
+          "mem_mb": 28332.0,
+          "time_s": 1.57
+        },
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 2338.0,
+          "time_s": 601.167,
+          "cuda_context_mb": 508.0
+        },
+        "seg_infer": {
+          "oom": false,
+          "mem_mb": 1222.0,
+          "per_token_s": 70.53
+        },
+        "full_train_h100": {
+          "oom": true,
+          "device_total_mb": 95329.8,
+          "vram_alloc_at_oom_mb": 93321.7
+        }
+      },
+      "cpu": {
+        "full_train": {
+          "oom": false,
+          "mem_mb": 111733.1,
+          "time_s": 216.933
+        },
+        "full_infer": {
+          "oom": false,
+          "mem_mb": 28054.9,
+          "time_s": 101.344
+        },
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 3593.6,
+          "time_s": 1311.118,
+          "cuda_context_mb": 0.0
+        },
+        "seg_infer": {
+          "oom": false,
+          "mem_mb": 2549.5,
+          "per_token_s": 67.83
+        }
+      },
+      "preset": "xxl7b_8x2x2x8",
+      "params_billion": 6.856,
+      "d_model": 4096,
+      "n_layers": 32,
+      "s_max_mb": 268.4,
+      "n_segments": 176,
+      "node": "A100-40GB"
+    }
+  ],
+  "fit_points": [
+    {
+      "preset": "xl15b_8x2x2x8",
+      "fit_point_only": true,
+      "params_billion": 1.568,
+      "d_model": 1792,
+      "n_layers": 36,
+      "s_max_mb": 51.4,
+      "n_segments": 196,
+      "node": "A100-80GB",
+      "gpu": {
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 1152.0,
+          "time_s": 154.019,
+          "cuda_context_mb": 508.0
+        },
+        "full_train": {
+          "oom": false,
+          "mem_mb": 39010.0,
+          "time_s": 1.225,
+          "device_total_mb": 81153.8
+        }
+      }
+    },
+    {
+      "preset": "xl5b_8x2x2x8",
+      "fit_point_only": true,
+      "params_billion": 5.121,
+      "d_model": 3328,
+      "n_layers": 36,
+      "s_max_mb": 177.2,
+      "n_segments": 196,
+      "node": "A100-80GB",
+      "gpu": {
+        "seg_train": {
+          "oom": false,
+          "mem_mb": 2046.0,
+          "time_s": 300.921,
+          "cuda_context_mb": 508.0
+        },
+        "full_train": {
+          "oom": true,
+          "oom_stage": "warmup",
+          "device_total_mb": 81153.8,
+          "vram_alloc_at_oom_mb": 78238.0
+        }
+      }
+    }
+  ],
+  "performance_model_fit": {
+    "note": "GPU segmented training, all techniques ON, partition 8x2x2x8, batch 4, seq 512. Time: T = overhead + slope*P per node class (overhead = N*alpha', independent of model size AND node class). Memory: M = ctx + 2*s_max + c_act*d_model, one fit across all points (total parameter count P absent).",
+    "time_overhead_s": 93.6,
+    "time_slope_s_per_bparam": 73.2,
+    "time_fit_a100_80gb": {
+      "time_overhead_s": 89.2,
+      "time_slope_s_per_bparam": 41.3,
+      "note": "two points, so the line is exact by construction; its content is the intercept's agreement with the A100-40GB fit"
+    },
+    "mem_ctx_mb": 508.0,
+    "mem_c_act_mb_per_dmodel": 0.3179,
+    "points": [
+      {
+        "params_billion": 0.837,
+        "node": "A100-40GB",
+        "time_measured_s": 164.53,
+        "time_predicted_s": 154.9,
+        "mem_measured_mb": 956.0,
+        "mem_predicted_mb": 979.3
+      },
+      {
+        "params_billion": 1.568,
+        "node": "A100-80GB",
+        "time_measured_s": 154.019,
+        "time_predicted_s": 154.0,
+        "mem_measured_mb": 1152.0,
+        "mem_predicted_mb": 1180.5
+      },
+      {
+        "params_billion": 3.09,
+        "node": "A100-40GB",
+        "time_measured_s": 304.343,
+        "time_predicted_s": 319.8,
+        "mem_measured_mb": 1528.0,
+        "mem_predicted_mb": 1531.7
+      },
+      {
+        "params_billion": 5.121,
+        "node": "A100-80GB",
+        "time_measured_s": 300.921,
+        "time_predicted_s": 300.7,
+        "mem_measured_mb": 2046.0,
+        "mem_predicted_mb": 1920.4
+      },
+      {
+        "params_billion": 6.856,
+        "node": "A100-40GB",
+        "time_measured_s": 601.167,
+        "time_predicted_s": 595.4,
+        "mem_measured_mb": 2338.0,
+        "mem_predicted_mb": 2347.0
+      }
+    ]
+  }
+}

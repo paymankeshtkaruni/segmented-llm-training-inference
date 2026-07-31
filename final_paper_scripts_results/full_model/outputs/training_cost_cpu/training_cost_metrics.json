@@ -1,0 +1,30 @@
+{
+  "run": "A2_cost_training",
+  "model": "large",
+  "device": "cpu",
+  "model_config": {
+    "architecture": "gpt_decoder",
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1,
+    "tokenizer": "gpt2"
+  },
+  "vocab_size": 50257,
+  "params_million": 837.70368,
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "synthetic_full_length_batches": true,
+  "profile_memory": false,
+  "step_times_s": [
+    113.439356,
+    113.628728,
+    113.308805
+  ],
+  "avg_step_time_s": 113.46876661968417,
+  "throughput_samples_per_s": 0.03525199153179209,
+  "memory": {}
+}

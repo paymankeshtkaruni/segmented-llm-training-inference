@@ -1,0 +1,71 @@
+{
+  "run": "infer_incremental_ablation",
+  "subdir": "cpu_inference",
+  "memory_note": "GPU headline = vram_peak_mb (no-miss high-water); CPU headline = rss_peak_mb (PER-RUNG sampled, not lifetime ru_maxrss)",
+  "ladder": [
+    {
+      "rung": "r0_baseline",
+      "adds": "naive segmented \u2014 all techniques OFF",
+      "tech_code": "00000000000",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 4003.3,
+      "per_token_s": 0.34
+    },
+    {
+      "rung": "r1_sdpa",
+      "adds": "SDPA attention (no full score matrix)",
+      "tech_code": "10000000000",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 4013.6,
+      "per_token_s": 0.328
+    },
+    {
+      "rung": "r2_mlp_sum",
+      "adds": "MLP running-sum (no full d_ff hidden)",
+      "tech_code": "11000000000",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 4015.9,
+      "per_token_s": 0.322
+    },
+    {
+      "rung": "r3_chunked_ce",
+      "adds": "streamed chunked CE at eval (no full logits)",
+      "tech_code": "11100000000",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 4046.7,
+      "per_token_s": 0.327
+    },
+    {
+      "rung": "r4_stream",
+      "adds": "stream segments off-device (one resident)",
+      "tech_code": "11101000000",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 1127.2,
+      "per_token_s": 7.072
+    },
+    {
+      "rung": "r5_segment_wo",
+      "adds": "stream W_o as a segment (resident floor down)",
+      "tech_code": "11101000100",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 941.9,
+      "per_token_s": 7.95
+    },
+    {
+      "rung": "r6_free_device",
+      "adds": "free_device / allocator hygiene on release",
+      "tech_code": "11101000110",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 940.3,
+      "per_token_s": 25.034
+    },
+    {
+      "rung": "r7_no_kv_cache",
+      "adds": "no KV cache (recompute each decode step)",
+      "tech_code": "11101000111",
+      "vram_peak_mb": 0.0,
+      "rss_peak_mb": 942.1,
+      "per_token_s": 23.523
+    }
+  ]
+}

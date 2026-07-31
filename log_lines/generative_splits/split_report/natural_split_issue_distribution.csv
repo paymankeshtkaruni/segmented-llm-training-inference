@@ -1,0 +1,153 @@
+Issue,test,train_before_balancing,validation,train,excluded_rare_issue_level,total
+Acpi Pci Root Bridge,1,6,1,0,0,8
+Anacron Job Schedule,1,8,1,0,0,10
+Anacron Sequential,1,6,1,0,0,8
+Anacron Started,4,24,3,0,0,31
+Audit Bpf Load,4,26,3,0,0,33
+Audit Bpf Unload,4,26,3,0,0,33
+Audit Config Change,5,34,4,0,0,43
+Audit Cwd,5,29,3,0,0,37
+Audit Execve Su,3,15,1,0,0,19
+Audit Proctitle,7,44,5,0,0,56
+Audit Syscall Logins,6,41,5,0,0,52
+Audit Syscall Su,6,41,5,0,0,52
+Batch Job Launch,8,53,6,0,0,67
+Beegfs Mount Config Error,1,1,1,0,0,3
+Beegfs No Nvfs Rdma,1,2,1,0,0,4
+Beegfs Unsafe Rkey,4,20,2,0,0,26
+Connection Closed,233,1842,229,0,0,2304
+Created User Slice,7,52,6,0,0,65
+Dhcp Activation Begin,144,1152,144,0,0,1440
+Dhcp State Changed,72,576,72,0,0,720
+Dhcp Transaction Canceled,72,576,72,0,0,720
+Email Failed,7,52,6,0,0,65
+Email Runtime Dir Missing,7,52,6,0,0,65
+Email Succeeded,8,52,6,0,0,66
+Energy Report,1172,9372,1171,0,0,11715
+Energy Task Blank,601,4804,600,0,0,6005
+Failed To Start User,7,52,6,0,0,65
+Filesystem Failed,72,576,72,0,0,720
+Filesystem Name Check,42,336,42,0,0,420
+Filesystem Remount Attempt,72,576,72,0,0,720
+Firewalld Nft Register Rule,216,1728,216,0,0,2160
+Fss No Fss Registered,2,16,2,0,0,20
+Fss Reconnect Successful,3,16,2,0,0,21
+Fss Reconnecting,3,16,2,0,0,21
+Fss Using V3 Readdir,3,16,2,0,0,21
+Ib0 Mtu Failure,288,2304,288,0,0,2880
+Init Mounting,45,352,44,0,0,441
+Init Remount Failed,53,420,52,0,0,525
+Init User Stopped,6,39,4,0,0,49
+Ipmi Error,395,3148,393,0,0,3936
+Ipmi Invalid Response,601,4804,600,0,0,6005
+Ipmi Read Error,995,7952,994,0,0,9941
+Journal Write Error,1,3,1,0,0,5
+Kernel Drop Caches,4,28,3,0,0,35
+Kernel Module,130,1030,128,0,0,1288
+Link Config Autonegotiation,1,1,1,0,0,3
+Lnet Error,69,542,67,0,0,678
+Lnet Recovery,20,153,19,0,0,192
+Lnet Route Inconsistency,58,458,57,0,0,573
+Lnet Skipped Messages,58,458,57,0,0,573
+Lustre Error,172,1367,170,0,0,1709
+Lustre Error Communication,29,225,28,0,0,282
+Lustre Mount Exited,14,112,14,0,0,140
+Lustre Mount Failed Exitcode,15,112,14,0,0,141
+Lustre Mount Failed Result,15,112,14,0,0,141
+Lustre Mount General Failure,71,568,71,0,0,710
+Lustre Skipped Message,28,224,28,0,0,280
+Lustre Unmounted,29,225,28,0,0,282
+Mgs Running Check,28,224,28,0,0,280
+Mgs Spec Check,42,336,42,0,0,420
+Module Inserted,1,5,1,0,0,7
+Mount Failed Exit Code,44,342,42,0,0,428
+Mount Lustre Failed,71,564,70,0,0,705
+Mount Process Exited,57,456,57,0,0,570
+Mounting Path,30,233,29,0,0,292
+Net Protocol Registered,1,5,1,0,0,7
+Netfilter Cfg,4,21,2,0,0,27
+Netfilter Register,1,4,1,0,0,6
+Netfilter Unregister,1,1,1,0,0,3
+Netfilter Unregister Rule,216,1728,216,0,0,2160
+Netfilter Unregister Table,1,1,1,0,0,3
+Network Activation Failed,72,576,72,0,0,720
+Network Connection Auto Activate,72,576,72,0,0,720
+Network Device Activation Start,72,576,72,0,0,720
+Network Interface Namepolicy,1,1,1,0,0,3
+Network State Change Config To Ipconfig,72,576,72,0,0,720
+Network State Change Disconnected To Prepare,72,576,72,0,0,720
+Network State Change Failed To Disconnected,72,576,72,0,0,720
+Network State Change Ipconfig To Failed,72,576,72,0,0,720
+Network State Change Prepare To Config,72,576,72,0,0,720
+Pam Session Closed,7,56,7,0,0,70
+Pam Session Opened,4,26,3,0,0,33
+Pam Unix Session Opened,8,54,6,0,0,68
+Path Created,14,108,13,0,0,135
+Path Does Not Exist,14,104,13,0,0,131
+Path Mounted,1,3,1,0,0,5
+Path Permissions Done,15,108,13,0,0,136
+Pci Bus Numa,1,6,1,0,0,8
+Pci Device Info,1,6,1,0,0,8
+Ping Name Resolution Failed,1,6,1,0,0,8
+Prometheus Collector Start,144,1152,144,0,0,1440
+Remount Failed,47,364,45,0,0,456
+Root Command Executed,2,10,1,0,0,13
+Root On None,5,32,4,0,0,41
+Run User Mount Succeeded,7,52,6,0,0,65
+Server Listening Ip,1,4,1,0,0,6
+Server Listening Ipv6,1,4,1,0,0,6
+Service Batch Bind Final,4,25,3,0,0,32
+Service Batch Bind Input,4,22,2,0,0,28
+Service Exited,15,114,14,0,0,143
+Service Failed Exit Code,15,114,14,0,0,143
+Service Finished,19,143,17,0,0,179
+Service Job Credential,2,12,1,0,0,15
+Service Leftover Process,3,17,2,0,0,22
+Service Normal Exit,2,9,1,0,0,12
+Service Root On None,3,15,1,0,0,19
+Service Run Parts,18,144,18,0,0,180
+Service Slurmd Batch Request,6,41,5,0,0,52
+Service Starting,18,144,18,0,0,180
+Service Succeeded,1278,10215,1276,0,0,12769
+Service Terminating,1,3,1,0,0,5
+Slurm Job File,3,17,2,0,0,22
+Slurm Job Runtime,48,372,46,0,0,466
+Slurm Memcg Job,8,53,6,0,0,67
+Slurm Memcg Job Init,3,15,1,0,0,19
+Slurm Memcg Step,8,53,6,0,0,67
+Slurm Memcg Step Init,3,15,1,0,0,19
+Slurm Step Done,7,50,6,0,0,63
+Slurm Stepmgr Done,5,40,5,0,0,50
+Slurm X11 Shutdown,8,55,6,0,0,69
+Sockaddr,152,1210,151,0,0,1513
+Srat Apic Mapping,8,64,8,0,0,80
+Ssh Disconnect User,6,37,4,0,0,47
+Ssh Disconnected,6,37,4,0,0,47
+Ssh Publickey Accepted,5,36,4,0,0,45
+Ssh Session Closed,6,37,4,0,0,47
+Ssh Session Opened,6,38,4,0,0,48
+Started User Directory,7,52,6,0,0,65
+Starting User Directory,7,52,6,0,0,65
+Starting User Uid,7,52,6,0,0,65
+Stopping User Directory,7,52,6,0,0,65
+Sudo Session Closed,2,12,1,0,0,15
+Sudo Session Opened,2,12,1,0,0,15
+Syscall Failure,115,920,115,0,0,1150
+Syscall Firewalld,144,1152,144,0,0,1440
+Syscall Modprobe,3,19,2,0,0,24
+Syscall Privileged Sudo,3,14,1,0,0,18
+Syscall Success,9,63,7,0,0,79
+Syslog Job Runtime,11,77,9,0,0,97
+System Update,11,76,9,0,0,96
+System Updating,71,556,69,0,0,696
+Target Reached,1,5,1,0,0,7
+Target Stopped,1,3,1,0,0,5
+Target Stopping,1,3,1,0,0,5
+Task Cpu Hw Mask,1,7,1,0,0,9
+Task Cpu Input Mask,1,7,1,0,0,9
+Task Ran Seconds,6,43,5,0,0,54
+Textfile Collector Start,1231,9838,1229,0,0,12298
+Textfile Collector Started,1087,8686,1085,0,0,10858
+Udevd Syscall,4,24,3,0,0,31
+Unclean Termination,3,17,2,0,0,22
+Xstate Offset Sizes,1,5,1,0,0,7

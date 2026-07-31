@@ -1,0 +1,107 @@
+Issue,level,issue_level_key,count
+Acpi Asp Unsupported,Information,Acpi Asp Unsupported :: Information,1
+Acpi Fadt Asp Disabled,Information,Acpi Fadt Asp Disabled :: Information,1
+Acpi Osc Controls,Information,Acpi Osc Controls :: Information,1
+Acpi Osc Not Supports,Information,Acpi Osc Not Supports :: Information,1
+Acpi Osc Supports,Information,Acpi Osc Supports :: Information,1
+Acpiphp Version,Information,Acpiphp Version :: Information,1
+Apic Physical Flat,Information,Apic Physical Flat :: Information,1
+Audit Initialized,Information,Audit Initialized :: Information,1
+Audit Netlink Init,Information,Audit Netlink Init :: Information,1
+Basic System Reached,Information,Basic System Reached :: Information,1
+Beegfs Client Id,Information,Beegfs Client Id :: Information,1
+Beegfs Client Version,Information,Beegfs Client Version :: Information,1
+Beegfs Datagram Listener,Information,Beegfs Datagram Listener :: Information,1
+Beegfs Mount Failed Auth File,Error,Beegfs Mount Failed Auth File :: Error,1
+Beegfs Net Filters,Information,Beegfs Net Filters :: Information,1
+Beegfs Tcp Filters,Information,Beegfs Tcp Filters :: Information,1
+Beegfs Xnode Connect Failed,Warning,Beegfs Xnode Connect Failed :: Warning,1
+Beegfs Xnode Helper Unreachable,Warning,Beegfs Xnode Helper Unreachable :: Warning,1
+Beegfs Xnode Init,Information,Beegfs Xnode Init :: Information,1
+Cpuidle Governor Menu,Information,Cpuidle Governor Menu :: Information,1
+Cvfs Proprietary License,Warning,Cvfs Proprietary License :: Warning,1
+Daily Cleanup Started,Information,Daily Cleanup Started :: Information,1
+Dbus Listening,Information,Dbus Listening :: Information,1
+Dbus Started,Information,Dbus Started :: Information,1
+Devtmpfs Initialized,Information,Devtmpfs Initialized :: Information,1
+Dma Preallocated Kernel,Information,Dma Preallocated Kernel :: Information,1
+Dma Preallocated Kernel Dma,Information,Dma Preallocated Kernel Dma :: Information,1
+Dma Preallocated Kernel Dma32,Information,Dma Preallocated Kernel Dma32 :: Information,1
+Fb0 Ast Switch,Information,Fb0 Ast Switch :: Information,1
+Firewalld Starting,Information,Firewalld Starting :: Information,1
+Futex Hash Table,Information,Futex Hash Table :: Information,1
+Generic Vs Hw Check,Information,Generic Vs Hw Check :: Information,1
+Hfi1 No Receive Contexts,Warning,Hfi1 No Receive Contexts :: Warning,1
+Hfi1 Send Contexts,Information,Hfi1 Send Contexts :: Information,1
+Interface Naming Scheme,Information,Interface Naming Scheme :: Information,2
+Ipmi Ssif Driver,Information,Ipmi Ssif Driver :: Information,1
+Itco Vendor Support,Information,Itco Vendor Support :: Information,1
+Itco Wdt Disabled,Warning,Itco Wdt Disabled :: Warning,1
+Itco Wdt Driver,Information,Itco Wdt Driver :: Information,1
+Ixgbe Nic Link Up,Information,Ixgbe Nic Link Up :: Information,1
+Ixgbe Phc Device Registered,Information,Ixgbe Phc Device Registered :: Information,2
+Kernel Bit Width,Information,Kernel Bit Width :: Information,1
+Kernel Event Mask,Information,Kernel Event Mask :: Information,1
+Kernel Fixed Events,Information,Kernel Fixed Events :: Information,1
+Kernel Generic Registers,Information,Kernel Generic Registers :: Information,1
+Kernel Max Period,Information,Kernel Max Period :: Information,1
+Kernel Value Mask,Information,Kernel Value Mask :: Information,1
+Kernel Version,Information,Kernel Version :: Information,1
+Lnet Fastreg,Information,Lnet Fastreg :: Information,1
+Lnet Lni Added,Information,Lnet Lni Added :: Information,1
+Machine Check Started,Information,Machine Check Started :: Information,1
+Max Sigframe Size,Information,Max Sigframe Size :: Information,1
+Mds Cpu Bug,Warning,Mds Cpu Bug :: Warning,1
+Mountpoints Started,Information,Mountpoints Started :: Information,1
+Mountpoints Starting,Information,Mountpoints Starting :: Information,1
+Netfilter Register Rule,Information,Netfilter Register Rule :: Information,1
+Nfs Id Legacy Registered,Information,Nfs Id Legacy Registered :: Information,1
+Nfs Id Resolver Register,Information,Nfs Id Resolver Register :: Information,1
+Nfs Id Resolver Registered,Information,Nfs Id Resolver Registered :: Information,1
+Nfs Loading,Information,Nfs Loading :: Information,1
+Nmi Watchdog Enabled,Information,Nmi Watchdog Enabled :: Information,1
+Node Deferred Pages,Information,Node Deferred Pages :: Information,2
+Openssh Key Generation Started,Information,Openssh Key Generation Started :: Information,1
+Openssh Key Generation Starting,Information,Openssh Key Generation Starting :: Information,1
+Pcc Driver Registered,Information,Pcc Driver Registered :: Information,1
+Pcc Subspaces Detected,Information,Pcc Subspaces Detected :: Information,1
+Pci Bus Bus Resource,Information,Pci Bus Bus Resource :: Information,1
+Pci Bus Io Resource,Information,Pci Bus Io Resource :: Information,1
+Pci Bus Mem Resource,Information,Pci Bus Mem Resource :: Information,1
+Pci Bus Mem Resource Large,Information,Pci Bus Mem Resource Large :: Information,1
+Pci Host Bridge,Information,Pci Host Bridge :: Information,1
+Pci Mmconfig Domain,Information,Pci Mmconfig Domain :: Information,1
+Pci Mmconfig E820,Information,Pci Mmconfig E820 :: Information,1
+Pinctrl Initialized,Information,Pinctrl Initialized :: Information,1
+Ping Response,Information,Ping Response :: Information,1
+Ping Start,Information,Ping Start :: Information,1
+Ping Statistics Header,Information,Ping Statistics Header :: Information,1
+Ping Statistics Rtt,Information,Ping Statistics Rtt :: Information,1
+Ping Statistics Summary,Information,Ping Statistics Summary :: Information,1
+Prometheus Collector Started,Information,Prometheus Collector Started :: Information,1
+Ram Map Start,Information,Ram Map Start :: Information,1
+Rapl Pmu Api Unit,Information,Rapl Pmu Api Unit :: Information,1
+Rapl Pmu Dram Unit,Information,Rapl Pmu Dram Unit :: Information,1
+Rapl Pmu Package Unit,Information,Rapl Pmu Package Unit :: Information,1
+Rcu Implementation,Information,Rcu Implementation :: Information,1
+Rcu Scheduler Delay,Information,Rcu Scheduler Delay :: Information,1
+Rcu Tracing Enabled,Information,Rcu Tracing Enabled :: Information,1
+Restore Started,Information,Restore Started :: Information,1
+Restore Starting,Information,Restore Starting :: Information,1
+Runtime Journal Status,Information,Runtime Journal Status :: Information,2
+Service Loading Rules,Information,Service Loading Rules :: Information,1
+Service Started,Information,Service Started :: Information,1
+Smart Daemon Started,Information,Smart Daemon Started :: Information,1
+Smart Daemon Starting,Information,Smart Daemon Starting :: Information,1
+Smp Bringing Up Cpus,Information,Smp Bringing Up Cpus :: Information,1
+Smp Node Cpu Mapping Long,Information,Smp Node Cpu Mapping Long :: Information,1
+Smp Node Cpu Mapping Short,Information,Smp Node Cpu Mapping Short :: Information,2
+Smpboot Cpu Conversion,Information,Smpboot Cpu Conversion :: Information,1
+Smpboot Cpu Info,Information,Smpboot Cpu Info :: Information,1
+Smpboot Frequency Ratio,Information,Smpboot Frequency Ratio :: Information,2
+Sockets Reached,Information,Sockets Reached :: Information,1
+Stornext Update Starting,Information,Stornext Update Starting :: Information,1
+System Initialization Reached,Information,System Initialization Reached :: Information,1
+X86 Booting Smp,Information,X86 Booting Smp :: Information,1
+X86 Path Memory Size,Information,X86 Path Memory Size :: Information,1
+Yama Mindful,Information,Yama Mindful :: Information,1

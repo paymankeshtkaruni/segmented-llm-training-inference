@@ -1,0 +1,26 @@
+{
+  "run": "B1_real_inference",
+  "device": "cpu",
+  "model": "small",
+  "model_config": {
+    "architecture": "gpt_decoder",
+    "max_seq_len": 128,
+    "n_layers": 4,
+    "d_model": 64,
+    "n_heads": 4,
+    "d_ff": 256,
+    "dropout": 0.1,
+    "tokenizer": "bpe"
+  },
+  "checkpoint": "final_paper_scripts_results/full_model/outputs/train_cpu/checkpoints/best.pt",
+  "batch_size": 256,
+  "max_new_tokens": 24,
+  "prompt_max_tokens": 104,
+  "prompts_truncated": 303,
+  "n_examples": 11654,
+  "exact_match_accuracy": 0.9336708426291402,
+  "issue_accuracy": 0.9336708426291402,
+  "level_accuracy": 0.9933070190492534,
+  "elapsed_s": 253.3446614742279,
+  "examples_per_s": 46.00057460135402
+}

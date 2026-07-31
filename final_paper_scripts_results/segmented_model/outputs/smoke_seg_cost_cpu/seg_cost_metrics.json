@@ -1,0 +1,452 @@
+{
+  "run": "segmented_cost",
+  "preset": "large_8x2x2x8",
+  "device": "cpu",
+  "model_config": {
+    "vocab_size": 50257,
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1,
+    "architecture": "gpt_decoder",
+    "pad_token_id": null,
+    "eos_token_id": null
+  },
+  "seg_config": {
+    "embedding_segments": 8,
+    "attention_segments": 2,
+    "mlp_chunks": 2,
+    "output_head_segments": 8,
+    "attention_axis": "head_groups",
+    "mlp_axis": "feedforward_hidden_dimension",
+    "embedding_axis": "d_model",
+    "output_head_axis": "vocab"
+  },
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 1,
+  "avg_step_time_s": 211.9749553897418,
+  "measurement": "synchronized VRAM+CPU-RAM, per-operation; categories not blended",
+  "baseline": {
+    "host_framework_mb": 470.4,
+    "host_after_build_mb": 1596.7,
+    "cuda_context_mb": 0.0
+  },
+  "overall": {
+    "vram_smi_peak_mb": 0.0,
+    "vram_reserved_peak_mb": 0.0,
+    "vram_alloc_peak_mb": 0.0,
+    "rss_peak_mb": 4628.2
+  },
+  "per_phase": {
+    "forward": {
+      "vram": {
+        "context_mb": 0.0,
+        "torch_cache_mb": 0.0,
+        "alloc_resident_mb": 0.0,
+        "alloc_operation_mb": 0.0,
+        "alloc_peak_mb": 0.0,
+        "reserved_peak_mb": 0.0,
+        "total_peak_mb": 0.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 1448.6,
+        "rss_peak_mb": 2177.9,
+        "rss_operation_mb": 729.2
+      },
+      "time_ms": 34763.1
+    },
+    "backward": {
+      "vram": {
+        "context_mb": 0.0,
+        "torch_cache_mb": 0.0,
+        "alloc_resident_mb": 0.0,
+        "alloc_operation_mb": 0.0,
+        "alloc_peak_mb": 0.0,
+        "reserved_peak_mb": 0.0,
+        "total_peak_mb": 0.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 1466.5,
+        "rss_peak_mb": 2189.4,
+        "rss_operation_mb": 722.9
+      },
+      "time_ms": 106623.1
+    },
+    "optimizer": {
+      "vram": {
+        "context_mb": 0.0,
+        "torch_cache_mb": 0.0,
+        "alloc_resident_mb": 0.0,
+        "alloc_operation_mb": 0.0,
+        "alloc_peak_mb": 0.0,
+        "reserved_peak_mb": 0.0,
+        "total_peak_mb": 0.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 1690.8,
+        "rss_peak_mb": 2125.2,
+        "rss_operation_mb": 434.4
+      },
+      "time_ms": 41201.1
+    },
+    "validation": {
+      "vram": {
+        "context_mb": 0.0,
+        "torch_cache_mb": 0.0,
+        "alloc_resident_mb": 0.0,
+        "alloc_operation_mb": 0.0,
+        "alloc_peak_mb": 0.0,
+        "reserved_peak_mb": 0.0,
+        "total_peak_mb": 0.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 1692.4,
+        "rss_peak_mb": 1884.2,
+        "rss_operation_mb": 191.8
+      },
+      "time_ms": 29387.2
+    }
+  },
+  "per_operation": {
+    "backward|bwd|attn_outproj": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 37.2
+    },
+    "backward|bwd|attn_seg": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|emb_seg": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|final_norm": {
+      "count": 1,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 20.2
+    },
+    "backward|bwd|load_record": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 15.1
+    },
+    "backward|bwd|mlp_chunk": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|recompute_attn": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|cebwd|grad": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|cebwd|lse": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|load|attention": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 34.1
+    },
+    "backward|load|embedding": {
+      "count": 16,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 66.1
+    },
+    "backward|load|mlp": {
+      "count": 144,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 66.0
+    },
+    "backward|load|output_head": {
+      "count": 16,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 75.8
+    },
+    "backward|rec|store": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|release|attention": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 289.9
+    },
+    "backward|release|embedding": {
+      "count": 16,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 6.6
+    },
+    "backward|release|mlp": {
+      "count": 144,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 146.0
+    },
+    "backward|release|output_head": {
+      "count": 16,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 155.2
+    },
+    "forward|fwd|attn_add": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|attn_norm": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 10.9
+    },
+    "forward|fwd|attn_seg": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 172.2
+    },
+    "forward|fwd|embed_cat": {
+      "count": 1,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|final_norm": {
+      "count": 1,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 9.8
+    },
+    "forward|fwd|mlp_add": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 20.8
+    },
+    "forward|fwd|mlp_chunk": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|mlp_norm": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 10.0
+    },
+    "forward|load|attention": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 23.8
+    },
+    "forward|load|embedding": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 31.2
+    },
+    "forward|load|mlp": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 55.1
+    },
+    "forward|release|attention": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|release|embedding": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 5.9
+    },
+    "forward|release|mlp": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 71.2
+    },
+    "optimizer|load|attention": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|load|embedding": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 233.1
+    },
+    "optimizer|load|mlp": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 107.1
+    },
+    "optimizer|load|output_head": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 59.1
+    },
+    "optimizer|release|attention": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 12.6
+    },
+    "optimizer|release|embedding": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 62.0
+    },
+    "optimizer|release|mlp": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 50.7
+    },
+    "optimizer|release|output_head": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 61.8
+    },
+    "validation|fwd|attn_add": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|attn_norm": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 10.0
+    },
+    "validation|fwd|attn_seg": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 23.4
+    },
+    "validation|fwd|embed_cat": {
+      "count": 1,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|final_norm": {
+      "count": 1,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|mlp_add": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 21.0
+    },
+    "validation|fwd|mlp_chunk": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|mlp_norm": {
+      "count": 36,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.3
+    },
+    "validation|load|attention": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 22.9
+    },
+    "validation|load|embedding": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 72.7
+    },
+    "validation|load|mlp": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 54.2
+    },
+    "validation|load|output_head": {
+      "count": 32,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 46.6
+    },
+    "validation|release|attention": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|release|embedding": {
+      "count": 8,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 3.3
+    },
+    "validation|release|mlp": {
+      "count": 72,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 38.0
+    },
+    "validation|release|output_head": {
+      "count": 32,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 0.0,
+      "rss_op_max_mb": 15.7
+    }
+  },
+  "timelines_omitted": "raw per-sample profiler timelines (vram_timeline / cpu_ram_timeline / moves) were omitted from this file to keep the repository a reasonable size; every aggregate the paper quotes is retained above. Re-run the producing script to regenerate the full trace."
+}

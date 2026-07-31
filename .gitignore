@@ -1,0 +1,60 @@
+# ---------------------------------------------------------------------------
+# Trained-model artifacts and runtime scratch are REGENERABLE and NOT committed.
+# Re-run the training / cost / export scripts to reproduce them locally.
+# ---------------------------------------------------------------------------
+
+# segment stores, checkpoints, optimizer moments (offloaded during a run)
+**/_work/
+**/checkpoints/
+**/stores/
+*.pt
+*.pth
+*.ckpt
+
+# exported dense / ONNX model weights (multi-GB; regenerate with the export scripts)
+**/onnx/
+*.onnx
+*.weights
+*.npz
+
+# scratch caches
+segment_cache/
+
+# ---------------------------------------------------------------------------
+# Cluster job output (regenerated on every submission; never committed)
+# ---------------------------------------------------------------------------
+*.out
+*.err
+**/results/logs/
+**/outputs/logs/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+.venv-deepspeed/
+venv/
+build/
+dist/
+
+# ---------------------------------------------------------------------------
+# LaTeX build products (the paper itself is not part of this repository)
+# ---------------------------------------------------------------------------
+*.aux
+*.log
+*.bbl
+*.blg
+*.xdv
+*.synctex.gz
+
+# ---------------------------------------------------------------------------
+# Editor / OS / tooling
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store

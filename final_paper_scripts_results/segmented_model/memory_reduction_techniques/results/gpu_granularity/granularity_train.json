@@ -1,0 +1,43 @@
+{
+  "run": "granularity_sweep",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "note": "all techniques ON; seg partition varied coarse->fine",
+  "grid": [
+    {
+      "code": "2x1x1x2",
+      "n_segments": 4,
+      "vram_peak_mb": 1830.0,
+      "rss_peak_mb": 20020.7,
+      "step_time_s": 107.35
+    },
+    {
+      "code": "4x2x2x4",
+      "n_segments": 64,
+      "vram_peak_mb": 1226.0,
+      "rss_peak_mb": 18869.9,
+      "step_time_s": 171.55
+    },
+    {
+      "code": "8x2x2x8",
+      "n_segments": 256,
+      "vram_peak_mb": 976.0,
+      "rss_peak_mb": 19224.8,
+      "step_time_s": 175.02
+    },
+    {
+      "code": "16x4x4x16",
+      "n_segments": 4096,
+      "vram_peak_mb": 826.0,
+      "rss_peak_mb": 19892.9,
+      "step_time_s": 300.09
+    },
+    {
+      "code": "20x5x5x20",
+      "n_segments": 10000,
+      "vram_peak_mb": 824.0,
+      "rss_peak_mb": 19190.8,
+      "step_time_s": 374.43
+    }
+  ]
+}

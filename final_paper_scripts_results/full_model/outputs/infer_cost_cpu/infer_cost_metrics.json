@@ -1,0 +1,31 @@
+{
+  "run": "B2_inference_cost",
+  "mode": "infer",
+  "model": "large",
+  "device": "cpu",
+  "model_config": {
+    "architecture": "gpt_decoder",
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1,
+    "tokenizer": "gpt2"
+  },
+  "vocab_size": 50257,
+  "params_million": 837.70368,
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "synthetic_full_length_batches": true,
+  "profile_memory": false,
+  "step_times_s": [
+    36.15533,
+    36.11596,
+    36.082146
+  ],
+  "avg_step_time_s": 36.09905288624577,
+  "throughput_samples_per_s": 0.11080623119406144,
+  "memory": {}
+}

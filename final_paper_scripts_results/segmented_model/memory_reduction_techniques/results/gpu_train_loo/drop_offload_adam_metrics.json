@@ -1,0 +1,1397 @@
+{
+  "run": "segmented_cost",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "model_config": {
+    "vocab_size": 50257,
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1,
+    "architecture": "gpt_decoder",
+    "pad_token_id": null,
+    "eos_token_id": null
+  },
+  "seg_config": {
+    "embedding_segments": 8,
+    "attention_segments": 2,
+    "mlp_chunks": 2,
+    "output_head_segments": 8,
+    "attention_axis": "head_groups",
+    "mlp_axis": "feedforward_hidden_dimension",
+    "embedding_axis": "d_model",
+    "output_head_axis": "vocab"
+  },
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "avg_step_time_s": 171.86175775403777,
+  "measurement": "synchronized VRAM+CPU-RAM, per-operation; categories not blended",
+  "baseline": {
+    "host_framework_mb": 23028.1,
+    "host_after_build_mb": 23028.1,
+    "cuda_context_mb": 510.0
+  },
+  "overall": {
+    "vram_smi_peak_mb": 968.0,
+    "vram_reserved_peak_mb": 458.0,
+    "vram_alloc_peak_mb": 354.3,
+    "rss_peak_sampled_mb": 23365.4,
+    "vram_hw_reserved_peak_mb": 458.0,
+    "vram_hw_total_peak_mb": 968.0,
+    "rss_hw_peak_mb": 25164.9
+  },
+  "per_phase": {
+    "forward": {
+      "vram": {
+        "context_mb": 510.0,
+        "torch_cache_mb": 62.2,
+        "alloc_resident_mb": 19.2,
+        "alloc_operation_mb": 136.6,
+        "alloc_peak_mb": 155.8,
+        "reserved_peak_mb": 218.0,
+        "total_peak_mb": 728.0,
+        "hw_alloc_peak_mb": 155.8,
+        "hw_reserved_peak_mb": 218.0,
+        "hw_total_peak_mb": 728.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 23028.1,
+        "rss_peak_mb": 23028.1,
+        "rss_operation_mb": 0.0
+      },
+      "time_ms": 28576.0
+    },
+    "backward": {
+      "vram": {
+        "context_mb": 510.0,
+        "torch_cache_mb": 103.7,
+        "alloc_resident_mb": 36.9,
+        "alloc_operation_mb": 317.3,
+        "alloc_peak_mb": 354.3,
+        "reserved_peak_mb": 458.0,
+        "total_peak_mb": 968.0,
+        "hw_alloc_peak_mb": 354.3,
+        "hw_reserved_peak_mb": 458.0,
+        "hw_total_peak_mb": 968.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 23028.1,
+        "rss_peak_mb": 23028.1,
+        "rss_operation_mb": 0.0
+      },
+      "time_ms": 75441.2
+    },
+    "optimizer": {
+      "vram": {
+        "context_mb": 510.0,
+        "torch_cache_mb": 146.7,
+        "alloc_resident_mb": 18.9,
+        "alloc_operation_mb": 184.4,
+        "alloc_peak_mb": 203.3,
+        "reserved_peak_mb": 350.0,
+        "total_peak_mb": 860.0,
+        "hw_alloc_peak_mb": 203.3,
+        "hw_reserved_peak_mb": 350.0,
+        "hw_total_peak_mb": 860.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 23028.1,
+        "rss_peak_mb": 23365.4,
+        "rss_operation_mb": 337.3
+      },
+      "time_ms": 33712.5
+    },
+    "validation": {
+      "vram": {
+        "context_mb": 510.0,
+        "torch_cache_mb": 74.2,
+        "alloc_resident_mb": 22.9,
+        "alloc_operation_mb": 132.9,
+        "alloc_peak_mb": 155.8,
+        "reserved_peak_mb": 230.0,
+        "total_peak_mb": 740.0,
+        "hw_alloc_peak_mb": 155.8,
+        "hw_reserved_peak_mb": 230.0,
+        "hw_total_peak_mb": 740.0
+      },
+      "cpu_ram": {
+        "rss_floor_mb": 23365.4,
+        "rss_peak_mb": 23365.4,
+        "rss_operation_mb": 0.0
+      },
+      "time_ms": 34366.0
+    }
+  },
+  "per_operation": {
+    "backward|bwd|attn_outproj": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 202.4,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|attn_seg": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 187.2,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|emb_seg": {
+      "count": 24,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 185.8,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|final_norm": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 53.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|load_record": {
+      "count": 108,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 167.0,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|mlp_chunk": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 209.2,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|bwd|recompute_attn": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 193.9,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|cebwd|grad": {
+      "count": 24,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 93.7,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|cebwd|lse": {
+      "count": 24,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 83.7,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|load|attention": {
+      "count": 648,
+      "vram_op_max_mb": 21.8,
+      "vram_alloc_max_mb": 222.6,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|load|attn_out_proj": {
+      "count": 324,
+      "vram_op_max_mb": 26.2,
+      "vram_alloc_max_mb": 214.9,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|load|embedding": {
+      "count": 48,
+      "vram_op_max_mb": 39.0,
+      "vram_alloc_max_mb": 216.8,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|load|mlp": {
+      "count": 432,
+      "vram_op_max_mb": 65.0,
+      "vram_alloc_max_mb": 234.3,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|load|output_head": {
+      "count": 48,
+      "vram_op_max_mb": 40.7,
+      "vram_alloc_max_mb": 124.4,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|rec|store": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 150.8,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|release|attention": {
+      "count": 648,
+      "vram_op_max_mb": 31.8,
+      "vram_alloc_max_mb": 228.2,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|release|attn_out_proj": {
+      "count": 324,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 213.9,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|release|embedding": {
+      "count": 48,
+      "vram_op_max_mb": 32.3,
+      "vram_alloc_max_mb": 218.1,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|release|mlp": {
+      "count": 432,
+      "vram_op_max_mb": 75.6,
+      "vram_alloc_max_mb": 294.3,
+      "rss_op_max_mb": 0.0
+    },
+    "backward|release|output_head": {
+      "count": 48,
+      "vram_op_max_mb": 49.0,
+      "vram_alloc_max_mb": 132.6,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|attn_add": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 81.1,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|attn_norm": {
+      "count": 108,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 105.8,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|attn_seg": {
+      "count": 216,
+      "vram_op_max_mb": 5.0,
+      "vram_alloc_max_mb": 101.1,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|embed_cat": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 63.9,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|final_norm": {
+      "count": 3,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 105.8,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|mlp_add": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 95.8,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|mlp_chunk": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 115.8,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|fwd|mlp_norm": {
+      "count": 108,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 91.1,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|load|attention": {
+      "count": 216,
+      "vram_op_max_mb": 10.3,
+      "vram_alloc_max_mb": 116.1,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|load|attn_out_proj": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 98.0,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|load|embedding": {
+      "count": 24,
+      "vram_op_max_mb": 35.0,
+      "vram_alloc_max_mb": 93.9,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|load|mlp": {
+      "count": 216,
+      "vram_op_max_mb": 25.0,
+      "vram_alloc_max_mb": 140.8,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|release|attention": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 101.1,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|release|attn_out_proj": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 91.1,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|release|embedding": {
+      "count": 24,
+      "vram_op_max_mb": 1.3,
+      "vram_alloc_max_mb": 64.2,
+      "rss_op_max_mb": 0.0
+    },
+    "forward|release|mlp": {
+      "count": 216,
+      "vram_op_max_mb": 0.6,
+      "vram_alloc_max_mb": 125.8,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|load|attention": {
+      "count": 216,
+      "vram_op_max_mb": 9.4,
+      "vram_alloc_max_mb": 151.0,
+      "rss_op_max_mb": 0.1
+    },
+    "optimizer|load|attn_out_proj": {
+      "count": 108,
+      "vram_op_max_mb": 6.3,
+      "vram_alloc_max_mb": 34.6,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|load|embedding": {
+      "count": 24,
+      "vram_op_max_mb": 31.0,
+      "vram_alloc_max_mb": 81.9,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|load|mlp": {
+      "count": 216,
+      "vram_op_max_mb": 25.0,
+      "vram_alloc_max_mb": 106.5,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|load|output_head": {
+      "count": 24,
+      "vram_op_max_mb": 30.7,
+      "vram_alloc_max_mb": 172.3,
+      "rss_op_max_mb": 122.6
+    },
+    "optimizer|opt|shared|attn_norm.0.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.0.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.1.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.1.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.10.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.10.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.11.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.11.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.12.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.12.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.13.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.13.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.14.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.14.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.15.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.15.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.16.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.16.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.17.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.17.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.18.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.18.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.19.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.19.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.2.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.2.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.20.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.20.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.21.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.21.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.22.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.22.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.23.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.23.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.24.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.24.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.25.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.25.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.26.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.26.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.27.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.27.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.28.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.28.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.29.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.29.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.3.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.3.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.30.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.30.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.31.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.31.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.32.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.32.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.33.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.33.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.34.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.34.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.35.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.35.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.4.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.4.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.5.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.5.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.6.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.6.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.7.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.7.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.8.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.8.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.9.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|attn_norm.9.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|final_norm.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|final_norm.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.0.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.0.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.1.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.1.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.10.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.10.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.11.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.11.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.12.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.12.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.13.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.13.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.14.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.14.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.15.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.15.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.16.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.16.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.17.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.17.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.18.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.18.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.19.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.19.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.2.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.2.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.20.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.20.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.21.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.21.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.22.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.22.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.23.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.23.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.24.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.24.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.25.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.25.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.26.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.26.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.27.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.27.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.28.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.28.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.29.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.29.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.3.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.3.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.30.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.30.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.31.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.31.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.32.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.32.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.33.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.33.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.34.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.34.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.35.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.35.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.4.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.4.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.5.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.5.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.6.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.6.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.7.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.7.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.8.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.8.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.9.bias": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_norm.9.weight": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|opt|shared|mlp_out_bias.": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 44.0,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|release|attention": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 28.3,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|release|attn_out_proj": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 25.2,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|release|embedding": {
+      "count": 24,
+      "vram_op_max_mb": 0.9,
+      "vram_alloc_max_mb": 50.9,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|release|mlp": {
+      "count": 216,
+      "vram_op_max_mb": 31.2,
+      "vram_alloc_max_mb": 81.5,
+      "rss_op_max_mb": 0.0
+    },
+    "optimizer|release|output_head": {
+      "count": 24,
+      "vram_op_max_mb": 60.1,
+      "vram_alloc_max_mb": 141.7,
+      "rss_op_max_mb": 92.0
+    },
+    "validation|fwd|attn_add": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 81.1,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|attn_norm": {
+      "count": 108,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 105.8,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|attn_seg": {
+      "count": 216,
+      "vram_op_max_mb": 5.0,
+      "vram_alloc_max_mb": 101.1,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|embed_cat": {
+      "count": 3,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 63.9,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|final_norm": {
+      "count": 3,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 105.8,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|mlp_add": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 95.8,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|mlp_chunk": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 115.8,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|fwd|mlp_norm": {
+      "count": 108,
+      "vram_op_max_mb": 10.0,
+      "vram_alloc_max_mb": 91.1,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|load|attention": {
+      "count": 216,
+      "vram_op_max_mb": 10.9,
+      "vram_alloc_max_mb": 116.1,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|load|attn_out_proj": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 98.0,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|load|embedding": {
+      "count": 24,
+      "vram_op_max_mb": 35.0,
+      "vram_alloc_max_mb": 94.2,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|load|mlp": {
+      "count": 216,
+      "vram_op_max_mb": 25.0,
+      "vram_alloc_max_mb": 140.8,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|load|output_head": {
+      "count": 96,
+      "vram_op_max_mb": 18.5,
+      "vram_alloc_max_mb": 90.3,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|release|attention": {
+      "count": 216,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 101.1,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|release|attn_out_proj": {
+      "count": 108,
+      "vram_op_max_mb": 0.0,
+      "vram_alloc_max_mb": 91.1,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|release|embedding": {
+      "count": 24,
+      "vram_op_max_mb": 1.4,
+      "vram_alloc_max_mb": 64.4,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|release|mlp": {
+      "count": 216,
+      "vram_op_max_mb": 0.6,
+      "vram_alloc_max_mb": 125.8,
+      "rss_op_max_mb": 0.0
+    },
+    "validation|release|output_head": {
+      "count": 96,
+      "vram_op_max_mb": 12.3,
+      "vram_alloc_max_mb": 71.9,
+      "rss_op_max_mb": 0.0
+    }
+  },
+  "timelines_omitted": "raw per-sample profiler timelines (vram_timeline / cpu_ram_timeline / moves) were omitted from this file to keep the repository a reasonable size; every aggregate the paper quotes is retained above. Re-run the producing script to regenerate the full trace."
+}

@@ -1,0 +1,114 @@
+# Example protocol for sequential segmented LLM training/inference.
+# This file is intentionally complete enough to initialize a strict segmented run
+# and to serve as a YAML protocol starting point.
+
+protocol_version: "1.0"
+
+device: cpu
+
+execution:
+  mode: strict_single_segment
+  max_active_segments: 1
+
+segment_storage:
+  backend: disk_streaming
+  segment_dir: runs/example_cpu_disk_streaming/segments
+
+model:
+  architecture: gpt_decoder
+  vocab_size: 50257
+  max_seq_len: 512
+  n_layers: 4
+  d_model: 256
+  n_heads: 8
+  d_ff: 1024
+  dropout: 0.1
+  pad_token_id: null
+  eos_token_id: null
+
+segmentation:
+  attention_segments: 4
+  mlp_chunks: 4
+  attention_segmentation_axis: head_groups
+  mlp_segmentation_axis: feedforward_hidden_dimension
+  strict_segmented_attention: true
+  strict_segmented_mlp: true
+
+runtime_records:
+  policy: full_segment_records
+  store_rng_state: true
+  restore_rng_state_during_backward: true
+  recomputation_check: true
+  recomputation_atol: 1.0e-5
+  recomputation_rtol: 1.0e-4
+
+training:
+  epochs: 1
+  batch_size: 4
+  gradient_accumulation_steps: 1
+  update_style: after_full_backward
+  precision: fp32
+  gradient_clip_norm: null
+
+optimizer:
+  type: segmentwise_adamw
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  state_key_policy: layer_id.segment_type.segment_id.parameter_name
+
+loss:
+  type: causal_cross_entropy
+  label_shift: internal
+  ignore_index: -100
+
+data:
+  dataset_name: example_dataset
+  data_root: data/example
+  train_split: data/example/train.csv
+  validation_split: data/example/validation.csv
+  test_split: data/example/test.csv
+  input_column: text
+  label_column: text
+  tokenizer_path: tokenizer/example
+
+validation:
+  mode: segmented_forward
+  frequency: each_epoch
+  metric_for_best_checkpoint: validation_loss
+  lower_is_better: true
+
+test:
+  mode: segmented_forward
+  checkpoint: best_segmented_checkpoint
+  metrics:
+    - test_loss
+
+checkpointing:
+  save_last: true
+  save_best: true
+  checkpoint_dir: runs/example_cpu_disk_streaming/checkpoints
+  best_checkpoint_path: runs/example_cpu_disk_streaming/checkpoints/best_segmented_checkpoint
+  last_checkpoint_path: runs/example_cpu_disk_streaming/checkpoints/last_segmented_checkpoint
+
+exports:
+  export_full_model: true
+  full_model_export_path: runs/example_cpu_disk_streaming/exports/full_model
+  export_yaml_protocol: true
+  yaml_protocol_path: runs/example_cpu_disk_streaming/exports/segmented_training_protocol.yaml
+
+inference:
+  mode: segmented_forward_generation
+  checkpoint: best_segmented_checkpoint
+  max_new_tokens: 32
+  temperature: 1.0
+  top_k: null
+  top_p: null
+
+reproducibility:
+  seed: 42
+  deterministic_mode: true
+  save_python_rng_state: true
+  save_torch_rng_state: true
+  save_cuda_rng_state: false
