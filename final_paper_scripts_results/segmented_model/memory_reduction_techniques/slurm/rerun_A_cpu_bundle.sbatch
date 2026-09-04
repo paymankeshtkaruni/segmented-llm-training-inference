@@ -9,9 +9,8 @@
 #SBATCH --time=06:00:00
 #SBATCH --output=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/rerun_cpu_bundle084_%j.out
 #SBATCH --error=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/rerun_cpu_bundle084_%j.err
-# Site-independent: export PROJECT_ROOT=<path to this repository> and, if the
-# interpreter is not on PATH, PYTHON=<interpreter> before submitting. Submit from
-# the repository root so the relative --output/--error log paths resolve.
+# Site-independent: export PROJECT_ROOT=<repo root> and, if needed,
+# PYTHON=<interpreter> before submitting from the repository root.
 set -euo pipefail
 cd "${PROJECT_ROOT:?set PROJECT_ROOT to the repo root}"
 module load gcc/13.2.0 cuda/12.8.2
@@ -23,8 +22,9 @@ export MALLOC_TRIM_THRESHOLD_=131072
 PYTHON="${PYTHON:-python}"
 MRT=final_paper_scripts_results/segmented_model/memory_reduction_techniques
 echo "Node: $(hostname)  Start: $(date)  OMP_NUM_THREADS=$OMP_NUM_THREADS"
-# Config-consistency reruns of the remaining 0.84B CPU cells (environment consistency): full inference, segmented train (no ARENA cap, unlike the ladder),
-# and segmented inference. Outputs join full_train_metrics.json
+# Config-consistency reruns of the remaining 0.84B CPU cells (audit SEV-1 #2 and
+# SEV-2 #4): full inference, segmented train (no ARENA cap, unlike the ladder),
+# and segmented inference. Outputs join full_train_metrics.json (job 15115043)
 # in results/scale_cpu_large/. Nothing pre-existing is overwritten.
 for RUN in full_infer seg_train seg_infer; do
   echo "===== $RUN  $(date) ====="

@@ -1,0 +1,190 @@
+{
+  "run": "x1_training_exactness",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "store": "cpu_ram",
+  "batch": 2,
+  "seq": 512,
+  "note": "12 modes: dropout x recompute x streaming x update style. Dropout rows: determinism + cross-mode grads vs T1 anchor. No-dropout rows: identity vs reference under the mode's own protocol (after_full: global clip 1.0; immediate: no clip), incl. all-parameter step checks",
+  "results": [
+    {
+      "mode": "T1_drop_resident_after",
+      "tech_code": "11100111000",
+      "dropout": 0.1,
+      "update_style": "after_full",
+      "note": "gradient-level checks; update style cannot alter gradients",
+      "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
+      "determinism_deltas": {
+        "mlp_chunk0_L0": 2.0954757928848267e-09,
+        "attn_q_seg0_L0": 5.602487362921238e-10,
+        "output_head_seg0": 0.0,
+        "final_norm_w": 0.0
+      },
+      "determinism_max_delta": 2.0954757928848267e-09
+    },
+    {
+      "mode": "T2_drop_recompute_after",
+      "tech_code": "11110111000",
+      "dropout": 0.1,
+      "update_style": "after_full",
+      "note": "gradient-level checks; update style cannot alter gradients",
+      "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
+      "determinism_deltas": {
+        "mlp_chunk0_L0": 2.153683453798294e-09,
+        "attn_q_seg0_L0": 5.384208634495735e-10,
+        "output_head_seg0": 0.0,
+        "final_norm_w": 0.0
+      },
+      "determinism_max_delta": 2.153683453798294e-09,
+      "vs_T1_anchor_deltas": {
+        "mlp_chunk0_L0": 2.8812792152166367e-09,
+        "attn_q_seg0_L0": 7.457856554538012e-10,
+        "output_head_seg0": 6.984919309616089e-10,
+        "final_norm_w": 9.313225746154785e-10
+      },
+      "vs_T1_anchor_max_delta": 2.8812792152166367e-09
+    },
+    {
+      "mode": "T3_drop_streaming_after",
+      "tech_code": "11111111100",
+      "dropout": 0.1,
+      "update_style": "after_full",
+      "note": "gradient-level checks; update style cannot alter gradients",
+      "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
+      "determinism_deltas": {
+        "mlp_chunk0_L0": 2.3283064365386963e-09,
+        "attn_q_seg0_L0": 5.748006515204906e-10,
+        "output_head_seg0": 0.0,
+        "final_norm_w": 0.0
+      },
+      "determinism_max_delta": 2.3283064365386963e-09,
+      "vs_T1_anchor_deltas": {
+        "mlp_chunk0_L0": 3.1723175197839737e-09,
+        "attn_q_seg0_L0": 7.566995918750763e-10,
+        "output_head_seg0": 6.984919309616089e-10,
+        "final_norm_w": 9.313225746154785e-10
+      },
+      "vs_T1_anchor_max_delta": 3.1723175197839737e-09
+    },
+    {
+      "mode": "T4_nodrop_resident_after",
+      "tech_code": "11100111000",
+      "dropout": 0.0,
+      "update_style": "after_full",
+      "clip": 1.0,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 6.984919309616089e-09,
+        "attn_q_seg0_L0": 1.7171259969472885e-09,
+        "output_head_seg0": 1.1059455573558807e-08,
+        "final_norm_w": 7.683411240577698e-09
+      },
+      "grad_max_delta": 1.1059455573558807e-08,
+      "step1_all_params_max_delta": 5.366397090256214e-05,
+      "step1_worst_param": "blocks.2.attention.output_projection.weight",
+      "step4_all_params_max_delta": 5.3833238780498505e-05,
+      "step4_worst_param": "blocks.2.attention.output_projection.weight"
+    },
+    {
+      "mode": "T5_nodrop_recompute_after",
+      "tech_code": "11110111000",
+      "dropout": 0.0,
+      "update_style": "after_full",
+      "clip": 1.0,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 7.290509529411793e-09,
+        "attn_q_seg0_L0": 1.6880221664905548e-09,
+        "output_head_seg0": 1.1059455573558807e-08,
+        "final_norm_w": 8.032657206058502e-09
+      },
+      "grad_max_delta": 1.1059455573558807e-08,
+      "step1_all_params_max_delta": 4.143081605434418e-05,
+      "step1_worst_param": "blocks.2.attention.output_projection.weight",
+      "step4_all_params_max_delta": 4.156655631959438e-05,
+      "step4_worst_param": "blocks.2.attention.output_projection.weight"
+    },
+    {
+      "mode": "T6_nodrop_streaming_after",
+      "tech_code": "11111111100",
+      "dropout": 0.0,
+      "update_style": "after_full",
+      "clip": 1.0,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 7.334165275096893e-09,
+        "attn_q_seg0_L0": 1.7316779121756554e-09,
+        "output_head_seg0": 1.1059455573558807e-08,
+        "final_norm_w": 8.032657206058502e-09
+      },
+      "grad_max_delta": 1.1059455573558807e-08,
+      "step1_all_params_max_delta": 4.331069067120552e-05,
+      "step1_worst_param": "blocks.2.attention.output_projection.weight",
+      "step4_all_params_max_delta": 4.345201887190342e-05,
+      "step4_worst_param": "blocks.2.attention.output_projection.weight"
+    },
+    {
+      "mode": "T7_drop_resident_immed",
+      "tech_code": "11100111000",
+      "dropout": 0.1,
+      "update_style": "immediate",
+      "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
+      "imm_vs_afterfull_all_params_max_delta": 7.170664321165532e-05,
+      "worst_param": "blocks.1.mlp.output_projection.weight"
+    },
+    {
+      "mode": "T8_drop_recompute_immed",
+      "tech_code": "11110111000",
+      "dropout": 0.1,
+      "update_style": "immediate",
+      "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
+      "imm_vs_afterfull_all_params_max_delta": 8.022948168218136e-05,
+      "worst_param": "blocks.1.attention.output_projection.weight"
+    },
+    {
+      "mode": "T9_drop_streaming_immed",
+      "tech_code": "11111111100",
+      "dropout": 0.1,
+      "update_style": "immediate",
+      "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
+      "imm_vs_afterfull_all_params_max_delta": 0.0001359080197289586,
+      "worst_param": "blocks.0.mlp.output_projection.weight"
+    },
+    {
+      "mode": "T10_nodrop_resident_immed",
+      "tech_code": "11100111000",
+      "dropout": 0.0,
+      "update_style": "immediate",
+      "clip": null,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "step1_all_params_max_delta": 0.0003788960166275501,
+      "step1_worst_param": "blocks.1.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00037964212242513895,
+      "step4_worst_param": "blocks.1.mlp.output_projection.weight"
+    },
+    {
+      "mode": "T11_nodrop_recompute_immed",
+      "tech_code": "11110111000",
+      "dropout": 0.0,
+      "update_style": "immediate",
+      "clip": null,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "step1_all_params_max_delta": 0.00034332211362197995,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.0003433607635088265,
+      "step4_worst_param": "blocks.0.mlp.output_projection.weight"
+    },
+    {
+      "mode": "T12_nodrop_streaming_immed",
+      "tech_code": "11111111100",
+      "dropout": 0.0,
+      "update_style": "immediate",
+      "clip": null,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "step1_all_params_max_delta": 0.0003221553924959153,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00032218635897152126,
+      "step4_worst_param": "blocks.0.mlp.output_projection.weight"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "run": "full_decode_cost",
+  "preset": "large_8x2x2x8",
+  "device": "cpu",
+  "model_config": {
+    "vocab_size": 50257,
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1,
+    "architecture": "gpt_decoder",
+    "pad_token_id": null,
+    "eos_token_id": null
+  },
+  "params_million": 837.7,
+  "prompt_len": 256,
+  "gen_tokens": 32,
+  "protocol": "identical to segmented infer_cost_lib: batch 1, greedy, warmup 1 token, full forward per step (standard resident implementation, no KV cache)",
+  "generate_total_s": 33.224,
+  "per_token_s": 1.038,
+  "vram_hw_reserved_peak_mb": null,
+  "rss_hw_peak_mb": 3981.1
+}

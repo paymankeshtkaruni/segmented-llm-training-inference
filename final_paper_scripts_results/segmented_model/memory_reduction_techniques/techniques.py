@@ -48,17 +48,19 @@ def baseline() -> Tech:
 
 
 # ---- logical order: each entry = (flag, rung name, one-line what/why) ----
-# TRAIN: forward-activation -> recompute -> streaming/offload -> allocator hygiene.
+# TRAIN: cheap-first — all time-free techniques, then streaming (moderate cost),
+# then allocator release (expensive). Cost classes measured on A100 (ladder_train.json):
+# free <2 s added; streaming x4.3; free_device x5.8 on top.
 TRAIN_LADDER = [
     ("sdpa",            "r1_sdpa",           "SDPA attention (no full score matrix)"),
     ("mlp_running_sum", "r2_mlp_sum",        "MLP running-sum (no full d_ff hidden)"),
     ("chunked_ce",      "r3_chunked_ce",     "streamed chunked cross-entropy (no full logits)"),
     ("recompute",       "r4_recompute",      "backward by recomputation (no full autograd graph)"),
-    ("stream_segments", "r5_stream",         "stream segments off-device (one resident)"),
-    ("offload_records", "r6_records",        "offload layer-input records (depth-independent)"),
-    ("park_grads_host", "r7_park_grads",     "park shared/W_o grads on host"),
-    ("offload_adam",    "r8_offload_adam",   "offload shared Adam state to host"),
-    ("segment_wo",      "r9_segment_wo",     "stream W_o as a segment (resident floor 243->17 MB)"),
+    ("offload_records", "r5_records",        "offload layer-input records (depth-independent)"),
+    ("park_grads_host", "r6_park_grads",     "park shared/W_o grads on host"),
+    ("offload_adam",    "r7_offload_adam",   "offload shared Adam state to host"),
+    ("segment_wo",      "r8_segment_wo",     "stream W_o as a segment (resident floor 243->17 MB)"),
+    ("stream_segments", "r9_stream",         "stream segments off-device (one resident)"),
     ("free_device",     "r10_free_device",   "free_device / allocator hygiene on release"),
 ]
 

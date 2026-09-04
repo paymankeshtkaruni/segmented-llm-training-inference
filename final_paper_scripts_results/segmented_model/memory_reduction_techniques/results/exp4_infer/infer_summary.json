@@ -1,0 +1,423 @@
+{
+ "run": "exp4_inference_modes",
+ "protocol": "prompt256 decode32 batch1, medians of 3",
+ "torch": {
+  "I1": {
+   "cpu": {
+    "vram_mb": 0.0,
+    "rss_mb": 3891.2,
+    "per_token_s": 0.24,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 3894.1,
+      "per_token_s": 0.243
+     },
+     {
+      "vram": 0.0,
+      "rss": 3891.2,
+      "per_token_s": 0.238
+     },
+     {
+      "vram": 0.0,
+      "rss": 3887.6,
+      "per_token_s": 0.236
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4122.0,
+    "rss_mb": 4224.4,
+    "per_token_s": 0.19,
+    "reps": [
+     {
+      "vram": 4122.0,
+      "rss": 4228.8,
+      "per_token_s": 0.193
+     },
+     {
+      "vram": 4122.0,
+      "rss": 4224.4,
+      "per_token_s": 0.192
+     },
+     {
+      "vram": 4122.0,
+      "rss": 4224.1,
+      "per_token_s": 0.192
+     }
+    ]
+   }
+  },
+  "I2": {
+   "cpu": {
+    "vram_mb": 0.0,
+    "rss_mb": 3800.2,
+    "per_token_s": 1.0,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 3800.4,
+      "per_token_s": 0.991
+     },
+     {
+      "vram": 0.0,
+      "rss": 3798.1,
+      "per_token_s": 0.996
+     },
+     {
+      "vram": 0.0,
+      "rss": 3800.2,
+      "per_token_s": 1.001
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4008.0,
+    "rss_mb": 4223.4,
+    "per_token_s": 0.28,
+    "reps": [
+     {
+      "vram": 4008.0,
+      "rss": 4223.4,
+      "per_token_s": 0.282
+     },
+     {
+      "vram": 4008.0,
+      "rss": 4221.8,
+      "per_token_s": 0.283
+     },
+     {
+      "vram": 4008.0,
+      "rss": 4223.9,
+      "per_token_s": 0.283
+     }
+    ]
+   }
+  },
+  "I3": {
+   "cpu": {
+    "vram_mb": 0.0,
+    "rss_mb": 817.7,
+    "per_token_s": 7.14,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 827.4,
+      "per_token_s": 7.194
+     },
+     {
+      "vram": 0.0,
+      "rss": 817.7,
+      "per_token_s": 7.139
+     },
+     {
+      "vram": 0.0,
+      "rss": 816.4,
+      "per_token_s": 7.123
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 804.0,
+    "rss_mb": 4265.1,
+    "per_token_s": 5.5,
+    "reps": [
+     {
+      "vram": 804.0,
+      "rss": 4282.2,
+      "per_token_s": 11.531
+     },
+     {
+      "vram": 804.0,
+      "rss": 4264.6,
+      "per_token_s": 5.495
+     },
+     {
+      "vram": 804.0,
+      "rss": 4265.1,
+      "per_token_s": 5.427
+     }
+    ]
+   }
+  },
+  "I4": {
+   "cpu": {
+    "vram_mb": 0.0,
+    "rss_mb": 821.6,
+    "per_token_s": 7.9,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 811.4,
+      "per_token_s": 7.94
+     },
+     {
+      "vram": 0.0,
+      "rss": 821.6,
+      "per_token_s": 7.902
+     },
+     {
+      "vram": 0.0,
+      "rss": 846.0,
+      "per_token_s": 7.872
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 660.0,
+    "rss_mb": 4259.3,
+    "per_token_s": 5.43,
+    "reps": [
+     {
+      "vram": 660.0,
+      "rss": 4259.3,
+      "per_token_s": 5.434
+     },
+     {
+      "vram": 660.0,
+      "rss": 4259.4,
+      "per_token_s": 5.442
+     },
+     {
+      "vram": 660.0,
+      "rss": 4258.6,
+      "per_token_s": 5.387
+     }
+    ]
+   }
+  }
+ },
+ "onnx": {
+  "O1_full": {
+   "cpu": {
+    "vram_mb": null,
+    "rss_mb": 3099.9,
+    "per_token_s": 0.6,
+    "reps": [
+     {
+      "vram": null,
+      "rss": 3100.8,
+      "per_token_s": 0.614
+     },
+     {
+      "vram": null,
+      "rss": 3097.8,
+      "per_token_s": 0.603
+     },
+     {
+      "vram": null,
+      "rss": 3099.9,
+      "per_token_s": 0.597
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4534.0,
+    "rss_mb": 728.8,
+    "per_token_s": 0.02,
+    "reps": [
+     {
+      "vram": 4550.0,
+      "rss": 727.5,
+      "per_token_s": 0.018
+     },
+     {
+      "vram": 4534.0,
+      "rss": 729.9,
+      "per_token_s": 0.018
+     },
+     {
+      "vram": 4534.0,
+      "rss": 728.8,
+      "per_token_s": 0.02
+     }
+    ]
+   }
+  },
+  "O2_baked": {
+   "cpu": {
+    "vram_mb": null,
+    "rss_mb": 5334.1,
+    "per_token_s": 8.36,
+    "reps": [
+     {
+      "vram": null,
+      "rss": 5315.0,
+      "per_token_s": 8.359
+     },
+     {
+      "vram": null,
+      "rss": 5383.6,
+      "per_token_s": 8.385
+     },
+     {
+      "vram": null,
+      "rss": 5334.1,
+      "per_token_s": 8.341
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 11632.0,
+    "rss_mb": 1697.5,
+    "per_token_s": 0.77,
+    "reps": [
+     {
+      "vram": 11632.0,
+      "rss": 1697.5,
+      "per_token_s": 0.756
+     },
+     {
+      "vram": 11638.0,
+      "rss": 1725.7,
+      "per_token_s": 0.766
+     },
+     {
+      "vram": 11612.0,
+      "rss": 1685.9,
+      "per_token_s": 0.77
+     }
+    ]
+   }
+  },
+  "O3_preload": {
+   "cpu": {
+    "vram_mb": 0.0,
+    "rss_mb": 3345.8,
+    "per_token_s": 6.43,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 3341.1,
+      "per_token_s": 6.423388216968306
+     },
+     {
+      "vram": 0.0,
+      "rss": 3345.8,
+      "per_token_s": 6.461175401877881
+     },
+     {
+      "vram": 0.0,
+      "rss": 3371.2,
+      "per_token_s": 6.425042518659211
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 506.0,
+    "rss_mb": 3789.0,
+    "per_token_s": 4.75,
+    "reps": [
+     {
+      "vram": 506.0,
+      "rss": 3789.0,
+      "per_token_s": 4.77696514503441
+     },
+     {
+      "vram": 506.0,
+      "rss": 3787.1,
+      "per_token_s": 4.751427205686923
+     },
+     {
+      "vram": 506.0,
+      "rss": 3792.9,
+      "per_token_s": 4.725205383533648
+     }
+    ]
+   }
+  },
+  "O4_stream": {
+   "cpu": {
+    "vram_mb": 0.0,
+    "rss_mb": 401.2,
+    "per_token_s": 9.2,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 431.7,
+      "per_token_s": 9.196177046253979
+     },
+     {
+      "vram": 0.0,
+      "rss": 399.8,
+      "per_token_s": 9.198428716314993
+     },
+     {
+      "vram": 0.0,
+      "rss": 401.2,
+      "per_token_s": 9.212996959873635
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 506.0,
+    "rss_mb": 846.3,
+    "per_token_s": 9.47,
+    "reps": [
+     {
+      "vram": 506.0,
+      "rss": 848.2,
+      "per_token_s": 9.474368070314085
+     },
+     {
+      "vram": 506.0,
+      "rss": 845.9,
+      "per_token_s": 9.501980568183171
+     },
+     {
+      "vram": 506.0,
+      "rss": 846.3,
+      "per_token_s": 9.443495021749186
+     }
+    ]
+   }
+  }
+ },
+ "full_anchor": {
+  "cpu": {
+   "vram_reserved_mb": null,
+   "rss_mb": 3981.1,
+   "per_token_s": 1.06,
+   "reps": [
+    {
+     "vram_reserved": null,
+     "rss": 3981.1,
+     "per_token_s": 1.038
+    },
+    {
+     "vram_reserved": null,
+     "rss": 3980.6,
+     "per_token_s": 1.056
+    },
+    {
+     "vram_reserved": null,
+     "rss": 3983.0,
+     "per_token_s": 1.061
+    }
+   ]
+  },
+  "gpu": {
+   "vram_reserved_mb": 3802.0,
+   "rss_mb": 3742.0,
+   "per_token_s": 0.04,
+   "reps": [
+    {
+     "vram_reserved": 3802.0,
+     "rss": 3739.8,
+     "per_token_s": 0.039
+    },
+    {
+     "vram_reserved": 3802.0,
+     "rss": 3742.0,
+     "per_token_s": 0.038
+    },
+    {
+     "vram_reserved": 3802.0,
+     "rss": 3742.0,
+     "per_token_s": 0.038
+    }
+   ]
+  }
+ },
+ "note_full_anchor": "vram_reserved excludes the 490 MB CUDA context"
+}

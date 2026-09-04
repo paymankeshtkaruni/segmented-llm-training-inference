@@ -128,3 +128,43 @@ they are the measurement provenance, not identity.
 Re-running the figure scripts overwrites `RES/figures/paper/*.png` — the figures used in
 the paper. Any difference between the regenerated and the committed PNGs is a difference in
 the committed result JSONs, not in the plotting code.
+
+---
+
+# Reproducing the v4 paper (paper_jsa: "Sequential Training and Inference on Resource-Constrained Devices")
+
+The v4 campaign lives under
+\`final_paper_scripts_results/segmented_model/memory_reduction_techniques/\`
+(scripts + \`slurm/\` jobs + \`results/\` summaries) and the manuscript under
+\`final_paper_scripts_results/segmented_model/paper_jsa/\`.
+
+## Regenerate tables and figures from committed results (CPU-only, seconds)
+
+\`\`\`bash
+export PROJECT_ROOT=$PWD
+cd final_paper_scripts_results/segmented_model/memory_reduction_techniques
+python build_exp_summaries.py   # rebuilds grid/infer/scale/exp6/exp7 summary JSONs from per-rep dirs
+python eval_cost_laws.py        # results/cost_model_eval.json  (Table: cost-model accuracy + held-out cell)
+python sustained_report.py      # reads the gzipped 6.9B trace -> per-step peaks (exp8_sustained)
+cd ../paper_jsa
+python paper_v4_figures.py      # figures/*.pdf (all five paper figures)
+\`\`\`
+
+Mapping (paper -> source):
+- Exactness tables: results/verify_modes/x1_train_exact_{gpu,cpu}.json, infer_exact_*.json,
+  control_fp32_floor_*.json, step_delta_analysis_*.json (jobs: slurm/x1_verify_*.sbatch)
+- Matched-pair learning + prediction agreement: results/quality_fresh_pair/*
+  (jobs: slurm/quality_triple.sbatch, full_repaired.sbatch, onnx accuracy jobs)
+- Comparison + anchors: results/exp1_compare, exp2_anchor, deepspeed_baseline_16t*
+- 12-mode grid: results/exp3_grid/grid_summary.json (slurm/exp3_grid_*.sbatch)
+- Inference modes + ONNX + full-decode anchors: results/exp4_infer/infer_summary.json
+- Scale: results/exp5_scale/scale_summary.json; fastest modes: results/exp6_fast/exp6_summary.json
+- Batch/sequence sensitivity: results/exp7_sensitivity/sensitivity_summary.json (slurm/exp7_sensitivity.sbatch)
+- Sustained 6.9B stability: results/exp8_sustained/sustained_summary.json (slurm/exp8_sustained.sbatch)
+- Cost model + pre-registration: results/prereg_prediction.json (committed BEFORE the
+  validation job), results/prereg_validation_result.json, results/cost_model_eval.json
+
+Notes: per-rep metrics JSONs larger than 2 MB carry their raw sampling timelines replaced by a
+stripped marker (the summary builders read only scalar fields); regenerate full traces by
+re-running the corresponding sbatch job. Every measurement runs via Slurm using the
+site-independent PROJECT_ROOT/PYTHON convention documented at the top of each sbatch file.

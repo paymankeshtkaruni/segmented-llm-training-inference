@@ -1,0 +1,38 @@
+{
+ "run": "segmented_infer_cost",
+ "preset": "xl15b_8x2x2x8",
+ "device": "cuda",
+ "model_config": {
+  "vocab_size": 50257,
+  "max_seq_len": 512,
+  "n_layers": 36,
+  "d_model": 1792,
+  "n_heads": 14,
+  "d_ff": 7168,
+  "dropout": 0.1,
+  "architecture": "gpt_decoder",
+  "pad_token_id": null,
+  "eos_token_id": null
+ },
+ "seg_config": {
+  "embedding_segments": 8,
+  "attention_segments": 2,
+  "mlp_chunks": 2,
+  "output_head_segments": 8,
+  "attention_axis": "head_groups",
+  "mlp_axis": "feedforward_hidden_dimension",
+  "embedding_axis": "d_model",
+  "output_head_axis": "vocab"
+ },
+ "prompt_len": 256,
+ "gen_tokens": 8,
+ "overall": {
+  "vram_hw_total_peak_mb": 7068.0,
+  "vram_reserved_peak_sampled_mb": 6578.0,
+  "rss_hw_peak_mb": 7046.3,
+  "rss_peak_sampled_mb": 7046.3,
+  "cuda_context_mb": 490.0
+ },
+ "generate_total_s": 1.646,
+ "per_token_s": 0.206
+}

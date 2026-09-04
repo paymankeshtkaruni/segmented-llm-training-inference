@@ -1,0 +1,9 @@
+[01] glue + config + manifest loaded  : 279.2 MB  (+241.8)
+Traceback (most recent call last):
+  File "${PROJECT_ROOT}/scripts/infer_onnx.py", line 1086, in <module>
+    main()
+  File "${PROJECT_ROOT}/scripts/infer_onnx.py", line 851, in main
+    runner = WInputsRunner(manifest, args.provider,
+  File "${PROJECT_ROOT}/scripts/infer_onnx.py", line 181, in __init__
+    self._sig_bytes[sig] = open(info["representative_weightless_onnx"], "rb").read()
+KeyError: 'representative_weightless_onnx'

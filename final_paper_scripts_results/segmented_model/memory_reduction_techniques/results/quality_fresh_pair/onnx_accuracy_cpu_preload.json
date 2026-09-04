@@ -1,0 +1,11 @@
+{
+  "run": "onnx_inference_accuracy_fresh",
+  "onnx_dir": "${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/onnx/c_seg_quality_fresh",
+  "provider": "cpu",
+  "mode": "preload",
+  "preset": "small_8x2x2x8",
+  "n_test": 11654,
+  "exact_match": 0.9547794748584177,
+  "eval_time_s": 353.0558795928955,
+  "note": "equal-length batches (no padding); causal baked into export"
+}

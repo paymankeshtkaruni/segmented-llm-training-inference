@@ -1,0 +1,28 @@
+{
+  "run": "control_fp32_floor",
+  "note": "full model vs itself: batch-of-2 vs 2x gradient accumulation; pure PyTorch, zero segmentation code involved",
+  "results": [
+    {
+      "device": "cpu",
+      "protocol": "clip",
+      "grad_max_delta": 1.4901161193847656e-08,
+      "grad_worst_param": "blocks.0.attention.output_projection.weight",
+      "step_worst_delta": 3.080815076828003e-06,
+      "step_worst_param": "blocks.2.mlp.output_projection.weight",
+      "n_elements_gt_1e-5": 0,
+      "n_elements_gt_1e-6": 91,
+      "max_|g|_at_gt_1e-5": 0.0
+    },
+    {
+      "device": "cpu",
+      "protocol": "no_clip",
+      "grad_max_delta": 1.4901161193847656e-08,
+      "grad_worst_param": "blocks.0.attention.output_projection.weight",
+      "step_worst_delta": 3.064516931772232e-05,
+      "step_worst_param": "blocks.22.mlp.output_projection.weight",
+      "n_elements_gt_1e-5": 27,
+      "n_elements_gt_1e-6": 2417,
+      "max_|g|_at_gt_1e-5": 8.43283487483859e-09
+    }
+  ]
+}

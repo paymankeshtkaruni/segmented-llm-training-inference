@@ -77,16 +77,33 @@ def main():
     ap.add_argument("--preset", default="large_8x2x2x8")
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--opset", type=int, default=18)
+    ap.add_argument("--checkpoint", type=Path, default=None,
+                    help="harness checkpoint (.pt with 'params'/'shared') to export "
+                         "TRAINED weights; default None = seeded random init (cost runs)")
     a = ap.parse_args()
     sig_dir = a.out_dir / "signatures"; w_dir = a.out_dir / "weights"
     for d in (sig_dir, w_dir):
         d.mkdir(parents=True, exist_ok=True)
 
     p = get_preset(a.preset); m, s = p["model"], p["seg"]
-    torch.manual_seed(0)
-    ref = ReferenceGPTDecoder(m).eval()
-    store = make_store("cpu_ram")
-    shared = populate_from_reference(ref, m, s, store)
+    if a.checkpoint is not None:
+        # export TRAINED weights from a harness checkpoint (accuracy runs)
+        ck = torch.load(a.checkpoint, map_location="cpu", weights_only=False)
+        if ck.get("preset") != a.preset:
+            raise SystemExit(f"checkpoint preset {ck.get('preset')!r} != --preset {a.preset!r}")
+        store = make_store("cpu_ram")
+        for kstr, sd in ck["params"].items():
+            layer, kind, seg = kstr.split("|")
+            store.put(SegmentKey(int(layer), kind, int(seg)), sd)
+        from forward_engine import SharedParams
+        shared = SharedParams(m)
+        shared.load_state_dict(ck["shared"])
+        print(f"[c-export-seg] trained weights from {a.checkpoint}")
+    else:
+        torch.manual_seed(0)
+        ref = ReferenceGPTDecoder(m).eval()
+        store = make_store("cpu_ram")
+        shared = populate_from_reference(ref, m, s, store)
 
     manifest = {"signatures": {}, "segments": {}}
     print(f"[c-export-seg] {a.preset}  {m.n_params_estimate/1e6:.0f}M  -> {a.out_dir}")

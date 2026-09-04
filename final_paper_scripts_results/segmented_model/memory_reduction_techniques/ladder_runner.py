@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 from techniques import cumulative, TRAIN_LADDER, INFER_LADDER
-from seg_cost_lib import run_cost
+from measure_one import run_isolated   # fresh process per rung: no allocator residue
 
 
 def run_train_ladder(preset: str, device: str, out_dir: Path,
@@ -22,8 +22,8 @@ def run_train_ladder(preset: str, device: str, out_dir: Path,
     rows = []
     for name, desc, tech in cumulative(TRAIN_LADDER):
         print(f"\n===== {name}  tech={tech.code()}  ({desc}) =====")
-        met = run_cost(preset, device, out_dir, prefix=name, batch=batch, n_steps=n_steps,
-                       seq_len=seq_len, from_scratch=True, tech=tech)
+        met = run_isolated("train", preset, device, out_dir, name, tech,
+                           batch=batch, n_steps=n_steps, seq_len=seq_len)
         o = met["overall"]; pp = met.get("per_phase", {})
         rows.append({
             "rung": name, "adds": desc, "tech_code": tech.code(),
@@ -41,14 +41,13 @@ def run_train_ladder(preset: str, device: str, out_dir: Path,
 
 def run_infer_ladder(preset: str, device: str, out_dir: Path,
                      prompt_len: int = 256, gen_tokens: int = 8):
-    from infer_cost_lib import run_infer_cost
     out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
     is_cuda = str(device).startswith("cuda")
     rows = []
     for name, desc, tech in cumulative(INFER_LADDER):
         print(f"\n===== {name}  tech={tech.code()}  ({desc}) =====")
-        met = run_infer_cost(preset, device, out_dir, prefix=name, prompt_len=prompt_len,
-                             gen_tokens=gen_tokens, tech=tech, from_scratch=True)
+        met = run_isolated("infer", preset, device, out_dir, name, tech,
+                           prompt_len=prompt_len, gen_tokens=gen_tokens)
         o = met["overall"]
         rows.append({
             "rung": name, "adds": desc, "tech_code": tech.code(),

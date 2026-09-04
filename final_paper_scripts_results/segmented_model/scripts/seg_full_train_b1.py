@@ -81,6 +81,8 @@ def main():
     ap.add_argument("--batch-size", type=int, default=64)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--warmup", type=int, default=200)
+    ap.add_argument("--save-ckpt", type=Path, default=None,
+                    help="save the trained state_dict here after training")
     a = ap.parse_args()
     torch.manual_seed(a.seed)
     p = get_preset(a.preset); m = p["model"]
@@ -111,6 +113,10 @@ def main():
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step(); gstep += 1
         print(f"  epoch {ep+1}/{a.epochs} done ({time.perf_counter()-t0:.0f}s)", flush=True)
+    if a.save_ckpt is not None:
+        a.save_ckpt.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(model.state_dict(), a.save_ckpt)
+        print(f"[ckpt] saved -> {a.save_ckpt}", flush=True)
     tacc = token_acc(model, tel, a.device, pad)
     b1, n = b1_full_test(model, tok, a.device, pad, eos, batch=a.batch_size)
     print(f"[FULL seed={a.seed}] test token-acc={tacc:.4f}  B1 exact-match (full test n={n})={b1:.4f}  ({time.perf_counter()-t0:.0f}s)")

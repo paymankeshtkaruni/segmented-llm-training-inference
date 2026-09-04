@@ -1,0 +1,29 @@
+{
+ "run": "segmented_onnx_infer_cost",
+ "onnx_dir": "final_paper_scripts_results/segmented_model/onnx/c_seg_large",
+ "provider": "cuda",
+ "batch": 1,
+ "seq": 512,
+ "gen_tokens": 32,
+ "preload_weights": true,
+ "unique_sessions": 4,
+ "active_provider": "CUDAExecutionProvider",
+ "torch_free": true,
+ "avg_prefill_s": 4.913608466672788,
+ "avg_token_s": 4.77696514503441,
+ "baseline": {
+  "rss_mb": 205.7,
+  "vram_mb": 0.0
+ },
+ "after_session": {
+  "rss_mb": 3537.5,
+  "vram_mb": 428.0
+ },
+ "peak": {
+  "vram_mb": 506.0,
+  "vram_net_mb": 506.0,
+  "rss_mb": 3789.0,
+  "rss_net_mb": 3583.3
+ },
+ "timeline": "[stripped for repository size: 2584 samples; regenerate via the corresponding sbatch job]"
+}

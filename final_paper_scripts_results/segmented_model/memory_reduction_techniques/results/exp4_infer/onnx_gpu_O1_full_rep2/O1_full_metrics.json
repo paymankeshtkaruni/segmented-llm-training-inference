@@ -1,0 +1,12 @@
+{
+ "run": "onnx_resident_cost",
+ "mode": "full",
+ "provider": "CUDAExecutionProvider",
+ "prompt_len": 256,
+ "gen_tokens": 32,
+ "build_s": 3.12,
+ "prefill_plus_first_s": 0.114,
+ "per_token_s": 0.018,
+ "rss_peak_mb": 729.9,
+ "vram_peak_mb": 4534.0
+}

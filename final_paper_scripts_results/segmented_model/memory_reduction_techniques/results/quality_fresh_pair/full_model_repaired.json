@@ -1,0 +1,10 @@
+{
+  "run": "full_model_repaired_eval",
+  "checkpoint": "${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/quality_fresh_pair/full_model_10ep.pt",
+  "protocol": "equal-length batches, no padding (identical to all other engines)",
+  "n_test": 11654,
+  "exact_match": 0.9556375493392827,
+  "agreement_vs_segmented_preds": 0.9707396602025056,
+  "note": "full model trained independently of the segmented checkpoint; agreement below 1.0 is expected (different weights), the comparable number is exact_match",
+  "eval_time_s": 13.7
+}

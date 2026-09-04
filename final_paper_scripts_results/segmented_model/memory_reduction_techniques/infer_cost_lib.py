@@ -31,7 +31,7 @@ class _NoEos:                       # force the full gen_tokens (measurement, no
 
 
 def run_infer_cost(preset, device, out_dir: Path, prefix, prompt_len=256, gen_tokens=8,
-                   tech=None, from_scratch=True):
+                   tech=None, from_scratch=True, seg_override=None):
     is_cuda = str(device).startswith("cuda")
     out_dir.mkdir(parents=True, exist_ok=True)
     if is_cuda:
@@ -40,7 +40,8 @@ def run_infer_cost(preset, device, out_dir: Path, prefix, prompt_len=256, gen_to
     mf = MemFlow(is_cuda); mf.start(); mf.set_phase("build")
     tr = SegmentedTrainer(preset, device, out_dir / "_work",
                           store_kind=("cpu_ram" if is_cuda else "disk"),
-                          from_scratch=from_scratch, tech=tech)
+                          from_scratch=from_scratch, tech=tech,
+                          seg_override=seg_override)
     m = tr.m; pad = tr.tok.pad_token_id
     tr.fwd.eval()
     gen = SegmentedGenerator(tr.fwd, _NoEos())

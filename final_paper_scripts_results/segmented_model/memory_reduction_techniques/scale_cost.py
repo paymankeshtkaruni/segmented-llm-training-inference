@@ -72,13 +72,17 @@ def _build_full_model(m):
 
 
 def run_full_cost(preset: str, device: str, out_dir: Path, prefix: str,
-                  mode: str, batch: int = 4, n_steps: int = 3, seq_len=None):
+                  mode: str, batch: int = 4, n_steps: int = 3, seq_len=None,
+                  dropout=None):
     """mode='train': forward+backward+AdamW step (params+grads+opt+full graph).
        mode='infer': forward-only under no_grad (params+activations+full logits).
     On CUDA OOM the failure is CAUGHT and RECORDED as a data point (oom=true)."""
     is_cuda = str(device).startswith("cuda")
     out_dir.mkdir(parents=True, exist_ok=True)
     p = get_preset(preset); m = p["model"]
+    if dropout is not None:
+        from dataclasses import replace as _replace
+        m = _replace(m, dropout=dropout)
     seq = seq_len or m.max_seq_len
     dev_total_mb = (torch.cuda.get_device_properties(0).total_memory / _MB
                     if is_cuda and torch.cuda.is_available() else None)
@@ -225,6 +229,8 @@ def main():
     ap.add_argument("--gen-tokens", type=int, default=8)
     ap.add_argument("--out-dir", type=Path, default=None,
                     help="default: results/scale_{gpu|cpu}_{preset}/")
+    ap.add_argument("--dropout", type=float, default=None,
+                    help="override model dropout for full_* runs (e.g. 0.0)")
     a = ap.parse_args()
 
     tag = "gpu" if a.device.startswith("cuda") else "cpu"
@@ -242,7 +248,8 @@ def main():
                        tech=None, from_scratch=True)
     elif a.run == "full_train":
         run_full_cost(a.preset, a.device, out_dir, prefix="full_train", mode="train",
-                      batch=a.batch, n_steps=a.n_steps, seq_len=a.seq_len)
+                      batch=a.batch, n_steps=a.n_steps, seq_len=a.seq_len,
+                      dropout=a.dropout)
     else:
         run_full_cost(a.preset, a.device, out_dir, prefix="full_infer", mode="infer",
                       batch=a.batch, n_steps=a.n_steps, seq_len=a.seq_len)

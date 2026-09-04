@@ -1,0 +1,65 @@
+{
+  "run": "verify_modes",
+  "preset": "large_8x2x2x8",
+  "dropout": 0.0,
+  "note": "identity vs reference full model, per operating mode; store=cpu_ram (locations do not affect values)",
+  "results": [
+    {
+      "mode": "M1",
+      "tech_code": "11100111000",
+      "device": "cpu",
+      "batch": 2,
+      "seq": 512,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 2.3283064365386963e-09,
+        "attn_q_seg0_L0": 5.620677256956697e-10,
+        "output_head_seg0": 3.4924596548080444e-09,
+        "final_norm_w": 1.7462298274040222e-09
+      },
+      "grad_max_delta": 3.4924596548080444e-09,
+      "step1_all_params_max_delta": 1.0927906259894371e-05,
+      "step1_worst_param": "blocks.1.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00010926509276032448,
+      "step4_worst_param": "output_projection.weight"
+    },
+    {
+      "mode": "M2",
+      "tech_code": "11110111000",
+      "device": "cpu",
+      "batch": 2,
+      "seq": 512,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 2.9103830456733704e-09,
+        "attn_q_seg0_L0": 5.529727786779404e-10,
+        "output_head_seg0": 3.4924596548080444e-09,
+        "final_norm_w": 1.862645149230957e-09
+      },
+      "grad_max_delta": 3.4924596548080444e-09,
+      "step1_all_params_max_delta": 1.3507320545613766e-05,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00010926742106676102,
+      "step4_worst_param": "output_projection.weight"
+    },
+    {
+      "mode": "M3",
+      "tech_code": "11111111100",
+      "device": "cpu",
+      "batch": 2,
+      "seq": 512,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 2.9103830456733704e-09,
+        "attn_q_seg0_L0": 5.529727786779404e-10,
+        "output_head_seg0": 3.4924596548080444e-09,
+        "final_norm_w": 1.862645149230957e-09
+      },
+      "grad_max_delta": 3.4924596548080444e-09,
+      "step1_all_params_max_delta": 1.3507320545613766e-05,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00010926742106676102,
+      "step4_worst_param": "output_projection.weight"
+    }
+  ]
+}

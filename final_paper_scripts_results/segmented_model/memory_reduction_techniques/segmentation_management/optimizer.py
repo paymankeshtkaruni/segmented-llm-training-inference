@@ -93,6 +93,33 @@ class SegmentwiseAdamW:
         norm = total_sq ** 0.5
         return 1.0 if norm <= max_norm else max_norm / (norm + 1e-6)
 
+    def begin_step(self) -> None:
+        """IMMEDIATE update style: advance the step counter once, at backward start.
+        (after_full's step() advances it itself — never call both in one step.)"""
+        self.t += 1
+
+    def update_segment(self, key, seg, gsd: Dict[str, torch.Tensor],
+                       scale: float = 1.0) -> None:
+        """Apply AdamW to ONE segment's params in place (moments streamed from the
+        opt store and parked back). Shared by both update styles: after_full calls
+        it from step()'s sweep; immediate calls it from the backward engine the
+        moment the segment's gradient is final."""
+        st = self.opt_store.get(key) or {}
+        for pname, p in seg.named_parameters():
+            if pname not in gsd:
+                continue
+            g = gsd[pname].to(self.device)
+            if scale != 1.0:
+                g = g * scale
+            # opt state lives in the store (CPU on GPU runs) — move to device
+            pst = {"exp_avg": st.get(f"{pname}.exp_avg"),
+                   "exp_avg_sq": st.get(f"{pname}.exp_avg_sq")}
+            pst = {k: v.to(self.device) for k, v in pst.items() if v is not None}
+            _adamw_(p.data, g, pst, self.t, self.lr, self.b1, self.b2, self.eps, self.wd)
+            st[f"{pname}.exp_avg"] = pst["exp_avg"].to("cpu")
+            st[f"{pname}.exp_avg_sq"] = pst["exp_avg_sq"].to("cpu")
+        self.opt_store.put(key, st)
+
     def step(self, shared_grads: Dict[str, torch.Tensor],
              clip_norm: Optional[float] = None) -> None:
         self.t += 1
@@ -103,24 +130,14 @@ class SegmentwiseAdamW:
             gsd = self.grad_store.get(key)
             if not gsd:
                 continue
-            st = self.opt_store.get(key) or {}
             with self.ld.acquire_segment(key, save_on_exit=True) as seg:
-                for pname, p in seg.named_parameters():
-                    if pname not in gsd:
-                        continue
-                    g = gsd[pname].to(self.device)
-                    if scale != 1.0:
-                        g = g * scale
-                    # opt state lives in the store (CPU on GPU runs) — move to device
-                    pst = {"exp_avg": st.get(f"{pname}.exp_avg"),
-                           "exp_avg_sq": st.get(f"{pname}.exp_avg_sq")}
-                    pst = {k: v.to(self.device) for k, v in pst.items() if v is not None}
-                    _adamw_(p.data, g, pst, self.t, self.lr, self.b1, self.b2, self.eps, self.wd)
-                    st[f"{pname}.exp_avg"] = pst["exp_avg"].to("cpu")
-                    st[f"{pname}.exp_avg_sq"] = pst["exp_avg_sq"].to("cpu")
-            self.opt_store.put(key, st)
-            del gsd, st
+                self.update_segment(key, seg, gsd, scale)
+            del gsd
 
+        self.step_shared(shared_grads, scale)
+
+    def step_shared(self, shared_grads: Dict[str, torch.Tensor],
+                    scale: float = 1.0) -> None:
         # shared params — the params themselves stay resident (used every layer), but
         # their Adam state (m,v) is PARKED on the host (self.shared_state holds CPU
         # tensors) and streamed to the device one param at a time for the update, then

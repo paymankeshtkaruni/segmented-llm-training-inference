@@ -194,7 +194,7 @@ def _val(tr, x, y, pad):
 
 
 def run_cost(preset, device, out_dir: Path, prefix, batch=4, n_steps=3, seq_len=None, from_scratch=True,
-             seg_override=None, tech=None):
+             seg_override=None, tech=None, update_style="after_full", dropout=None):
     is_cuda = str(device).startswith("cuda")
     out_dir.mkdir(parents=True, exist_ok=True)
     host_baseline = host_rss_mb()
@@ -207,7 +207,13 @@ def run_cost(preset, device, out_dir: Path, prefix, batch=4, n_steps=3, seq_len=
     mf.set_phase("build")
     tr = SegmentedTrainer(preset, device, out_dir / "_work",
                           store_kind=("cpu_ram" if is_cuda else "disk"), from_scratch=from_scratch,
-                          seg_override=seg_override, tech=tech)
+                          seg_override=seg_override, tech=tech, update_style=update_style,
+                          dropout_override=dropout)
+    imm = (update_style == "immediate")
+    # immediate: segments update during backward (no global clip possible); the
+    # "optimizer" phase then covers only the shared leftovers.
+    _opt_step = (lambda g: tr.opt.step_shared(g)) if imm \
+        else (lambda g: tr.opt.step(g, clip_norm=1.0))
     m, s = tr.m, tr.s
     seq = seq_len or m.max_seq_len
     pad = tr.tok.pad_token_id
@@ -217,7 +223,7 @@ def run_cost(preset, device, out_dir: Path, prefix, batch=4, n_steps=3, seq_len=
 
     mf.set_phase("warmup")
     xw, yw = _synth(batch, seq, m.vocab_size, pad, device, 0)
-    grw = tr.bwd.backward(xw, yw, pad_token_id=pad); tr.opt.step(grw, clip_norm=1.0)
+    grw = tr.bwd.backward(xw, yw, pad_token_id=pad); _opt_step(grw)
     del xw, yw, grw
 
     windows = []; step_times = []; last_grads = None
@@ -227,7 +233,7 @@ def run_cost(preset, device, out_dir: Path, prefix, batch=4, n_steps=3, seq_len=
         for ph, fn in [
             ("forward",    lambda: _fwd(tr, x, pad)),
             ("backward",   lambda: tr.bwd.backward(x, y, pad_token_id=pad)),
-            ("optimizer",  lambda: tr.opt.step(last_grads, clip_norm=1.0)),
+            ("optimizer",  lambda: _opt_step(last_grads)),
             ("validation", lambda: _val(tr, x, y, pad)),
         ]:
             mf.set_phase(ph)

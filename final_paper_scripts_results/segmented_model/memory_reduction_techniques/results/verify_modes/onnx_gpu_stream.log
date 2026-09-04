@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "${PROJECT_ROOT}/scripts/infer_onnx.py", line 50, in <module>
+    import onnxruntime as ort
+ModuleNotFoundError: No module named 'onnxruntime'

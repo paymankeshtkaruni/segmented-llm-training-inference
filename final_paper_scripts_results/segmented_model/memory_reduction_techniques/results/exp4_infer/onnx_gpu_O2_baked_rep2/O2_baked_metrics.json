@@ -1,0 +1,12 @@
+{
+ "run": "onnx_resident_cost",
+ "mode": "baked",
+ "provider": "CUDAExecutionProvider",
+ "prompt_len": 256,
+ "gen_tokens": 32,
+ "build_s": 6.27,
+ "prefill_plus_first_s": 1.708,
+ "per_token_s": 0.766,
+ "rss_peak_mb": 1725.7,
+ "vram_peak_mb": 11638.0
+}

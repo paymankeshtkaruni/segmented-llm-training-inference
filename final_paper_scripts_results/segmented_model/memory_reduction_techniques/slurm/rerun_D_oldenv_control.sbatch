@@ -9,13 +9,12 @@
 #SBATCH --time=02:00:00
 #SBATCH --output=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/rerun_oldenv_ctrl_%j.out
 #SBATCH --error=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/rerun_oldenv_ctrl_%j.err
-# Site-independent: export PROJECT_ROOT=<path to this repository> and, if the
-# interpreter is not on PATH, PYTHON=<interpreter> before submitting. Submit from
-# the repository root so the relative --output/--error log paths resolve.
+# Site-independent: export PROJECT_ROOT=<repo root> and, if needed,
+# PYTHON=<interpreter> before submitting from the repository root.
 set -euo pipefail
 cd "${PROJECT_ROOT:?set PROJECT_ROOT to the repo root}"
 module load gcc/13.2.0 cuda/12.8.2
-# Old-environment control: same script and workload as the 16-pinned-thread rerun but under the OLD
+# Audit D-7 control: same script and workload as job 15115043 but under the OLD
 # environment of full_model/slurm/cost.sbatch — 8 CPUs, OMP_NUM_THREADS unset,
 # no MALLOC tuning. If this reproduces ~114 s / ~33 GB, the 33.0 s / 26.9 GB
 # correction is proven to be environment-caused, not script-caused.

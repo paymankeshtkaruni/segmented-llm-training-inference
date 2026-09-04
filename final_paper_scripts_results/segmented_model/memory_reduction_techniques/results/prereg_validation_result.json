@@ -1,0 +1,30 @@
+{
+  "job": 15681815,
+  "config": "xl3b_16x4x4x16 T3",
+  "reps": [
+    {
+      "vram_mb": 1268.0,
+      "avg_step_s": 102.7
+    },
+    {
+      "vram_mb": 1268.0,
+      "avg_step_s": 102.4
+    },
+    {
+      "vram_mb": 1268.0,
+      "avg_step_s": 103.0
+    }
+  ],
+  "predicted": {
+    "time_s": 110,
+    "mem_mb": 1330
+  },
+  "measured_mean": {
+    "time_s": 102.7,
+    "mem_mb": 1268.0
+  },
+  "error": {
+    "time_pct": 7.1,
+    "mem_pct": 4.9
+  }
+}

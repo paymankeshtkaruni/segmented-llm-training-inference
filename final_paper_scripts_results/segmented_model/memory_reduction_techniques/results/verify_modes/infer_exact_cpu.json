@@ -1,0 +1,43 @@
+{
+  "run": "verify_infer_modes",
+  "preset": "large_8x2x2x8",
+  "note": "greedy tokens vs reference full model; identical weights; random-id prompts, fixed decode length",
+  "results": [
+    {
+      "mode": "I1_resident_cache",
+      "tech_code": "11100111000",
+      "prefill_hidden_max_delta": 3.5762786865234375e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "n_prompts": 5,
+      "new_tokens": 20
+    },
+    {
+      "mode": "I2_resident_nocache",
+      "tech_code": "11100111001",
+      "prefill_hidden_max_delta": 3.5762786865234375e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "n_prompts": 5,
+      "new_tokens": 20
+    },
+    {
+      "mode": "I3_streaming_cache",
+      "tech_code": "11101111100",
+      "prefill_hidden_max_delta": 3.5762786865234375e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "n_prompts": 5,
+      "new_tokens": 20
+    },
+    {
+      "mode": "I4_streaming_nocache",
+      "tech_code": "11101111101",
+      "prefill_hidden_max_delta": 3.5762786865234375e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "n_prompts": 5,
+      "new_tokens": 20
+    }
+  ]
+}

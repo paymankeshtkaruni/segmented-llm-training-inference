@@ -1,0 +1,7 @@
+Highlights
+
+- LLMs train and serve on devices far too small to hold them, one segment at a time
+- A 6.9B model trains on a CPU-only node in 9.3 GB of RAM, or on one 40 GB GPU
+- 0.84B trains in 1.08 GB device memory, 20x below the DeepSpeed ZeRO-Offload floor
+- All 12 training and 4 inference modes are verified to compute the same model
+- Smallest serving mode answers queries in 401 MB, with no GPU and no PyTorch

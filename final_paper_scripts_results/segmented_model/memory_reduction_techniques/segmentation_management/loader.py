@@ -15,6 +15,7 @@ the right sliced dimensions (segments.py). The loader never builds the full mode
 from __future__ import annotations
 
 import gc
+import random
 from contextlib import contextmanager
 from typing import Optional
 
@@ -105,10 +106,22 @@ class StrictSegmentLoader:
         # W_o with segment_wo OFF) — the cached module is the source of truth, store bypassed.
         if self._is_resident(key) and key in self._resident:
             self._active, self._active_key = self._resident[key], key
+            # re-apply the CURRENT train/eval flag: the cached module keeps the flag it
+            # was built with, so an eval->train transition would otherwise leave its
+            # internal dropouts silently off (caught by X1: T3-vs-T1 grad delta 3.3e-3).
+            self._active.train(self.training)
             if self.profiler is not None:
                 self.profiler.on_load(key)
             return self._active
+        # RNG-neutral build (mirrors execution/rng.py capture/restore): module
+        # constructors CONSUME the global CPU RNG for their immediately-overwritten
+        # init draws. On CPU, dropout masks draw from that same generator, so an
+        # unpreserved build makes a streaming run draw different masks than a
+        # resident run (caught by X1: CPU T3-vs-T1 grad delta 3.8e-3). Constructors
+        # never touch CUDA RNG, so only CPU/python state needs preserving.
+        _py_state, _cpu_state = random.getstate(), torch.get_rng_state()
         module = build_segment(key, self.model, self.seg)
+        random.setstate(_py_state); torch.set_rng_state(_cpu_state)
         sd = self.store.get(key)
         if sd is not None:
             module.load_state_dict(sd, strict=True)

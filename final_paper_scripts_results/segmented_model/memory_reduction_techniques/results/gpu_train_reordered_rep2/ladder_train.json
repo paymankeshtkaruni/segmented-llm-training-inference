@@ -1,0 +1,131 @@
+{
+  "run": "train_incremental_ablation",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "batch": 4,
+  "n_steps": 3,
+  "metric_notes": "vram_peak_mb = no-miss total VRAM (context+reserved); rss_peak_mb = no-miss host RSS; step_time_s = avg over steps",
+  "ladder": [
+    {
+      "rung": "r0_baseline",
+      "adds": "naive segmented \u2014 all techniques OFF",
+      "tech_code": "00000000000",
+      "vram_peak_mb": 18244.0,
+      "rss_peak_mb": 21393.9,
+      "step_time_s": 8.14,
+      "fwd_ms": 334.5,
+      "bwd_ms": 1196.7,
+      "opt_ms": 6179.7
+    },
+    {
+      "rung": "r1_sdpa",
+      "adds": "SDPA attention (no full score matrix)",
+      "tech_code": "10000000000",
+      "vram_peak_mb": 12248.0,
+      "rss_peak_mb": 21372.2,
+      "step_time_s": 8.21,
+      "fwd_ms": 323.6,
+      "bwd_ms": 1344.1,
+      "opt_ms": 6018.2
+    },
+    {
+      "rung": "r2_mlp_sum",
+      "adds": "MLP running-sum (no full d_ff hidden)",
+      "tech_code": "11000000000",
+      "vram_peak_mb": 12288.0,
+      "rss_peak_mb": 21885.7,
+      "step_time_s": 7.98,
+      "fwd_ms": 271.7,
+      "bwd_ms": 1192.2,
+      "opt_ms": 6027.9
+    },
+    {
+      "rung": "r3_chunked_ce",
+      "adds": "streamed chunked cross-entropy (no full logits)",
+      "tech_code": "11100000000",
+      "vram_peak_mb": 11488.0,
+      "rss_peak_mb": 21490.5,
+      "step_time_s": 8.06,
+      "fwd_ms": 277.6,
+      "bwd_ms": 1070.5,
+      "opt_ms": 6300.7
+    },
+    {
+      "rung": "r4_recompute",
+      "adds": "backward by recomputation (no full autograd graph)",
+      "tech_code": "11110000000",
+      "vram_peak_mb": 4884.0,
+      "rss_peak_mb": 22639.5,
+      "step_time_s": 8.29,
+      "fwd_ms": 272.6,
+      "bwd_ms": 1439.4,
+      "opt_ms": 6054.4
+    },
+    {
+      "rung": "r5_records",
+      "adds": "offload layer-input records (depth-independent)",
+      "tech_code": "11110100000",
+      "vram_peak_mb": 4490.0,
+      "rss_peak_mb": 22010.6,
+      "step_time_s": 8.22,
+      "fwd_ms": 270.3,
+      "bwd_ms": 1728.5,
+      "opt_ms": 5739.9
+    },
+    {
+      "rung": "r6_park_grads",
+      "adds": "park shared/W_o grads on host",
+      "tech_code": "11110110000",
+      "vram_peak_mb": 4490.0,
+      "rss_peak_mb": 21951.6,
+      "step_time_s": 8.19,
+      "fwd_ms": 272.6,
+      "bwd_ms": 1801.8,
+      "opt_ms": 5661.7
+    },
+    {
+      "rung": "r7_offload_adam",
+      "adds": "offload shared Adam state to host",
+      "tech_code": "11110111000",
+      "vram_peak_mb": 4488.0,
+      "rss_peak_mb": 22513.6,
+      "step_time_s": 8.15,
+      "fwd_ms": 275.6,
+      "bwd_ms": 1826.7,
+      "opt_ms": 5620.6
+    },
+    {
+      "rung": "r8_segment_wo",
+      "adds": "stream W_o as a segment (resident floor 243->17 MB)",
+      "tech_code": "11110111100",
+      "vram_peak_mb": 4488.0,
+      "rss_peak_mb": 21828.9,
+      "step_time_s": 8.17,
+      "fwd_ms": 275.5,
+      "bwd_ms": 1853.1,
+      "opt_ms": 5648.3
+    },
+    {
+      "rung": "r9_stream",
+      "adds": "stream segments off-device (one resident)",
+      "tech_code": "11111111100",
+      "vram_peak_mb": 1080.0,
+      "rss_peak_mb": 20689.6,
+      "step_time_s": 30.57,
+      "fwd_ms": 4095.0,
+      "bwd_ms": 11152.5,
+      "opt_ms": 10054.0
+    },
+    {
+      "rung": "r10_free_device",
+      "adds": "free_device / allocator hygiene on release",
+      "tech_code": "11111111110",
+      "vram_peak_mb": 964.0,
+      "rss_peak_mb": 19696.8,
+      "step_time_s": 146.73,
+      "fwd_ms": 23815.3,
+      "bwd_ms": 64388.6,
+      "opt_ms": 30598.9
+    }
+  ]
+}

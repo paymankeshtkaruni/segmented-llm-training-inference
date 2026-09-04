@@ -18,7 +18,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from techniques import Tech
-from seg_cost_lib import run_cost
+from measure_one import run_isolated   # fresh process per config: no allocator residue
 
 # independently-droppable techniques (recompute excluded — prerequisite for streaming)
 TRAIN_LOO = ["sdpa", "mlp_running_sum", "chunked_ce", "stream_segments", "offload_records",
@@ -68,12 +68,22 @@ def _run_loo(preset, device, out_dir: Path, kind, flags, run_fn, ref_kwargs):
     return rows
 
 
+def _isolated_train(preset, device, out_dir, prefix, tech, batch=4, n_steps=3, from_scratch=True):
+    return run_isolated("train", preset, device, out_dir, prefix, tech,
+                        batch=batch, n_steps=n_steps)
+
+
+def _isolated_infer(preset, device, out_dir, prefix, tech, prompt_len=256, gen_tokens=8,
+                    from_scratch=True):
+    return run_isolated("infer", preset, device, out_dir, prefix, tech,
+                        prompt_len=prompt_len, gen_tokens=gen_tokens)
+
+
 def run_train_loo(preset, device, out_dir, batch=4, n_steps=3):
-    return _run_loo(preset, device, out_dir, "train", TRAIN_LOO, run_cost,
+    return _run_loo(preset, device, out_dir, "train", TRAIN_LOO, _isolated_train,
                     {"batch": batch, "n_steps": n_steps, "from_scratch": True})
 
 
 def run_infer_loo(preset, device, out_dir, prompt_len=256, gen_tokens=8):
-    from infer_cost_lib import run_infer_cost
-    return _run_loo(preset, device, out_dir, "infer", INFER_LOO, run_infer_cost,
+    return _run_loo(preset, device, out_dir, "infer", INFER_LOO, _isolated_infer,
                     {"prompt_len": prompt_len, "gen_tokens": gen_tokens, "from_scratch": True})

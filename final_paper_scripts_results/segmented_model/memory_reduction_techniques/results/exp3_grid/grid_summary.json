@@ -1,0 +1,1038 @@
+{
+ "run": "exp3_12mode_grid",
+ "protocol": "batch4 seq512 3steps, medians of 3 reps, pinned A100-40 / corrected CPU",
+ "modes": {
+  "T1": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 19692.0,
+    "step_s": 84.04,
+    "opt_phase_s": 27.87,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 19740.2,
+      "step_s": 79.46137391294663,
+      "phases_ms": {
+       "forward": 14592.6,
+       "backward": 31797.6,
+       "optimizer": 26965.7,
+       "validation": 5870.2
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 19691.3,
+      "step_s": 84.04338919301517,
+      "phases_ms": {
+       "forward": 14532.9,
+       "backward": 31958.8,
+       "optimizer": 27873.0,
+       "validation": 5987.6
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 19692.0,
+      "step_s": 86.16471756342798,
+      "phases_ms": {
+       "forward": 14738.1,
+       "backward": 34308.9,
+       "optimizer": 33842.5,
+       "validation": 5982.0
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 11486.0,
+    "rss_mb": 19790.2,
+    "step_s": 5.77,
+    "opt_phase_s": 4.13,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 11486.0,
+      "rss": 19351.4,
+      "step_s": 5.747946082303922,
+      "phases_ms": {
+       "forward": 283.0,
+       "backward": 988.4,
+       "optimizer": 4111.8,
+       "validation": 320.7
+      }
+     },
+     {
+      "vram": 11486.0,
+      "rss": 19994.6,
+      "step_s": 5.7853411839654045,
+      "phases_ms": {
+       "forward": 278.1,
+       "backward": 995.9,
+       "optimizer": 4149.7,
+       "validation": 320.2
+      }
+     },
+     {
+      "vram": 11486.0,
+      "rss": 19790.2,
+      "step_s": 5.768955287989229,
+      "phases_ms": {
+       "forward": 270.5,
+       "backward": 981.8,
+       "optimizer": 4127.3,
+       "validation": 308.7
+      }
+     }
+    ]
+   }
+  },
+  "T2": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 4519.6,
+    "step_s": 113.88,
+    "opt_phase_s": 27.12,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 4461.9,
+      "step_s": 106.33730542031117,
+      "phases_ms": {
+       "forward": 14523.0,
+       "backward": 58827.5,
+       "optimizer": 26757.3,
+       "validation": 5899.0
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4519.6,
+      "step_s": 113.88233668760707,
+      "phases_ms": {
+       "forward": 14621.2,
+       "backward": 62350.6,
+       "optimizer": 27118.8,
+       "validation": 5893.3
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4574.6,
+      "step_s": 116.8127032269258,
+      "phases_ms": {
+       "forward": 14616.9,
+       "backward": 66827.1,
+       "optimizer": 29620.4,
+       "validation": 5949.2
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4488.0,
+    "rss_mb": 20864.3,
+    "step_s": 6.41,
+    "opt_phase_s": 4.07,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 4488.0,
+      "rss": 20796.4,
+      "step_s": 6.325672572323431,
+      "phases_ms": {
+       "forward": 269.0,
+       "backward": 1582.2,
+       "optimizer": 4038.6,
+       "validation": 305.0
+      }
+     },
+     {
+      "vram": 4488.0,
+      "rss": 20958.8,
+      "step_s": 6.411702994955704,
+      "phases_ms": {
+       "forward": 274.0,
+       "backward": 1598.2,
+       "optimizer": 4066.1,
+       "validation": 313.8
+      }
+     },
+     {
+      "vram": 4488.0,
+      "rss": 20864.3,
+      "step_s": 6.456272130599245,
+      "phases_ms": {
+       "forward": 281.1,
+       "backward": 1597.8,
+       "optimizer": 4199.8,
+       "validation": 317.4
+      }
+     }
+    ]
+   }
+  },
+  "T3": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 1288.4,
+    "step_s": 155.56,
+    "opt_phase_s": 35.82,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 1359.1,
+      "step_s": 146.12173731919998,
+      "phases_ms": {
+       "forward": 21314.7,
+       "backward": 76461.4,
+       "optimizer": 34169.2,
+       "validation": 14391.8
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1178.9,
+      "step_s": 155.5635649576628,
+      "phases_ms": {
+       "forward": 21656.0,
+       "backward": 86269.3,
+       "optimizer": 35821.6,
+       "validation": 14553.3
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1288.4,
+      "step_s": 157.11275226560733,
+      "phases_ms": {
+       "forward": 21673.4,
+       "backward": 85020.5,
+       "optimizer": 40945.3,
+       "validation": 14262.8
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 1080.0,
+    "rss_mb": 19832.6,
+    "step_s": 28.27,
+    "opt_phase_s": 8.24,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 1080.0,
+      "rss": 19499.3,
+      "step_s": 28.24303221524072,
+      "phases_ms": {
+       "forward": 3929.0,
+       "backward": 10865.5,
+       "optimizer": 8183.6,
+       "validation": 5124.4
+      }
+     },
+     {
+      "vram": 1080.0,
+      "rss": 20190.4,
+      "step_s": 28.288392271303263,
+      "phases_ms": {
+       "forward": 3968.5,
+       "backward": 11040.0,
+       "optimizer": 8260.0,
+       "validation": 5128.4
+      }
+     },
+     {
+      "vram": 1080.0,
+      "rss": 19832.6,
+      "step_s": 28.27193324198015,
+      "phases_ms": {
+       "forward": 3930.1,
+       "backward": 10879.9,
+       "optimizer": 8240.7,
+       "validation": 5117.5
+      }
+     }
+    ]
+   }
+  },
+  "T4": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 10735.7,
+    "step_s": 66.63,
+    "opt_phase_s": 29.73,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 10708.1,
+      "step_s": 60.23048601462506,
+      "phases_ms": {
+       "forward": 5386.2,
+       "backward": 22174.5,
+       "optimizer": 26891.6,
+       "validation": 5857.0
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 10735.7,
+      "step_s": 68.17592913269375,
+      "phases_ms": {
+       "forward": 5418.8,
+       "backward": 25407.2,
+       "optimizer": 29725.2,
+       "validation": 5945.4
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 10752.3,
+      "step_s": 66.63096907098468,
+      "phases_ms": {
+       "forward": 5392.2,
+       "backward": 23664.8,
+       "optimizer": 34515.7,
+       "validation": 5920.5
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 11316.0,
+    "rss_mb": 20704.0,
+    "step_s": 5.76,
+    "opt_phase_s": 4.1,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 11316.0,
+      "rss": 20333.7,
+      "step_s": 5.750013084694122,
+      "phases_ms": {
+       "forward": 274.0,
+       "backward": 971.8,
+       "optimizer": 4149.0,
+       "validation": 320.8
+      }
+     },
+     {
+      "vram": 11316.0,
+      "rss": 20742.5,
+      "step_s": 5.762981556666394,
+      "phases_ms": {
+       "forward": 274.6,
+       "backward": 982.4,
+       "optimizer": 4091.5,
+       "validation": 310.7
+      }
+     },
+     {
+      "vram": 11316.0,
+      "rss": 20704.0,
+      "step_s": 5.816558681583653,
+      "phases_ms": {
+       "forward": 281.2,
+       "backward": 973.8,
+       "optimizer": 4100.9,
+       "validation": 313.7
+      }
+     }
+    ]
+   }
+  },
+  "T5": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 4694.1,
+    "step_s": 75.97,
+    "opt_phase_s": 28.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 4694.1,
+      "step_s": 70.03262773932268,
+      "phases_ms": {
+       "forward": 5439.7,
+       "backward": 31731.8,
+       "optimizer": 26900.0,
+       "validation": 5746.8
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4518.9,
+      "step_s": 79.2034351406619,
+      "phases_ms": {
+       "forward": 5407.4,
+       "backward": 36080.3,
+       "optimizer": 33426.4,
+       "validation": 5951.4
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4896.3,
+      "step_s": 75.97279699294207,
+      "phases_ms": {
+       "forward": 5351.3,
+       "backward": 33796.6,
+       "optimizer": 28027.2,
+       "validation": 5866.5
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4464.0,
+    "rss_mb": 21242.3,
+    "step_s": 6.43,
+    "opt_phase_s": 4.17,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 4464.0,
+      "rss": 21862.7,
+      "step_s": 6.441182669329767,
+      "phases_ms": {
+       "forward": 266.3,
+       "backward": 1561.5,
+       "optimizer": 4270.7,
+       "validation": 309.9
+      }
+     },
+     {
+      "vram": 4464.0,
+      "rss": 20580.8,
+      "step_s": 6.397240709513426,
+      "phases_ms": {
+       "forward": 282.3,
+       "backward": 1559.0,
+       "optimizer": 4170.3,
+       "validation": 318.1
+      }
+     },
+     {
+      "vram": 4464.0,
+      "rss": 21242.3,
+      "step_s": 6.4303641426377,
+      "phases_ms": {
+       "forward": 276.9,
+       "backward": 1561.2,
+       "optimizer": 4172.1,
+       "validation": 320.1
+      }
+     }
+    ]
+   }
+  },
+  "T6": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 1304.3,
+    "step_s": 119.19,
+    "opt_phase_s": 40.45,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 1303.2,
+      "step_s": 113.72929985332303,
+      "phases_ms": {
+       "forward": 12086.2,
+       "backward": 55046.3,
+       "optimizer": 42292.8,
+       "validation": 14248.3
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1378.8,
+      "step_s": 119.52058636940394,
+      "phases_ms": {
+       "forward": 12356.8,
+       "backward": 54668.1,
+       "optimizer": 40453.3,
+       "validation": 14589.3
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1304.3,
+      "step_s": 119.18703155700739,
+      "phases_ms": {
+       "forward": 12147.4,
+       "backward": 53836.7,
+       "optimizer": 40206.6,
+       "validation": 14269.1
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 1030.0,
+    "rss_mb": 19576.4,
+    "step_s": 28.26,
+    "opt_phase_s": 8.29,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 1030.0,
+      "rss": 19493.5,
+      "step_s": 28.18058287220386,
+      "phases_ms": {
+       "forward": 3950.6,
+       "backward": 10868.9,
+       "optimizer": 8127.4,
+       "validation": 5183.8
+      }
+     },
+     {
+      "vram": 1030.0,
+      "rss": 20492.1,
+      "step_s": 28.56908373069018,
+      "phases_ms": {
+       "forward": 3969.2,
+       "backward": 11056.7,
+       "optimizer": 8400.2,
+       "validation": 5177.7
+      }
+     },
+     {
+      "vram": 1030.0,
+      "rss": 19576.4,
+      "step_s": 28.261391931058217,
+      "phases_ms": {
+       "forward": 3926.6,
+       "backward": 10856.2,
+       "optimizer": 8293.4,
+       "validation": 5126.3
+      }
+     }
+    ]
+   }
+  },
+  "T7": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 19701.6,
+    "step_s": 71.99,
+    "opt_phase_s": 0.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 19695.4,
+      "step_s": 69.87027925462462,
+      "phases_ms": {
+       "forward": 14781.5,
+       "backward": 49030.0,
+       "optimizer": 27.0,
+       "validation": 6144.5
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 19701.6,
+      "step_s": 73.22007310957027,
+      "phases_ms": {
+       "forward": 14800.0,
+       "backward": 51241.9,
+       "optimizer": 30.0,
+       "validation": 5894.1
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 19737.3,
+      "step_s": 71.98857765637028,
+      "phases_ms": {
+       "forward": 14864.0,
+       "backward": 48307.4,
+       "optimizer": 24.8,
+       "validation": 6039.0
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 11454.0,
+    "rss_mb": 18961.6,
+    "step_s": 3.89,
+    "opt_phase_s": 0.11,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 11454.0,
+      "rss": 18158.0,
+      "step_s": 3.903606208972633,
+      "phases_ms": {
+       "forward": 275.1,
+       "backward": 3132.3,
+       "optimizer": 105.5,
+       "validation": 314.6
+      }
+     },
+     {
+      "vram": 11454.0,
+      "rss": 18961.6,
+      "step_s": 3.8825291813506433,
+      "phases_ms": {
+       "forward": 273.3,
+       "backward": 3110.1,
+       "optimizer": 107.5,
+       "validation": 311.9
+      }
+     },
+     {
+      "vram": 11454.0,
+      "rss": 19017.2,
+      "step_s": 3.886914488316203,
+      "phases_ms": {
+       "forward": 271.6,
+       "backward": 3108.9,
+       "optimizer": 104.7,
+       "validation": 311.5
+      }
+     }
+    ]
+   }
+  },
+  "T8": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 4568.7,
+    "step_s": 106.08,
+    "opt_phase_s": 0.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 4568.5,
+      "step_s": 97.00173084499936,
+      "phases_ms": {
+       "forward": 14804.1,
+       "backward": 76243.3,
+       "optimizer": 25.3,
+       "validation": 6058.5
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4734.9,
+      "step_s": 106.08358858564559,
+      "phases_ms": {
+       "forward": 14980.0,
+       "backward": 84385.8,
+       "optimizer": 26.5,
+       "validation": 6168.4
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4568.7,
+      "step_s": 107.83955939432296,
+      "phases_ms": {
+       "forward": 14867.5,
+       "backward": 85777.4,
+       "optimizer": 28.8,
+       "validation": 6014.5
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4608.0,
+    "rss_mb": 17556.4,
+    "step_s": 3.94,
+    "opt_phase_s": 0.1,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 4616.0,
+      "rss": 17556.4,
+      "step_s": 3.915744475244234,
+      "phases_ms": {
+       "forward": 267.6,
+       "backward": 3209.9,
+       "optimizer": 104.4,
+       "validation": 307.2
+      }
+     },
+     {
+      "vram": 4608.0,
+      "rss": 17675.6,
+      "step_s": 3.9447639932235083,
+      "phases_ms": {
+       "forward": 270.7,
+       "backward": 3223.6,
+       "optimizer": 101.4,
+       "validation": 300.8
+      }
+     },
+     {
+      "vram": 4608.0,
+      "rss": 17236.9,
+      "step_s": 3.9586961589908847,
+      "phases_ms": {
+       "forward": 277.1,
+       "backward": 3239.7,
+       "optimizer": 105.7,
+       "validation": 314.3
+      }
+     }
+    ]
+   }
+  },
+  "T9": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 1388.0,
+    "step_s": 136.17,
+    "opt_phase_s": 0.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 1375.6,
+      "step_s": 130.06987565973154,
+      "phases_ms": {
+       "forward": 21883.2,
+       "backward": 93547.7,
+       "optimizer": 27.0,
+       "validation": 14814.4
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1432.4,
+      "step_s": 136.17038232507184,
+      "phases_ms": {
+       "forward": 21858.5,
+       "backward": 96453.6,
+       "optimizer": 27.5,
+       "validation": 14854.0
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1388.0,
+      "step_s": 137.06496478500776,
+      "phases_ms": {
+       "forward": 21845.3,
+       "backward": 96981.4,
+       "optimizer": 25.5,
+       "validation": 14764.8
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 1158.0,
+    "rss_mb": 15828.1,
+    "step_s": 21.69,
+    "opt_phase_s": 0.11,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 1158.0,
+      "rss": 15601.3,
+      "step_s": 21.694034370904166,
+      "phases_ms": {
+       "forward": 3932.5,
+       "backward": 12444.1,
+       "optimizer": 106.4,
+       "validation": 5118.5
+      }
+     },
+     {
+      "vram": 1158.0,
+      "rss": 15828.1,
+      "step_s": 21.654114667015772,
+      "phases_ms": {
+       "forward": 3945.2,
+       "backward": 12363.2,
+       "optimizer": 107.9,
+       "validation": 5109.1
+      }
+     },
+     {
+      "vram": 1158.0,
+      "rss": 16618.7,
+      "step_s": 21.747440851603944,
+      "phases_ms": {
+       "forward": 3963.5,
+       "backward": 12448.7,
+       "optimizer": 103.3,
+       "validation": 5142.6
+      }
+     }
+    ]
+   }
+  },
+  "T10": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 10747.2,
+    "step_s": 54.05,
+    "opt_phase_s": 0.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 10716.5,
+      "step_s": 49.85738066964162,
+      "phases_ms": {
+       "forward": 5461.6,
+       "backward": 38682.0,
+       "optimizer": 25.3,
+       "validation": 6061.0
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 10747.2,
+      "step_s": 56.34498990963524,
+      "phases_ms": {
+       "forward": 5421.1,
+       "backward": 44767.5,
+       "optimizer": 23.5,
+       "validation": 5924.5
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 10779.5,
+      "step_s": 54.05063250738507,
+      "phases_ms": {
+       "forward": 5365.5,
+       "backward": 42440.5,
+       "optimizer": 33.2,
+       "validation": 5887.4
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 11284.0,
+    "rss_mb": 18013.4,
+    "step_s": 3.87,
+    "opt_phase_s": 0.11,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 11284.0,
+      "rss": 18013.4,
+      "step_s": 3.8917915023242435,
+      "phases_ms": {
+       "forward": 275.3,
+       "backward": 3108.6,
+       "optimizer": 108.8,
+       "validation": 318.4
+      }
+     },
+     {
+      "vram": 11284.0,
+      "rss": 18080.8,
+      "step_s": 3.8701573972745487,
+      "phases_ms": {
+       "forward": 270.3,
+       "backward": 3099.4,
+       "optimizer": 109.3,
+       "validation": 317.9
+      }
+     },
+     {
+      "vram": 11284.0,
+      "rss": 17964.0,
+      "step_s": 3.841044225419561,
+      "phases_ms": {
+       "forward": 271.6,
+       "backward": 3089.6,
+       "optimizer": 106.7,
+       "validation": 312.3
+      }
+     }
+    ]
+   }
+  },
+  "T11": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 4669.2,
+    "step_s": 66.13,
+    "opt_phase_s": 0.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 4669.2,
+      "step_s": 59.754414333341025,
+      "phases_ms": {
+       "forward": 5449.7,
+       "backward": 48129.3,
+       "optimizer": 26.3,
+       "validation": 6139.2
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4546.6,
+      "step_s": 67.00445407566924,
+      "phases_ms": {
+       "forward": 5477.8,
+       "backward": 53965.0,
+       "optimizer": 27.1,
+       "validation": 5994.4
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 4745.8,
+      "step_s": 66.12558069569059,
+      "phases_ms": {
+       "forward": 5456.7,
+       "backward": 54273.0,
+       "optimizer": 28.1,
+       "validation": 5948.4
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 4584.0,
+    "rss_mb": 17800.3,
+    "step_s": 3.92,
+    "opt_phase_s": 0.11,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 4584.0,
+      "rss": 17800.3,
+      "step_s": 3.9224716344227395,
+      "phases_ms": {
+       "forward": 273.6,
+       "backward": 3226.8,
+       "optimizer": 104.0,
+       "validation": 307.6
+      }
+     },
+     {
+      "vram": 4592.0,
+      "rss": 17542.8,
+      "step_s": 3.883537067255626,
+      "phases_ms": {
+       "forward": 275.0,
+       "backward": 3132.0,
+       "optimizer": 106.5,
+       "validation": 315.4
+      }
+     },
+     {
+      "vram": 4584.0,
+      "rss": 17932.4,
+      "step_s": 3.9262446000551185,
+      "phases_ms": {
+       "forward": 277.7,
+       "backward": 3228.0,
+       "optimizer": 105.2,
+       "validation": 317.6
+      }
+     }
+    ]
+   }
+  },
+  "T12": {
+   "cpu": {
+    "vram_mb": 0,
+    "rss_mb": 1373.7,
+    "step_s": 101.11,
+    "opt_phase_s": 0.03,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 0.0,
+      "rss": 1373.7,
+      "step_s": 92.30864812200889,
+      "phases_ms": {
+       "forward": 12473.1,
+       "backward": 65055.9,
+       "optimizer": 25.8,
+       "validation": 14710.4
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1471.8,
+      "step_s": 101.11116415269983,
+      "phases_ms": {
+       "forward": 12516.9,
+       "backward": 72285.6,
+       "optimizer": 27.1,
+       "validation": 14808.2
+      }
+     },
+     {
+      "vram": 0.0,
+      "rss": 1364.1,
+      "step_s": 102.82813997357152,
+      "phases_ms": {
+       "forward": 12513.2,
+       "backward": 71613.9,
+       "optimizer": 25.9,
+       "validation": 14796.1
+      }
+     }
+    ]
+   },
+   "gpu": {
+    "vram_mb": 1126.0,
+    "rss_mb": 16268.6,
+    "step_s": 21.69,
+    "opt_phase_s": 0.11,
+    "n": 3,
+    "reps": [
+     {
+      "vram": 1126.0,
+      "rss": 15870.7,
+      "step_s": 21.763008041695382,
+      "phases_ms": {
+       "forward": 4022.6,
+       "backward": 12392.3,
+       "optimizer": 106.3,
+       "validation": 5182.1
+      }
+     },
+     {
+      "vram": 1126.0,
+      "rss": 16433.7,
+      "step_s": 21.605524462259684,
+      "phases_ms": {
+       "forward": 3940.1,
+       "backward": 12341.9,
+       "optimizer": 105.1,
+       "validation": 5120.8
+      }
+     },
+     {
+      "vram": 1126.0,
+      "rss": 16268.6,
+      "step_s": 21.69485696738896,
+      "phases_ms": {
+       "forward": 3918.9,
+       "backward": 12426.6,
+       "optimizer": 106.1,
+       "validation": 5146.5
+      }
+     }
+    ]
+   }
+  }
+ }
+}

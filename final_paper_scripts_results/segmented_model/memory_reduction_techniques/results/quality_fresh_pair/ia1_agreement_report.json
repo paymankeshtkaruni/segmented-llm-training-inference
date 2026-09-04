@@ -1,0 +1,9 @@
+{
+  "run": "ia1_onnx_torch_agreement",
+  "n_test": 11654,
+  "agreement_text": 1.0,
+  "agreement_token_ids": 1.0,
+  "n_disagreements_text": 0,
+  "n_disagreements_token_ids": 0,
+  "margin_rows": []
+}

@@ -7,24 +7,18 @@
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:A100:1
 #SBATCH --constraint=40gb_vram
-# NOTE: on this cluster --constraint=40gb_vram means ">= 40 GB VRAM", so the
-# 80 GB A100 nodes satisfy it too. Selecting the true A100-40 class therefore also
-# needs an explicit exclusion of the 80 GB-class nodes; re-add a site-specific
-#   #SBATCH --exclude=<comma-separated names of the 80 GB-class nodes>
-# directive here. Independently of node selection, every run records the device
-# capacity in its metrics JSON (40442 MB = the 40 GB class), so the node class of
-# each committed result is verifiable after the fact.
+# (site note: pin to one homogeneous node pool at your site;
+#  the original runs excluded non-matching nodes here)
 #SBATCH --time=01:30:00
 #SBATCH --output=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/rerun_gpu_infer_a40_%j.out
 #SBATCH --error=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/rerun_gpu_infer_a40_%j.err
-# Site-independent: export PROJECT_ROOT=<path to this repository> and, if the
-# interpreter is not on PATH, PYTHON=<interpreter> before submitting. Submit from
-# the repository root so the relative --output/--error log paths resolve.
+# Site-independent: export PROJECT_ROOT=<repo root> and, if needed,
+# PYTHON=<interpreter> before submitting from the repository root.
 set -euo pipefail
 cd "${PROJECT_ROOT:?set PROJECT_ROOT to the repo root}"
 module load gcc/13.2.0 cuda/12.8.2
-# Node-class consistency: the original GPU segmented-inference ladder
-# landed on an A100-80 while all its comparison partners are A100-40.
+# Audit SEV-2 #5: the original GPU segmented-inference ladder (job 14640777)
+# landed on an A100-80 (ggpu144) while all its comparison partners are A100-40.
 # Same 8-CPU/unset-OMP env as the whole GPU job family; only the node class is
 # pinned via --constraint=40gb_vram.
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONUNBUFFERED=1

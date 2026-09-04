@@ -1,0 +1,30 @@
+{
+ "run": "full_cost_scale",
+ "mode": "train",
+ "preset": "xl5b_8x2x2x8",
+ "device": "cuda",
+ "model_config": {
+  "vocab_size": 50257,
+  "max_seq_len": 512,
+  "n_layers": 36,
+  "d_model": 3328,
+  "n_heads": 26,
+  "d_ff": 13312,
+  "dropout": 0.1,
+  "architecture": "gpt_decoder",
+  "pad_token_id": null,
+  "eos_token_id": null
+ },
+ "params_estimate_million": 5120.866816,
+ "batch_size": 4,
+ "seq_len": 512,
+ "n_steps": 3,
+ "device_total_mb": 81153.8,
+ "measurement": "reference full model (src GPTDecoder), standard resident execution; mirrors full_model/scripts/_cost_lib.py conventions",
+ "oom": true,
+ "oom_stage": "warmup",
+ "error": "OutOfMemoryError: CUDA out of memory. Tried to allocate 640.00 MiB. GPU 0 has a total capacity of 79.25 GiB of which 379.69 MiB is free. Including non-PyTorch memory, this process has 78.87 GiB memory in use. Of the allocated memory 76.40 GiB is allocated by PyTorch, and 1.97 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+ "vram_alloc_at_oom_mb": 78238.0,
+ "vram_reserved_at_oom_mb": 80556.0,
+ "rss_peak_sampled_mb": 20109.9
+}

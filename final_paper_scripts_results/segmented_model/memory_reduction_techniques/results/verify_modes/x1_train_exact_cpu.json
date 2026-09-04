@@ -1,0 +1,190 @@
+{
+  "run": "x1_training_exactness",
+  "preset": "large_8x2x2x8",
+  "device": "cpu",
+  "store": "disk",
+  "batch": 2,
+  "seq": 512,
+  "note": "12 modes: dropout x recompute x streaming x update style. Dropout rows: determinism + cross-mode grads vs T1 anchor. No-dropout rows: identity vs reference under the mode's own protocol (after_full: global clip 1.0; immediate: no clip), incl. all-parameter step checks",
+  "results": [
+    {
+      "mode": "T1_drop_resident_after",
+      "tech_code": "11100111000",
+      "dropout": 0.1,
+      "update_style": "after_full",
+      "note": "gradient-level checks; update style cannot alter gradients",
+      "eval_forward_hidden_max_delta": 3.7550926208496094e-06,
+      "determinism_deltas": {
+        "mlp_chunk0_L0": 0.0,
+        "attn_q_seg0_L0": 0.0,
+        "output_head_seg0": 0.0,
+        "final_norm_w": 0.0
+      },
+      "determinism_max_delta": 0.0
+    },
+    {
+      "mode": "T2_drop_recompute_after",
+      "tech_code": "11110111000",
+      "dropout": 0.1,
+      "update_style": "after_full",
+      "note": "gradient-level checks; update style cannot alter gradients",
+      "eval_forward_hidden_max_delta": 3.7550926208496094e-06,
+      "determinism_deltas": {
+        "mlp_chunk0_L0": 0.0,
+        "attn_q_seg0_L0": 0.0,
+        "output_head_seg0": 0.0,
+        "final_norm_w": 0.0
+      },
+      "determinism_max_delta": 0.0,
+      "vs_T1_anchor_deltas": {
+        "mlp_chunk0_L0": 1.8044374883174896e-09,
+        "attn_q_seg0_L0": 4.3655745685100555e-10,
+        "output_head_seg0": 6.984919309616089e-10,
+        "final_norm_w": 6.984919309616089e-10
+      },
+      "vs_T1_anchor_max_delta": 1.8044374883174896e-09
+    },
+    {
+      "mode": "T3_drop_streaming_after",
+      "tech_code": "11111111100",
+      "dropout": 0.1,
+      "update_style": "after_full",
+      "note": "gradient-level checks; update style cannot alter gradients",
+      "eval_forward_hidden_max_delta": 3.7550926208496094e-06,
+      "determinism_deltas": {
+        "mlp_chunk0_L0": 0.0,
+        "attn_q_seg0_L0": 0.0,
+        "output_head_seg0": 0.0,
+        "final_norm_w": 0.0
+      },
+      "determinism_max_delta": 0.0,
+      "vs_T1_anchor_deltas": {
+        "mlp_chunk0_L0": 1.8044374883174896e-09,
+        "attn_q_seg0_L0": 4.3655745685100555e-10,
+        "output_head_seg0": 6.984919309616089e-10,
+        "final_norm_w": 6.984919309616089e-10
+      },
+      "vs_T1_anchor_max_delta": 1.8044374883174896e-09
+    },
+    {
+      "mode": "T4_nodrop_resident_after",
+      "tech_code": "11100111000",
+      "dropout": 0.0,
+      "update_style": "after_full",
+      "clip": 1.0,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 2.3283064365386963e-09,
+        "attn_q_seg0_L0": 5.620677256956697e-10,
+        "output_head_seg0": 3.4924596548080444e-09,
+        "final_norm_w": 1.7462298274040222e-09
+      },
+      "grad_max_delta": 3.4924596548080444e-09,
+      "step1_all_params_max_delta": 1.0927906259894371e-05,
+      "step1_worst_param": "blocks.1.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00010926509276032448,
+      "step4_worst_param": "output_projection.weight"
+    },
+    {
+      "mode": "T5_nodrop_recompute_after",
+      "tech_code": "11110111000",
+      "dropout": 0.0,
+      "update_style": "after_full",
+      "clip": 1.0,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 2.9103830456733704e-09,
+        "attn_q_seg0_L0": 5.529727786779404e-10,
+        "output_head_seg0": 3.4924596548080444e-09,
+        "final_norm_w": 1.862645149230957e-09
+      },
+      "grad_max_delta": 3.4924596548080444e-09,
+      "step1_all_params_max_delta": 1.3507320545613766e-05,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00010926742106676102,
+      "step4_worst_param": "output_projection.weight"
+    },
+    {
+      "mode": "T6_nodrop_streaming_after",
+      "tech_code": "11111111100",
+      "dropout": 0.0,
+      "update_style": "after_full",
+      "clip": 1.0,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "grad_slice_deltas": {
+        "mlp_chunk0_L0": 2.9103830456733704e-09,
+        "attn_q_seg0_L0": 5.529727786779404e-10,
+        "output_head_seg0": 3.4924596548080444e-09,
+        "final_norm_w": 1.862645149230957e-09
+      },
+      "grad_max_delta": 3.4924596548080444e-09,
+      "step1_all_params_max_delta": 1.3507320545613766e-05,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00010926742106676102,
+      "step4_worst_param": "output_projection.weight"
+    },
+    {
+      "mode": "T7_drop_resident_immed",
+      "tech_code": "11100111000",
+      "dropout": 0.1,
+      "update_style": "immediate",
+      "eval_forward_hidden_max_delta": 3.7550926208496094e-06,
+      "imm_vs_afterfull_all_params_max_delta": 0.0,
+      "worst_param": ""
+    },
+    {
+      "mode": "T8_drop_recompute_immed",
+      "tech_code": "11110111000",
+      "dropout": 0.1,
+      "update_style": "immediate",
+      "eval_forward_hidden_max_delta": 3.7550926208496094e-06,
+      "imm_vs_afterfull_all_params_max_delta": 0.0,
+      "worst_param": ""
+    },
+    {
+      "mode": "T9_drop_streaming_immed",
+      "tech_code": "11111111100",
+      "dropout": 0.1,
+      "update_style": "immediate",
+      "eval_forward_hidden_max_delta": 3.7550926208496094e-06,
+      "imm_vs_afterfull_all_params_max_delta": 0.0,
+      "worst_param": ""
+    },
+    {
+      "mode": "T10_nodrop_resident_immed",
+      "tech_code": "11100111000",
+      "dropout": 0.0,
+      "update_style": "immediate",
+      "clip": null,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "step1_all_params_max_delta": 0.00013473397120833397,
+      "step1_worst_param": "blocks.5.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00013478309847414494,
+      "step4_worst_param": "blocks.5.mlp.output_projection.weight"
+    },
+    {
+      "mode": "T11_nodrop_recompute_immed",
+      "tech_code": "11110111000",
+      "dropout": 0.0,
+      "update_style": "immediate",
+      "clip": null,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "step1_all_params_max_delta": 0.00018261931836605072,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00018264504615217447,
+      "step4_worst_param": "blocks.0.mlp.output_projection.weight"
+    },
+    {
+      "mode": "T12_nodrop_streaming_immed",
+      "tech_code": "11111111100",
+      "dropout": 0.0,
+      "update_style": "immediate",
+      "clip": null,
+      "forward_hidden_max_delta": 3.7550926208496094e-06,
+      "step1_all_params_max_delta": 0.00018261931836605072,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_max_delta": 0.00018264504615217447,
+      "step4_worst_param": "blocks.0.mlp.output_projection.weight"
+    }
+  ]
+}

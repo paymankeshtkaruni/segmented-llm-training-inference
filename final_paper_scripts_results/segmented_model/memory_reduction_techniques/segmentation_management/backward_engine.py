@@ -53,6 +53,11 @@ class SegmentedBackwardEngine:
         self.sh: SharedParams = fwd.shared
         self.device = fwd.device
         self.grad_store = grad_store
+        # IMMEDIATE update style: when set (via set_immediate_optimizer), each
+        # segment is updated the moment its gradient is final — the gradient never
+        # reaches grad_store and there is no separate optimizer sweep. Requires
+        # clip_norm=None (global norm unknowable before all grads exist).
+        self.imm_opt = None
         # Records store holds the residual-stream snapshot at each layer boundary
         # OFF the compute device (cpu_ram on GPU / disk on CPU), so backward never
         # pins all n_layers activations in VRAM — peak becomes depth-INDEPENDENT.
@@ -73,6 +78,26 @@ class SegmentedBackwardEngine:
         # reproduces the SAME masks (cf. torch.utils.checkpoint preserve_rng_state).
         self._rng: Dict[tuple, tuple] = {}
         self._train: bool = False     # set per backward(): training AND dropout>0
+
+    # ---- immediate update style ----
+    def set_immediate_optimizer(self, opt) -> "SegmentedBackwardEngine":
+        self.imm_opt = opt
+        return self
+
+    def _finish_segment_grads(self, key, seg, gd) -> None:
+        """A segment's gradient is FINAL. after_full: park it in the grad store for
+        the optimizer sweep. immediate: update the segment right here (it is still
+        the acquired module; caller acquires with save_on_exit so the updated
+        weights persist to the store on release) and drop the gradient."""
+        if self.imm_opt is not None:
+            self.imm_opt.update_segment(key, seg, gd)
+        else:
+            self.grad_store.put(key, gd)
+
+    @property
+    def _soe(self) -> bool:
+        """save_on_exit for acquisitions whose segment may be updated in place."""
+        return self.imm_opt is not None
 
     # ---- shared-grad accumulator (park_grads_host technique) ----
     def _add(self, d: Dict[str, torch.Tensor], name: str, g: Optional[torch.Tensor]) -> None:
@@ -216,7 +241,8 @@ class SegmentedBackwardEngine:
         arg_idx = torch.zeros_like(tgt)
         for h in range(s.output_head_segments):
             v0, v1 = vocab_range(m.vocab_size, s.output_head_segments, h)
-            with ld.acquire_segment(SegmentKey(-1, "output_head", h)) as head:
+            with ld.acquire_segment(SegmentKey(-1, "output_head", h),
+                                    save_on_exit=self._soe) as head:
                 z = head(sh)                                  # [B,Tm1,vsl]
                 softmax = torch.exp(z - lse.unsqueeze(-1))    # streamed softmax
                 onehot = torch.zeros_like(softmax)
@@ -225,13 +251,15 @@ class SegmentedBackwardEngine:
                 onehot.scatter_(-1, local.unsqueeze(-1), in_rng.unsqueeze(-1).to(softmax.dtype))
                 g_z = (softmax - onehot) * (mask.unsqueeze(-1).to(softmax.dtype)) * scale
                 gw = torch.einsum("btv,btd->vd", g_z, sh)
-                self.grad_store.put(SegmentKey(-1, "output_head", h), {"projection.weight": gw})
                 grad_hidden = grad_hidden + torch.einsum("btv,vd->btd", g_z, head.projection.weight)
                 picked = z.gather(-1, local.unsqueeze(-1)).squeeze(-1)
                 correct_logit = torch.where((tgt >= v0) & (tgt < v1), picked, correct_logit)
                 smax, sarg = z.max(dim=-1)
                 upd = smax > arg_val
                 arg_val = torch.where(upd, smax, arg_val); arg_idx = torch.where(upd, sarg + v0, arg_idx)
+                # AFTER the last read of head weights (the grad_hidden einsum above)
+                self._finish_segment_grads(SegmentKey(-1, "output_head", h), head,
+                                           {"projection.weight": gw})
                 del z, softmax, onehot, g_z, gw
             _tm(f"cebwd|grad|h{h}")
         per_token = (lse - correct_logit)
@@ -289,6 +317,8 @@ class SegmentedBackwardEngine:
     def _backward_fullgraph(self, input_ids, labels, pad_token_id=None) -> Dict[str, torch.Tensor]:
         from forward_engine import _all_segment_keys
         m, s, ld, sh = self.m, self.s, self.ld, self.sh
+        if self.imm_opt is not None:
+            self.imm_opt.begin_step()
         shared_grads: Dict[str, torch.Tensor] = {}
         for mod in ld._resident.values():                      # zero prior grads
             for p in mod.parameters():
@@ -304,7 +334,13 @@ class SegmentedBackwardEngine:
                 continue
             gd = {n: p.grad.detach() for n, p in mod.named_parameters() if p.grad is not None}
             if gd:
-                self.grad_store.put(key, gd)
+                if self.imm_opt is not None:
+                    self.imm_opt.update_segment(key, mod, gd)
+                    # resident cache-hit acquire; release persists the updated weights
+                    with ld.acquire_segment(key, save_on_exit=True):
+                        pass
+                else:
+                    self.grad_store.put(key, gd)
         for n, p in sh.named_parameters():                     # harvest shared grads (park-aware)
             self._add(shared_grads, n, p.grad)
         return shared_grads
@@ -312,6 +348,8 @@ class SegmentedBackwardEngine:
     def backward(self, input_ids, labels, pad_token_id=None) -> Dict[str, torch.Tensor]:
         if not self._recompute:
             return self._backward_fullgraph(input_ids, labels, pad_token_id)
+        if self.imm_opt is not None:
+            self.imm_opt.begin_step()
         m, s, ld, sh = self.m, self.s, self.ld, self.sh
         from forward_engine import _attn_bias
         bias = _attn_bias(input_ids, pad_token_id, self.device)
@@ -358,16 +396,17 @@ class SegmentedBackwardEngine:
             xnorm = sh.mlp_norm[L](hh)                   # shared norm (grad accumulates)
             mlp_norm_params = list(sh.mlp_norm[L].parameters())
             for c in range(s.mlp_chunks):
-                with ld.acquire_segment(SegmentKey(L, "mlp", c)) as seg:
+                with ld.acquire_segment(SegmentKey(L, "mlp", c),
+                                        save_on_exit=self._soe) as seg:
                     seg_params = list(seg.parameters())
                     out = seg(xnorm)
                     gs = torch.autograd.grad(out, [hh, *mlp_norm_params, *seg_params],
                                              grad_outputs=g_mlp, retain_graph=True, allow_unused=True)
+                    names = [n for n, _ in seg.named_parameters()]
+                    self._finish_segment_grads(SegmentKey(L, "mlp", c), seg,
+                                               {n: gs[3 + i].detach() for i, n in enumerate(names)})
                 g_half = g_half + (gs[0] if gs[0] is not None else 0)
                 self._add(shared_grads, f"mlp_norm.{L}.weight", gs[1]); self._add(shared_grads, f"mlp_norm.{L}.bias", gs[2])
-                names = [n for n, _ in seg.named_parameters()]
-                self.grad_store.put(SegmentKey(L, "mlp", c),
-                                    {n: gs[3 + i].detach() for i, n in enumerate(names)})
                 del out, gs
                 _tm(f"bwd|L{L}|mlp_chunk{c}")
             del xnorm, hh
@@ -377,7 +416,8 @@ class SegmentedBackwardEngine:
             mask_ao = self._drop_mask(g_half, ("attn_out", L))   # (c) recorded attn-out mask, or None
             g_ao = g_half if mask_ao is None else g_half * mask_ao   # grad wrt out_proj(concat)
             # out_proj backward (shared): need concat with grad
-            with ld.acquire_segment(SegmentKey(L, "attn_out_proj", 0)) as op:
+            with ld.acquire_segment(SegmentKey(L, "attn_out_proj", 0),
+                                    save_on_exit=self._soe) as op:
                 c_req = concat_val.detach().requires_grad_(True)
                 a = op(c_req)
                 op_params = list(op.parameters())
@@ -385,8 +425,8 @@ class SegmentedBackwardEngine:
                                          retain_graph=False, allow_unused=True)
                 grad_concat = go[0]
                 names = [n for n, _ in op.named_parameters()]      # weight, bias
-                self.grad_store.put(SegmentKey(L, "attn_out_proj", 0),
-                                    {n: go[1 + i].detach() for i, n in enumerate(names)})
+                self._finish_segment_grads(SegmentKey(L, "attn_out_proj", 0), op,
+                                           {n: go[1 + i].detach() for i, n in enumerate(names)})
                 del a
             del c_req, concat_val
             _tm(f"bwd|L{L}|attn_outproj")
@@ -398,18 +438,19 @@ class SegmentedBackwardEngine:
             for asg in range(s.attention_segments):
                 if self._train:
                     self._rng_restore(self._rng[("attn", L, asg)])   # same SDPA mask as record
-                with ld.acquire_segment(SegmentKey(L, "attention", asg)) as seg:
+                with ld.acquire_segment(SegmentKey(L, "attention", asg),
+                                        save_on_exit=self._soe) as seg:
                     seg_params = list(seg.parameters())
                     out = seg(xnorm, attn_bias=bias)
                     w = out.size(-1)
                     g_slice = grad_concat[..., off:off + w]; off += w
                     gs = torch.autograd.grad(out, [hh, *an_params, *seg_params],
                                              grad_outputs=g_slice, retain_graph=True, allow_unused=True)
+                    names = [n for n, _ in seg.named_parameters()]
+                    self._finish_segment_grads(SegmentKey(L, "attention", asg), seg,
+                                               {n: gs[3 + i].detach() for i, n in enumerate(names)})
                 g_in = g_in + (gs[0] if gs[0] is not None else 0)
                 self._add(shared_grads, f"attn_norm.{L}.weight", gs[1]); self._add(shared_grads, f"attn_norm.{L}.bias", gs[2])
-                names = [n for n, _ in seg.named_parameters()]
-                self.grad_store.put(SegmentKey(L, "attention", asg),
-                                    {n: gs[3 + i].detach() for i, n in enumerate(names)})
                 del out, gs
                 _tm(f"bwd|L{L}|attn_seg{asg}")
             del xnorm, hh, grad_concat
@@ -423,14 +464,16 @@ class SegmentedBackwardEngine:
             d0, d1 = dmodel_range(m.d_model, s.embedding_segments, e)
             if self._train:
                 self._rng_restore(self._rng[("emb", e)])   # same embedding dropout mask as record
-            with ld.acquire_segment(SegmentKey(-1, "embedding", e)) as emb:
+            with ld.acquire_segment(SegmentKey(-1, "embedding", e),
+                                    save_on_exit=self._soe) as emb:
                 emb_params = list(emb.parameters())
                 names = [n for n, _ in emb.named_parameters()]
                 out = emb(input_ids)
                 gs = torch.autograd.grad(out, emb_params, grad_outputs=g[..., d0:d1],
                                          retain_graph=False, allow_unused=True)
-            self.grad_store.put(SegmentKey(-1, "embedding", e),
-                                {n: gs[i].detach() for i, n in enumerate(names) if gs[i] is not None})
+                self._finish_segment_grads(
+                    SegmentKey(-1, "embedding", e), emb,
+                    {n: gs[i].detach() for i, n in enumerate(names) if gs[i] is not None})
             del out, gs
             _tm(f"bwd|emb_seg{e}")
         return shared_grads

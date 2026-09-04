@@ -1,0 +1,12 @@
+{
+ "run": "onnx_resident_cost",
+ "mode": "full",
+ "provider": "CPUExecutionProvider",
+ "prompt_len": 256,
+ "gen_tokens": 32,
+ "build_s": 2.78,
+ "prefill_plus_first_s": 0.578,
+ "per_token_s": 0.597,
+ "rss_peak_mb": 3099.9,
+ "vram_peak_mb": null
+}

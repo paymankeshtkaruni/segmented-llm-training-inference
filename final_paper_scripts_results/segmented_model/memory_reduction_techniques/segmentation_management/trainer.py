@@ -56,10 +56,15 @@ class SegmentedTrainer:
                  lr: float = 3e-4, weight_decay: float = 0.1, grad_clip: float = 1.0,
                  warmup: int = 200, scheduler: str = "cosine", seed: int = 42,
                  store_kind: Optional[str] = None, from_scratch: bool = False,
-                 seg_override: Optional[SegmentationConfig] = None, tech=None):
+                 seg_override: Optional[SegmentationConfig] = None, tech=None,
+                 update_style: str = "after_full",
+                 dropout_override: Optional[float] = None):
         torch.manual_seed(seed)
         p = get_preset(preset_name)
         self.m: ModelConfig = p["model"]
+        if dropout_override is not None:
+            from dataclasses import replace as _replace
+            self.m = _replace(self.m, dropout=dropout_override)
         # seg_override lets the ablation vary the E×A×M×H split while keeping the SAME
         # (large) model. None -> the preset's segmentation. Validated against the model.
         self.s: SegmentationConfig = seg_override if seg_override is not None else p["seg"]
@@ -94,6 +99,14 @@ class SegmentedTrainer:
         self.bwd = SegmentedBackwardEngine(self.fwd, self.grad_store, self.records_store)
         self.opt = SegmentwiseAdamW(self.m, self.s, self.loader, self.shared, self.grad_store,
                                     self.opt_store, device, lr=lr, weight_decay=weight_decay)
+        # update style: "after_full" (default; separate optimizer sweep, supports
+        # global clip) or "immediate" (segments updated during backward; NO global
+        # clip — the engine applies updates the moment each gradient is final).
+        self.update_style = update_style
+        if update_style == "immediate":
+            self.bwd.set_immediate_optimizer(self.opt)
+        elif update_style != "after_full":
+            raise ValueError(f"unknown update_style {update_style!r}")
 
     # ---- one optimizer step from a batch (forward-record + backward + AdamW) ----
     def train_step(self, batch, global_step: int, total_steps: int) -> Dict[str, float]:
@@ -102,10 +115,14 @@ class SegmentedTrainer:
         # clear previous grads
         for k in all_segment_keys(self.m, self.s):
             self.grad_store.evict(k)
-        shared_grads = self.bwd.backward(ii, lab, pad_token_id=self.tok.pad_token_id)
+        # lr must be current BEFORE backward: immediate style updates during it
         mult = lr_mult(global_step, self.warmup, total_steps, self.scheduler)
         self.opt.lr = self.lr * mult
-        self.opt.step(shared_grads, clip_norm=self.grad_clip)
+        shared_grads = self.bwd.backward(ii, lab, pad_token_id=self.tok.pad_token_id)
+        if self.update_style == "immediate":
+            self.opt.step_shared(shared_grads)        # segments already updated in-backward
+        else:
+            self.opt.step(shared_grads, clip_norm=self.grad_clip)
         return {"loss": self.bwd.last_loss, "correct": self.bwd.last_correct,
                 "valid": self.bwd.last_valid, "lr": self.opt.lr}
 
@@ -198,8 +215,24 @@ if __name__ == "__main__":
     p.add_argument("--max-val-steps", type=int, default=2)
     p.add_argument("--max-rows", type=int, default=64)
     p.add_argument("--warmup", type=int, default=1)
+    p.add_argument("--tech-code", default=None,
+                   help="11-flag technique code (see techniques.py); default None = all ON")
+    p.add_argument("--full-run", action="store_true",
+                   help="lift the smoke-test caps: full dataset, no step limits")
     p.add_argument("--out-dir", type=Path, default=Path("/tmp/seg_smoke"))
     a = p.parse_args()
-    tr = SegmentedTrainer(a.preset, a.device, a.out_dir, warmup=a.warmup, store_kind="cpu_ram")
-    tr.fit(a.epochs, a.batch_size, log_every=1, max_train_steps=a.max_train_steps,
-           max_val_steps=a.max_val_steps, max_rows=a.max_rows)
+    tech = None
+    if a.tech_code is not None:
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from techniques import Tech as _Tech
+        from dataclasses import fields as _fields
+        tech = _Tech(**{f.name: c == "1" for f, c in zip(_fields(_Tech), a.tech_code)})
+        print(f"[tech] {a.tech_code} -> {tech}")
+    tr = SegmentedTrainer(a.preset, a.device, a.out_dir, warmup=a.warmup,
+                          store_kind="cpu_ram", tech=tech)
+    if a.full_run:
+        tr.fit(a.epochs, a.batch_size, log_every=50)
+    else:
+        tr.fit(a.epochs, a.batch_size, log_every=1, max_train_steps=a.max_train_steps,
+               max_val_steps=a.max_val_steps, max_rows=a.max_rows)

@@ -1,0 +1,16 @@
+{
+  "run": "quality_inference_accuracy_fresh",
+  "checkpoint": "${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/quality_fresh_pair/T1/checkpoints/best.pt",
+  "preset": "small_8x2x2x8",
+  "segmented_mode": "resident, batched greedy (no cache)",
+  "n_test": 11654,
+  "exported_exact_match": 0.9547794748584177,
+  "segmented_exact_match": 0.9547794748584177,
+  "prediction_agreement": 1.0,
+  "n_disagreements": 0,
+  "first_disagreements": [],
+  "eval_time_s": {
+    "exported": 13.924620389938354,
+    "segmented": 24.468806982040405
+  }
+}

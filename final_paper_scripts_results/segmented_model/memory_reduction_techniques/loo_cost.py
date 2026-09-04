@@ -26,12 +26,14 @@ if __name__ == "__main__":
     ap.add_argument("--n-steps", type=int, default=3)
     ap.add_argument("--prompt-len", type=int, default=256)
     ap.add_argument("--gen-tokens", type=int, default=8)
+    ap.add_argument("--out-suffix", default="",
+                    help="appended to output dir names, e.g. _rep1 -> results/gpu_train_loo_rep1")
     a = ap.parse_args()
     tag = "gpu" if a.device.startswith("cuda") else "cpu"
     kinds = [k.strip() for k in a.kinds.split(",") if k.strip()]
     if "train" in kinds:
-        run_train_loo(a.preset, a.device, HERE / "results" / f"{tag}_train_loo",
+        run_train_loo(a.preset, a.device, HERE / "results" / f"{tag}_train_loo{a.out_suffix}",
                       batch=a.batch, n_steps=a.n_steps)
     if "infer" in kinds:
-        run_infer_loo(a.preset, a.device, HERE / "results" / f"{tag}_inference_loo",
+        run_infer_loo(a.preset, a.device, HERE / "results" / f"{tag}_inference_loo{a.out_suffix}",
                       prompt_len=a.prompt_len, gen_tokens=a.gen_tokens)

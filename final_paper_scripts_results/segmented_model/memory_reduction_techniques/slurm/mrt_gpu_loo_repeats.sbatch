@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --job-name=mrt_gpu_loo_rep
+#SBATCH --partition=grete:shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=96G
+#SBATCH --gres=gpu:A100:1
+#SBATCH --time=02:30:00
+#SBATCH --array=1-3
+#SBATCH --output=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/mrt_gpu_loo_rep_%A_%a.out
+#SBATCH --error=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/mrt_gpu_loo_rep_%A_%a.err
+# Site-independent: export PROJECT_ROOT=<repo root> and, if needed,
+# PYTHON=<interpreter> before submitting from the repository root.
+set -euo pipefail
+cd "${PROJECT_ROOT:?set PROJECT_ROOT to the repo root}"
+module load gcc/13.2.0 cuda/12.8.2
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONUNBUFFERED=1
+PYTHON="${PYTHON:-python}"
+echo "Node: $(hostname)  Repeat: ${SLURM_ARRAY_TASK_ID}  Start: $(date)"
+# Train-only leave-one-out repeats for timing-noise resolution (order-independent;
+# resolves the 124.8s-vs-164.5s all-on discrepancy via median of 3).
+"$PYTHON" final_paper_scripts_results/segmented_model/memory_reduction_techniques/loo_cost.py \
+    --preset large_8x2x2x8 --device cuda --kinds train --batch 4 --n-steps 3 \
+    --out-suffix _rep${SLURM_ARRAY_TASK_ID}
+echo "Done: $(date)"
