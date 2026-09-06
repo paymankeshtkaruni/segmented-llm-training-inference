@@ -102,9 +102,13 @@ are a separate matter; Sec.~\ref{sec:disc}). We note up
 front that our mechanism is orthogonal to the edge community's default
 lever, reduced precision: quantization and low-precision training shrink
 every memory term by a constant factor~\cite{nadalini2023reduced,micikevicius2018mixed},
-whereas segmentation bounds which terms must coexist at all---the two
-compose, and all results here are deliberately full-precision fp32 so that
-exactness can be verified end to end. For these
+whereas segmentation bounds which terms must coexist at all---and the two
+compose \emph{productively}: quantized segments are smaller, so a fixed
+memory budget affords a coarser partition, and coarser partitions are the
+faster end of the granularity dial (Sec.~\ref{sec:gran}); quantization
+inside segmented execution therefore buys back time as well as memory. All
+results here are deliberately full-precision fp32 so that exactness can be
+verified end to end. For these
 settings the binding constraint is \emph{memory}, not FLOPs, and the question
 is not ``how do we make the model fit the machine?'' but ``how do we make the
 \emph{computation} fit a memory budget we are given?'' This memory-bound
@@ -271,7 +275,9 @@ latter approximately.
 \emph{Memory-bounded inference.} Placement policies over GPU, CPU, and
 disk~\cite{sheng2023flexgen}, flash-resident weights~\cite{alizadeh2024llmflash},
 and layer-wise fetch~\cite{rajbhandari2021zeroinfinity} serve models beyond
-device memory; TPI-LLM pages tensor-parallel weight slices through
+device memory; the widely deployed llama.cpp
+runtime~\cite{gerganov2023llamacpp} memory-maps quantized weights for
+CPU-class inference; TPI-LLM pages tensor-parallel weight slices through
 low-resource devices at inference time~\cite{li2025tpillm}; collaborative
 serving distributes layers across peers~\cite{borzunov2023petals}.
 
@@ -299,6 +305,8 @@ evidence that a share of what is called ``model memory'' is in fact runtime
 overhead.
 
 \subsection{Positioning}
+Table~\ref{tab:landscape} situates this work among the closest systems, by
+their own reported properties.
 Every single-device system above has a residency floor of one transformer
 layer (or the whole model). Our claim is that the floor can be pushed one
 level lower, to one \emph{segment} of one layer, by applying the cut planes
@@ -313,6 +321,35 @@ federated clients block-wise in sequence to fit device
 memory~\cite{wu2026blockwise}---at layer granularity and inside an FL
 protocol; our four-axis sub-layer partition, exactness guarantee, and
 mode taxonomy are the single-device substrate such systems presuppose.
+
+\begin{table}[t]
+\caption{The closest systems, by their reported properties. ``Trains'' =
+full-parameter training/fine-tuning on the constrained device;
+``sub-layer'' = residency floor below one transformer layer; ``verified
+equivalence'' = published bit/roundoff-level identity with unmodified
+full-model execution; ``framework-free serving'' = inference without the
+training framework; ``lossless'' = no quantization/approximation required
+by the method. ---~=~not reported.}
+\label{tab:landscape}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+System & Trains & Sub-layer & Verified equiv. & Fw.-free serving & Lossless \\
+\midrule
+ZeRO-Offload~\cite{ren2021zerooffload} & \checkmark & --- & --- & --- & \checkmark \\
+PatrickStar~\cite{fang2022patrickstar} & \checkmark & --- & --- & --- & \checkmark \\
+STRONGHOLD~\cite{sun2022stronghold} & \checkmark & --- & --- & --- & \checkmark \\
+LoHan~\cite{liao2025lohan} & \checkmark & --- & --- & --- & \checkmark \\
+MemAscend~\cite{liaw2026memascend} & \checkmark & --- & --- & --- & \checkmark \\
+FlexGen~\cite{sheng2023flexgen} & --- & --- & --- & --- & --- \\
+llama.cpp~\cite{gerganov2023llamacpp} & --- & --- & --- & \checkmark & --- \\
+TPI-LLM~\cite{li2025tpillm} & --- & \checkmark & --- & --- & \checkmark \\
+This work & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ============================================================================
 \section{Segmented Execution: Design}\label{sec:design}
@@ -1380,6 +1417,25 @@ headroom, not algorithm. Prefetching the next segment during the current
 one's compute would relax the residency floor from one segment to two and
 attack the dominant term directly; we deliberately did not, because the
 one-segment floor is the claim under test.
+
+\textbf{What the time prices buy today.} The measured menu, taken at
+face value on today's framework, already supports real work: the fastest
+resident modes are everyday-practical (at 0.84B, a 10{,}000-step run is
+${\sim}14$ hours); the streamed 6.9B modes support one- to two-day
+fine-tunes of a thousand-odd steps in under 3~GB of device memory; and
+batch amortization makes the streamed per-token cost nearly flat (batch~8
+processes $8\times$ the tokens for $3\%$ more wall-clock,
+Sec.~\ref{sec:model}). The 6.9B-on-CPU cell is a \emph{capability
+boundary}, and we state its arithmetic plainly: at 478~s per step, an
+overnight run is on the order of a hundred steps---suited to bounded
+adaptation on private data, not to long training campaigns. Crucially,
+these wall-clock prices are a property of the framework, not of the
+method: the decomposition above attributes ${\sim}90\%$ of the streamed
+step to synchronous orchestration by an engine built for the
+memory-abundant regime, with transport itself bounded near 2~s. The memory
+column of every table is what segmentation guarantees; the time column is
+what today's PyTorch charges to honor it, and it shrinks with runtime
+engineering, not with new mathematics.
 
 \textbf{Segmentation equalizes hardware tiers.} Full-model training at
 0.84B is $46\times$ slower on our CPU node than on the A100
