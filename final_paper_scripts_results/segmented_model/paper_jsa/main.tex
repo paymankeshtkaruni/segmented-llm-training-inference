@@ -1109,27 +1109,31 @@ stationary; their residual variance is co-tenant noise on the shared nodes
 (Sec.~\ref{sec:longhorizon}), reported as the p5--p95 spread.
 
 \begin{table}[t]
-\caption{Long-horizon training: sustained peaks (GPU: reserved + CUDA
-context; CPU: resident set), the peak band over the whole run, the
-training-only long-run step time, and the directly priced per-step
-validation pass that converts to the four-phase protocol.}
+\caption{Long-horizon training: sustained peak and band in MB (GPU:
+reserved + CUDA context; CPU: resident set), the training-only long-run
+step time, and the directly priced per-step validation pass (+val.) that
+converts to the four-phase protocol.}
 \label{tab:sustainedtrain}
 \centering
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
-Mode & Steps & Sustained peak & Band & Step & +valid. \\
+Mode & Steps & Peak & Band & Step & +val. \\
 \midrule
-0.84B GPU retained, resident, in-backw. & 2{,}048 & 11{,}968\,MB & 0\,MB & 5.23\,s & +0.3\,s \\
-0.84B GPU recomp., resident, deferred & 2{,}048 & 4{,}663\,MB & 0\,MB & 9.05\,s & +0.3\,s \\
-0.84B GPU recomp., streamed, deferred & 2{,}048 & 1{,}142\,MB & 0\,MB & 27.11\,s & +6.6\,s \\
-0.84B GPU recomp., streamed, in-backw. & 2{,}048 & 1{,}172\,MB & 0\,MB & 16.28\,s & +6.6\,s \\
-6.9B GPU recomp., resident, deferred & 1{,}024 & 29{,}687\,MB & 0\,MB & 41.90\,s & +1.6\,s \\
-6.9B GPU recomp., streamed, in-backw. & 512 & 2{,}799\,MB & 0\,MB & 102.2\,s & +37.4\,s \\
-0.84B CPU recomp., streamed, deferred & 512 & 2{,}087\,MB & 349\,MB & 112.5\,s & +14.0\,s \\
-0.84B CPU retained, resident, in-backw. & 1{,}024 & 21{,}134\,MB & 691\,MB & 50.95\,s & +6.2\,s \\
-6.9B CPU recomp., streamed, in-backw. & 128 & 7{,}932\,MB & 1{,}251\,MB & 478.0\,s & +79.9\,s \\
+\multicolumn{6}{@{}l}{\emph{0.84B, GPU}} \\
+\enspace retained, resident, in-backward & 2{,}048 & 11{,}968 & 0 & 5.23\,s & +0.3\,s \\
+\enspace recompute, resident, deferred & 2{,}048 & 4{,}663 & 0 & 9.05\,s & +0.3\,s \\
+\enspace recompute, streamed, deferred & 2{,}048 & 1{,}142 & 0 & 27.11\,s & +6.6\,s \\
+\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}172 & 0 & 16.28\,s & +6.6\,s \\
+\multicolumn{6}{@{}l}{\emph{6.9B, GPU}} \\
+\enspace recompute, resident, deferred & 1{,}024 & 29{,}687 & 0 & 41.90\,s & +1.6\,s \\
+\enspace recompute, streamed, in-backward & 512 & 2{,}799 & 0 & 102.2\,s & +37.4\,s \\
+\multicolumn{6}{@{}l}{\emph{0.84B, CPU}} \\
+\enspace recompute, streamed, deferred & 512 & 2{,}087 & 349 & 112.5\,s & +14.0\,s \\
+\enspace retained, resident, in-backward & 1{,}024 & 21{,}134 & 691 & 50.95\,s & +6.2\,s \\
+\multicolumn{6}{@{}l}{\emph{6.9B, CPU}} \\
+\enspace recompute, streamed, in-backward & 128 & 7{,}932 & 1{,}251 & 478.0\,s & +79.9\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
