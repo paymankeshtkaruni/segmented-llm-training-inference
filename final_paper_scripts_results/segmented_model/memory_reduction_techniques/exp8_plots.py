@@ -128,22 +128,23 @@ def fig_validation_cost():
     if not labels:
         print("fig_validation_cost: no bridge rows available, skipping")
         return
-    fig, ax = plt.subplots(figsize=(7.0, 3.2))
+    fig, ax = plt.subplots(figsize=(7.0, 3.6))
     y = range(len(labels))
     ax.barh(y, train, color="#4c72b0", label="training step (long-run average)")
     ax.barh(y, val, left=train, color="#c44e52",
             label="per-step validation pass (directly timed)")
     ax.set_yticks(list(y))
-    ax.set_yticklabels(labels, fontsize=6)
+    ax.set_yticklabels(labels, fontsize=8)
     ax.invert_yaxis()
     ax.set_xscale("log")
-    ax.set_xlabel("seconds per step (log scale)")
+    ax.set_xlabel("seconds per step (log scale)", fontsize=9)
+    ax.tick_params(axis="x", labelsize=8)
     for i, (t, v) in enumerate(zip(train, val)):
         ax.annotate(f"+{v:.1f}s ({100*v/(t+v):.0f}%)", xy=(t + v, i),
-                    xytext=(3, 0), textcoords="offset points",
-                    va="center", fontsize=6)
+                    xytext=(4, 0), textcoords="offset points",
+                    va="center", fontsize=8)
     ax.set_xlim(right=max(t + v for t, v in zip(train, val)) * 1.8)
-    ax.legend(fontsize=6, loc="upper right")
+    ax.legend(fontsize=8.5, loc="upper right")
     ax.grid(alpha=.3, axis="x")
     fig.tight_layout()
     fig.savefig(OUT / "fig_exp9_validation_cost.pdf")

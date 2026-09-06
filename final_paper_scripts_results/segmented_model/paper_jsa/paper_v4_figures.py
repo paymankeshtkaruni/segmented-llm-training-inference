@@ -117,7 +117,9 @@ def fig_frontier():
         ml.Line2D([], [], color="gray", marker="o", ls="", label="deferred update"),
         ml.Line2D([], [], color="gray", marker="^", ls="", label="optimizer-in-backward"),
     ]
-    a.legend(handles=handles, loc="lower left", ncol=1)
+    fig.legend(handles=handles, loc="lower center", ncol=5, fontsize=7,
+               frameon=False, bbox_to_anchor=(0.5, -0.04))
+    fig.tight_layout(rect=[0, 0.04, 1, 1])
     save(fig, "frontier_train.pdf")
 
 

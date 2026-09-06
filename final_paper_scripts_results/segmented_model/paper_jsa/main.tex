@@ -686,15 +686,15 @@ co-tenant load on the shared nodes---verified for the largest excursion,
 where a step-time drop aligns to the minute with another user's jobs
 ending on the same node.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig_exp9_validation_cost.pdf}
+\includegraphics[width=\textwidth]{figures/fig_exp9_validation_cost.pdf}
 \caption{The directly priced per-step validation pass (red) on top of the
 training-only long-run step time (blue), per configuration. Adding the red
 component converts a training-realistic step into the four-phase
 measurement protocol's step.}
 \label{fig:valcost}
-\end{figure}
+\end{figure*}
 
 % ============================================================================
 \section{Exactness}\label{sec:exact}
@@ -1074,20 +1074,12 @@ Disk-streamed & 506 & 0.8\,GB & 9.47 & \textbf{401} & 9.20 \\
 \end{table}
 
 \subsection{Scale: Moving the Wall}\label{sec:scale}
-Table~\ref{tab:scale} and Fig.~\ref{fig:scale} answer Q1, on both device
+Table~\ref{tab:scale} answers Q1, on both device
 classes: a CPU-only node trains the 6.9B model in 9.3~GB of RAM (where
 full-model training needs 111.6~GB), and the 40~GB accelerator carries
 every size that aborts larger devices.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/scale_train.pdf}
-\caption{Peak device memory of training across model sizes on one
-A100-40GB. Hatched bars mark full-model out-of-memory aborts, annotated
-with the requirement measured on larger devices. Segmented execution keeps
-every size on the 40~GB card, resident or streamed.}
-\label{fig:scale}
-\end{figure} On the 40~GB device, full-model training
+ On the 40~GB device, full-model training
 fits only up to 1.5B (39.0~GB---already at the edge); at 3B it aborts, and
 an H100 measurement shows why: 67.6~GB. At 5B it aborts on an 80~GB device,
 and at 6.9B \emph{even the 94~GB H100 aborts}. Segmented execution trains
