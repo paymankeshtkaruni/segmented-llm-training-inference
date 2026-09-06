@@ -353,6 +353,25 @@ This work & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
 
 % ============================================================================
 \section{Segmented Execution: Design}\label{sec:design}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_schematic.pdf}
+\caption{Segmented execution at a glance. A GPT decoder is partitioned along
+four axes---embedding width ($E$), attention head groups ($A$), feed-forward
+hidden chunks ($M$), and vocabulary slices ($H$)---and exactly one segment is
+ever \emph{executing}, so the transient activations and gradient workspace of
+at most one segment exist at any time. Weight residency is a separate dial:
+under \emph{streaming} (top) at most one segment's weights are materialized on
+the constrained device and all non-resident state lives in the backing store
+(host memory behind a GPU, disk behind a CPU), so peak memory approaches the
+one-segment floor; in the \emph{resident} modes (bottom) all segment weights
+stay on the device and the invariant bounds the activation and workspace terms
+only, with gradients and optimizer moments parked in the store. Every mode
+computes the same model: the weights are identical and only the memory
+schedule changes.}
+\label{fig:schematic}
+\end{figure*}
+
 % ============================================================================
 \subsection{Partition and Reassembly Identities}\label{sec:partition}
 The architecture is unchanged; segmentation is a pure execution concern, and
@@ -363,7 +382,8 @@ $d_\text{model}$; each attention block into $A$ head groups; each feed-forward
 block into $M$ chunks along the hidden width $d_\text{ff}$; and the output
 head into $H$ vocabulary slices. Layer norms, the attention output projection
 $W_o$, and biases are shared parameters outside the partition. Exactness
-rests on three algebraic identities.
+rests on three algebraic identities; Fig.~\ref{fig:schematic} summarizes
+the partition axes and the two residency regimes.
 
 \begin{proposition}[Concatenative reassembly]\label{prop:concat}
 The embedding of a token is the concatenation over slices of the per-slice

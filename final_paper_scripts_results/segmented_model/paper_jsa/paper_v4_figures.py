@@ -252,9 +252,107 @@ def fig_inference():
     save(fig, "inference_frontier.pdf")
 
 
+
+
+def fig_schematic():
+    """Concept figure: four segmentation axes; one segment EXECUTING at a
+    time in every mode; residency differs by regime (streamed vs resident).
+    Honest to the corrected invariant of Sec. III-B."""
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+    fig, ax = plt.subplots(figsize=(7.6, 4.4))
+    ax.set_xlim(0, 100); ax.set_ylim(0, 100); ax.axis("off")
+
+    def box(x, y, w, h, fc, ec="black", lw=1.0, r=1.6):
+        b = FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0.4,rounding_size={r}",
+                           fc=fc, ec=ec, lw=lw)
+        ax.add_patch(b)
+
+    def txt(x, y, t, size=7.5, c="black", w="normal", ha="center", style="normal"):
+        ax.text(x, y, t, fontsize=size, color=c, ha=ha, va="center",
+                fontweight=w, fontstyle=style)
+
+    txt(50, 97, "Segmented execution: one segment executing at a time",
+        11, w="bold")
+
+    # ---- left: four axes
+    txt(14, 89, "GPT decoder — four segmentation axes", 7.5, w="bold")
+    axes_boxes = [
+        ("E — embedding", "split $d_{model}$, concat", "#4c72b0"),
+        ("A — attention", "head groups, shared $W_o$", "#55a868"),
+        ("M — MLP", "$d_{ff}$ chunks, running-sum", "#dd8452"),
+        ("H — output head", "vocab slices, streamed CE", "#c44e52"),
+    ]
+    y = 76
+    for name, sub, col in axes_boxes:
+        box(2, y, 24, 9.5, col)
+        txt(14, y + 6.4, name, 7.5, "white", "bold")
+        txt(14, y + 2.6, sub, 5.6, "white")
+        y -= 13.5
+    ax.add_patch(FancyArrowPatch((27.5, 55), (31.5, 55), arrowstyle="-|>",
+                                 mutation_scale=14, lw=1.4, color="black"))
+
+    # ---- middle top: streamed modes (box 33..67)
+    box(33, 56, 34, 32, "#f4f4f4", lw=1.6)
+    txt(50, 84.8, "STREAMED modes — constrained device", 6.8, w="bold")
+    box(40, 69, 20, 9, "#4c72b0")
+    txt(50, 74.6, "1 active segment", 7.5, "white", "bold")
+    txt(50, 71.2, "the only weights on device", 5.4, "white")
+    txt(50, 64.5, "+ tiny shared norms / biases", 5.8)
+    txt(50, 60.5, "peak $\\approx$ one segment (memory floor)", 5.8, style="italic")
+
+    # ---- middle bottom: resident modes
+    box(33, 20, 34, 30, "#f4f4f4", lw=1.6)
+    txt(50, 46.8, "RESIDENT modes — constrained device", 6.8, w="bold")
+    blue_cx = None
+    for i2 in range(8):
+        cx = 37.5 + (i2 % 4) * 6.4
+        cy = 35.5 - (i2 // 4) * 6.8
+        col = "#4c72b0" if i2 == 1 else "#bfbfbf"
+        if i2 == 1:
+            blue_cx = cx + 2.5
+        box(cx, cy, 5.0, 4.6, col, lw=0.7)
+    txt(blue_cx, 43.0, "executing", 5.2, "#4c72b0", "bold")
+    txt(50, 26.0, "all segment weights stay on device;", 5.8)
+    txt(50, 23.0, "activations of one segment at a time", 5.8)
+
+    # ---- right: backing store (box 72..98)
+    box(72, 34, 26, 42, "#eaeef3", lw=1.6)
+    txt(85, 72.6, "backing store", 8, w="bold")
+    txt(85, 69.2, "GPU: host RAM  |  CPU: disk", 5.8)
+    for i2 in range(6):
+        cx = 75.5 + (i2 % 3) * 7.2
+        cy = 57 - (i2 // 3) * 7.5
+        box(cx, cy, 5.8, 5.2, "#bfbfbf", lw=0.7)
+    txt(85, 44.0, "streamed: all other segments,", 5.6)
+    txt(85, 41.4, "gradients, Adam state, records", 5.6)
+    txt(85, 37.6, "resident: gradients + Adam state", 5.6)
+
+    ax.add_patch(FancyArrowPatch((68, 76), (71, 71), arrowstyle="-|>",
+                                 mutation_scale=11, lw=1.2, color="#c44e52"))
+    txt(69.5, 77.5, "evict", 6, "#c44e52", "bold")
+    ax.add_patch(FancyArrowPatch((71, 63), (68, 68), arrowstyle="-|>",
+                                 mutation_scale=11, lw=1.2, color="#55a868"))
+    txt(69.5, 61.5, "load", 6, "#55a868", "bold")
+    ax.add_patch(FancyArrowPatch((68, 38), (71, 42), arrowstyle="-|>",
+                                 mutation_scale=11, lw=1.2, color="0.45"))
+    txt(69.3, 36.2, "park", 6, "0.35", "bold")
+
+    # ---- footer
+    txt(50, 13.5, "dials: recomputation  ·  weight streaming  ·  update schedule  ·  dropout  ·  KV cache"
+        "   $\\Rightarrow$   12 training + 4 inference modes", 6.8)
+    txt(50, 9.2, "every mode computes the same model — identical weights, "
+        "only the memory schedule changes", 7.2, "#4c72b0", "bold")
+    fig.tight_layout()
+    fig.savefig(OUT / "fig_schematic.pdf")
+    fig.savefig(OUT / "fig_schematic.png", dpi=220)
+    plt.close(fig)
+    print("wrote", OUT / "fig_schematic.pdf")
+
+
 if __name__ == "__main__":
     fig_learning_curves()
     fig_frontier()
     fig_traces()
     fig_scale()
     fig_inference()
+    fig_schematic()

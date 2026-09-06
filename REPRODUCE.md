@@ -147,7 +147,7 @@ python build_exp_summaries.py   # rebuilds grid/infer/scale/exp6/exp7 summary JS
 python eval_cost_laws.py        # results/cost_model_eval.json  (Table: cost-model accuracy + held-out cell)
 python sustained_report.py      # reads the gzipped 6.9B trace -> per-step peaks (exp8_sustained)
 cd ../paper_jsa
-python paper_v4_figures.py      # figures/*.pdf (all five paper figures)
+python paper_v4_figures.py      # figures/*.pdf (all paper figures, incl. the Fig. 1 concept schematic — drawn, no data)
 \`\`\`
 
 Mapping (paper -> source):
