@@ -206,10 +206,10 @@ def fig_inference():
     onx = {"O1_full": "full-session", "O3_preload": "preloaded",
            "O4_stream": "disk-streamed"}
     # per-point label offsets (points), tuned to avoid collisions
-    off_g = {"I1": (5, 5), "I2": (5, -9), "I3": (-2, 7), "I4": (2, -11),
-             "O1_full": (-10, -12), "O3_preload": (-12, 8), "O4_stream": (5, -3)}
-    off_c = {"I1": (-24, 9), "I2": (5, -10), "I3": (-8, 7), "I4": (2, -11),
-             "O1_full": (-14, -12), "O3_preload": (5, 3), "O4_stream": (-30, 6)}
+    off_g = {"I1": (6, 6), "I2": (6, -11), "I3": (-2, 8), "I4": (2, -12),
+             "O1_full": (-6, 9), "O3_preload": (-14, -13), "O4_stream": (6, -4)}
+    off_c = {"I1": (-38, -5), "I2": (6, -11), "I3": (-10, 8), "I4": (2, -12),
+             "O1_full": (-18, -13), "O3_preload": (6, 5), "O4_stream": (-34, 7)}
     for m, lab in tor.items():
         g, c = d["torch"][m]["gpu"], d["torch"][m]["cpu"]
         a.scatter(g["per_token_s"], g["vram_mb"] / 1024, c=COL["recomp"], s=22)
@@ -234,10 +234,10 @@ def fig_inference():
     fc = (fa["cpu"]["rss_mb"] / 1024, fa["cpu"]["per_token_s"])
     a.scatter(fg[1], fg[0], c=COL["full"], marker="*", s=80)
     a.annotate("full model", (fg[1], fg[0]), textcoords="offset points",
-               xytext=(4, 6), fontsize=6)
+               xytext=(4, -13), fontsize=6)
     b.scatter(fc[1], fc[0], c=COL["full"], marker="*", s=80)
     b.annotate("full model", (fc[1], fc[0]), textcoords="offset points",
-               xytext=(5, 6), fontsize=6)
+               xytext=(6, 8), fontsize=6)
     import matplotlib.lines as ml
     handles = [ml.Line2D([], [], color=COL["recomp"], marker="o", ls="",
                          label="training runtime (PyTorch)"),

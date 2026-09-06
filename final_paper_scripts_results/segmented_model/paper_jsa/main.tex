@@ -39,38 +39,31 @@ Research (BMBF), Germany, under the AI service center KISSKI (grant nos.\
 \begin{abstract}
 Devices with limited memory---edge nodes, commodity CPUs, single mid-range
 accelerators---are widely considered unable to train or even load large
-language models (LLMs): if the weights, optimizer state, and activations do
-not fit, the model is treated as out of reach. We argue that this limit is
-set by framework scheduling rather than by the computation, and present
-segmented execution: a GPT decoder is partitioned along four cut planes
-(attention head groups, feed-forward hidden units, embedding width, and
-vocabulary slices) and the parts are executed sequentially in time on the
-constrained device---one small segment computing at a time, and, in the
-streamed modes, at most one segment resident at all, while everything else
-waits in host memory or on disk. Settings of a small number
-of dials (activation recomputation, weight streaming, dropout, key--value
-caching, and the optimizer update schedule) define named operating modes
-that trade memory for time, and every mode is verified to compute the same
-model: on CPU the backward pass is bit-deterministic, and all engines and
-modes, including a PyTorch-free ONNX runtime, produce identical predictions
-on every test example---the data never has to leave the device that owns it.
-A 0.84-billion-parameter decoder trains in 1.1~GB of device memory, 23 times
-below full-model training and 20 times below the DeepSpeed ZeRO-Offload
-floor; a 6.9-billion-parameter model, whose full-model training aborts even
-on a 94~GB accelerator, trains on a CPU-only node in 9.3~GB of RAM, on a
-single 40~GB accelerator resident at 28.5~GB, or in 2.6~GB when streamed;
-and the smallest serving mode answers queries in 401~MB of total memory
-without a GPU or a training framework. The price is time, which we measure
-for every mode---from $5.4\times$ full-model step time at half its memory to
-$30\times$ at the memory floor---and capture in analytic memory and time
-laws validated by a pre-registered prediction on a held-out configuration.
-These are not snapshot measurements: every headline configuration is
-additionally trained for hundreds to thousands of consecutive steps and
-served for hundreds to thousands of requests, over which device memory is
-stationary to the byte on GPU and bounded on CPU, step times are reported
-as long-run averages, and the per-step cost of evaluation is priced
-separately; under these deployment conditions the resident serving mode
-answers at 31~ms per token.
+language models (LLMs). We argue this limit is set by framework scheduling
+rather than by the computation, and present segmented execution: a GPT
+decoder is partitioned along four cut planes (attention head groups,
+feed-forward hidden units, embedding width, and vocabulary slices) and
+executed sequentially---one small segment computing at a time, and, in the
+streamed modes, at most one segment resident, while everything else waits
+in host memory or on disk. A small set of dials (recomputation, weight
+streaming, dropout, key--value caching, and the update schedule) defines
+operating modes that trade memory for time, and every mode is verified to
+compute the same model: bit-deterministic on CPU, with identical
+predictions across all engines including a PyTorch-free ONNX runtime---the
+data never has to leave the device that owns it. A 0.84-billion-parameter
+decoder trains in 1.1~GB of device memory, 23 times below full-model
+training and 20 times below the DeepSpeed ZeRO-Offload floor; a
+6.9-billion-parameter model, whose full-model training aborts even on a
+94~GB accelerator, trains on a CPU-only node in 9.3~GB of RAM, on a single
+40~GB accelerator, or in 2.6~GB when streamed; and the smallest serving
+mode answers queries in 401~MB without a GPU or a training framework. The
+price is time---$5.4\times$ full-model step time at half its memory to
+$30\times$ at the memory floor---captured in analytic memory and time laws
+validated by a pre-registered prediction on a held-out configuration.
+Every headline mode is further validated over hundreds to thousands of
+consecutive training steps and serving requests: device memory stationary
+to the byte on GPU and bounded on CPU, with long-run latencies down to
+31~ms per token for resident 0.84B serving.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -102,8 +95,10 @@ frameworks deny: that each resource-constrained participant can run training
 locally. This paper builds that missing substrate; the federated and
 distributed instantiations on top of it are our declared next step
 (Sec.~\ref{sec:limits}). Keeping training and inference on the device that
-owns the data is also the strongest security posture available: no raw
-records, gradients, or activations cross a network boundary. We note up
+owns the data removes the network and server-side attack surface entirely:
+no raw records, gradients, or activations ever cross a network boundary
+(threats that require physical or privileged access to the device itself
+are a separate matter; Sec.~\ref{sec:disc}). We note up
 front that our mechanism is orthogonal to the edge community's default
 lever, reduced precision: quantization and low-precision training shrink
 every memory term by a constant factor~\cite{nadalini2023reduced,micikevicius2018mixed},
@@ -675,16 +670,45 @@ requests. Three self-checks reconcile the protocols. (i) \emph{Validation
 pricing}: each configuration re-measured for five steps under the
 four-phase protocol yields the validation pass's direct cost, 0.3--80~s
 per step depending on mode and scale (Fig.~\ref{fig:valcost}).
-(ii) \emph{Tracer overhead}: profiled and unprofiled serving measured
-back-to-back on one node shows the per-operation tracer inflates
+(ii) \emph{Instrumentation overhead}: profiled and unprofiled serving
+measured back-to-back on one node shows the per-operation tracer inflates
 sub-second decoding $5.9\times$ while leaving slow modes within
 $1.16\times$---fast-decode latencies are therefore quoted from the
-untraced protocol. (iii) \emph{Sampler and environment}: the 50~ms
+untraced protocol. For training, the same five-step re-measurements price
+the four-phase protocol's total remainder beyond the validation pass
+(tracer, per-step allocator trimming, and node placement together) at
+2.3--63~s per step across the nine configurations (all values in the
+artifact's bridge summary); the four-phase tables are therefore
+\emph{protocol-inclusive} and internally comparable across modes, while
+Table~\ref{tab:sustainedtrain} gives deployment step times, the two
+reconciled per mode by Fig.~\ref{fig:valcost} plus these priced
+overheads. Table~\ref{tab:protocols} states which measurements carry
+which components. (iii) \emph{Sampler and environment}: the 50~ms
 resident-set sampler used on CPU changes step time by less than $0.3\%$
 (paired same-node control), and residual step-time variance traces to
 co-tenant load on the shared nodes---verified for the largest excursion,
 where a step-time drop aligns to the minute with another user's jobs
 ending on the same node.
+
+\begin{table}[t]
+\caption{What each measurement protocol includes, and which results it
+produces.}
+\label{tab:protocols}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+ & Four-phase (comparison) & Training-realistic \\
+\midrule
+Per-step validation pass & \checkmark & --- \\
+Per-operation memory tracer & \checkmark & --- \\
+Per-step allocator trim & \checkmark & --- \\
+Steps / requests per run & 2--5 & 128--2{,}048 / 500--2{,}000 \\
+Produces & Tabs.~\ref{tab:compare}--\ref{tab:infer}, \ref{tab:scale}, \ref{tab:costmodel}, \ref{tab:sensitivity} & Tabs.~\ref{tab:sustainedtrain}--\ref{tab:sustainedserve} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure*}[t]
 \centering
@@ -733,18 +757,18 @@ in pure PyTorch.}
 \toprule
 Check (scope) & GPU & CPU \\
 \midrule
-Forward hidden state vs.\ ref.\ (all 12 modes) & $1.2\text{e-}5$ & $3.8\text{e-}6$ \\
-Gradient slices vs.\ ref.\ (no-dropout, deferred) & $1.1\text{e-}8$ & $3.5\text{e-}9$ \\
-Params.\ after 1 step vs.\ ref.\ (deferred, clip) & $5.4\text{e-}5$ & $1.4\text{e-}5$ \\
-Params.\ after 4 steps vs.\ ref.\ (deferred, clip) & $5.4\text{e-}5$ & $1.1\text{e-}4$ \\
-Params.\ after 4 steps vs.\ ref.\ (in-backward, no clip) & $3.8\text{e-}4$ & $1.8\text{e-}4$ \\
-Backward determinism, repeat run (dropout on) & $2.3\text{e-}9$ & $\mathbf{0.0}$ \\
-Cross-mode gradients vs.\ anchor (dropout on) & $3.2\text{e-}9$ & $1.8\text{e-}9$ \\
-In-backward vs.\ deferred twin, all params.\ (dropout on) & $1.4\text{e-}4$ & $\mathbf{0.0}$ \\
+Forward hidden state vs.\ ref.\ (all 12 modes) & $1.2{\times}10^{-5}$ & $3.8{\times}10^{-6}$ \\
+Gradient slices vs.\ ref.\ (no-dropout, deferred) & $1.1{\times}10^{-8}$ & $3.5{\times}10^{-9}$ \\
+Params.\ after 1 step vs.\ ref.\ (deferred, clip) & $5.4{\times}10^{-5}$ & $1.4{\times}10^{-5}$ \\
+Params.\ after 4 steps vs.\ ref.\ (deferred, clip) & $5.4{\times}10^{-5}$ & $1.1{\times}10^{-4}$ \\
+Params.\ after 4 steps vs.\ ref.\ (in-backward, no clip) & $3.8{\times}10^{-4}$ & $1.8{\times}10^{-4}$ \\
+Backward determinism, repeat run (dropout on) & $2.3{\times}10^{-9}$ & $\mathbf{0.0}$ \\
+Cross-mode gradients vs.\ anchor (dropout on) & $3.2{\times}10^{-9}$ & $1.8{\times}10^{-9}$ \\
+In-backward vs.\ deferred twin, all params.\ (dropout on) & $1.4{\times}10^{-4}$ & $\mathbf{0.0}$ \\
 \midrule
-\emph{Control:} framework vs.\ itself, gradients (clip) & $2.2\text{e-}7$ & $1.5\text{e-}8$ \\
-\emph{Control:} framework vs.\ itself, step (clip) & $3.5\text{e-}5$ & $3.1\text{e-}6$ \\
-\emph{Control:} framework vs.\ itself, step (no clip) & $2.3\text{e-}4$ & $3.1\text{e-}5$ \\
+\emph{Control:} framework vs.\ itself, gradients (clip) & $2.2{\times}10^{-7}$ & $1.5{\times}10^{-8}$ \\
+\emph{Control:} framework vs.\ itself, step (clip) & $3.5{\times}10^{-5}$ & $3.1{\times}10^{-6}$ \\
+\emph{Control:} framework vs.\ itself, step (no clip) & $2.3{\times}10^{-4}$ & $3.1{\times}10^{-5}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -884,7 +908,9 @@ Segmented, smallest (fine partition) & 0.89\,GB & 30.8\,s \\
 
 \subsection{The Mode Grid at 0.84B}\label{sec:grid}
 Table~\ref{tab:grid} is the paper's centerpiece: all 12 training modes on
-both devices; Fig.~\ref{fig:frontier} plots the same cells as a
+both devices, measured under the four-phase protocol (its times are
+protocol-inclusive and comparable \emph{across} rows; deployment step
+times are in Table~\ref{tab:sustainedtrain}); Fig.~\ref{fig:frontier} plots the same cells as a
 memory--time frontier against the anchors, and Fig.~\ref{fig:traces} shows
 the device-memory timeline of three representative modes. Reading the grid
 as a menu:
@@ -1036,13 +1062,13 @@ Serving mode & Requests & Footprint & Band & s/token \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig_exp8_serving.pdf}
+\includegraphics[width=\textwidth]{figures/fig_exp8_serving.pdf}
 \caption{Long-horizon serving, per experiment: per-request peak memory and
 latency with its running average, over the full session.}
 \label{fig:sustainedserve}
-\end{figure}
+\end{figure*}
 
 \begin{table}[t]
 \caption{Inference at 0.84B (prompt 256, greedy decode, batch 1; medians
@@ -1295,8 +1321,10 @@ the sweep; below ${\sim}2$k tokens per step the vocabulary-tied term
 dominates and Eq.~(\ref{eq:memlaw}) applies unchanged, while larger token
 budgets add the measured slope. Step \emph{time} is flatter still: within
 the sweep's node, the $32\times$ token range moves the step by less than
-$6\%$ (40.3--42.7~s)---the streamed step is weight-traffic-bound, not
-token-bound, so the per-token cost of the smallest modes falls almost
+$6\%$ (40.3--42.7~s under the four-phase protocol; the sweep's node ran
+the paper-protocol cell at 41.5~s where the grid's node measured 28.3~s,
+the node-placement spread of Sec.~\ref{sec:longhorizon})---the streamed
+step is weight-traffic-bound, not token-bound, so the per-token cost of the smallest modes falls almost
 linearly with batch size: batch 8 processes $8\times$ the tokens of batch
 1 for $3\%$ more wall-clock.
 
@@ -1380,6 +1408,22 @@ invariant---baked per-segment sessions---failed for a structural reason
 resolves. We expect the same pattern, residency control through the graph
 interface, to carry to other inference runtimes with session-owned
 initializers.
+
+\textbf{Security posture, stated precisely.} The security benefit of
+segmented execution is \emph{data locality}: training and serving complete
+on the device that owns the data, so the threats that motivate federated
+and on-device learning---interception in transit, exposure to a serving or
+training provider, gradient leakage to an aggregator---are removed by
+construction rather than mitigated. We claim no more than that. An
+adversary with physical or privileged access to the device itself (memory
+inspection, side channels, model extraction from the local store) is
+outside this paper's scope and must be addressed by the platform's own
+protections; and once the federated extension of Sec.~\ref{sec:limits}
+exchanges updates across devices, the standard defenses of that setting
+(secure aggregation, differential privacy) become necessary again. The
+mechanism's contribution to security is therefore precise and bounded: it
+makes local execution \emph{possible} on hardware that could not
+previously train, eliminating the need to export data in the first place.
 
 \textbf{The dials become the runtime's job.} Sec.~\ref{sec:exact} makes
 every mode safe and Sec.~\ref{sec:model} makes every mode predictable;
