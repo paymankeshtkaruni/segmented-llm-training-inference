@@ -1,63 +1,61 @@
 #!/usr/bin/env python
-"""Per-step peak-memory report for the sustained 6.9B resident run (exp8).
+"""exp8 aggregator: long-horizon training and serving stability.
 
-Reads the MemFlow trace in results/exp8_sustained/rep1/T2sus_met.json, splits
-the timeline at each training step's forward-phase mark, and reports the peak
-reserved device memory of every step. The claim under test: the peak is FLAT
-across 50 consecutive steps (no allocator creep), so "trains on a 40 GB card"
-holds for sustained training, not just the 2-step measurement cell.
+exp8 (redefined 2026-09-05) is the long-horizon experiment family: training
+runs of 128-2,048 consecutive steps and serving runs of 500-2,000 requests
+at the cost scale, each recording per-step/per-request wall time and peak
+memory (runners: exp8_long_run.py, exp8_long_serve.py; jobs:
+slurm/exp8_g*.sbatch, slurm/exp8_i*.sbatch). The earlier 30-step run is
+kept as the sizing pilot under results/exp8_sustained/pilot_30step/.
 
-Writes results/exp8_sustained/sustained_summary.json (small, committed).
+This script aggregates every completed job under results/exp8_sustained/
+into one committed summary: results/exp8_sustained/sustained_summary.json.
 """
 from __future__ import annotations
 
-import gzip
 import json
-import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 R = HERE / "results" / "exp8_sustained"
 
+KEEP = ["n_steps_target", "n_steps_done", "n_requests_target", "n_requests_done",
+        "complete", "wall_total_s", "avg_step_s", "median_step_s", "step_s_p5_p95",
+        "avg_request_s", "avg_per_token_s", "request_s_p5_p95",
+        "peak_mb_first", "peak_mb_max", "peak_mb_max_at_step",
+        "peak_mb_max_at_request", "peak_mb_band",
+        "preset", "device", "engine", "tech_code", "update_style", "batch",
+        "seq_len", "prompt_len", "gen_tokens", "memory_note", "protocol"]
+
 
 def main():
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else R / "rep1" / "T2sus_met.json"
-    if not src.exists() and src.with_suffix(src.suffix + ".gz").exists():
-        src = src.with_suffix(src.suffix + ".gz")
-    opener = gzip.open if src.suffix == ".gz" else open
-    d = json.load(opener(src, "rt"))
-    tl = d["vram_timeline"]                     # [t, alloc_mb, reserved_mb]
-    marks = [m[0] for m in d["moves"]
-             if m[2] == "<phase>" and m[1] == "forward"]
-    if not marks:
-        raise SystemExit("no forward phase marks in trace")
-    bounds = marks + [tl[-1][0] + 1]
-    peaks = []
-    j = 0
-    for k in range(len(marks)):
-        lo, hi = bounds[k], bounds[k + 1]
-        peak = 0.0
-        while j < len(tl) and tl[j][0] < hi:
-            if tl[j][0] >= lo:
-                peak = max(peak, tl[j][2])
-            j += 1
-        peaks.append(round(peak, 1))
-    ctx = 490.0                                  # CUDA context on the pinned node class
-    out = {
-        "run": "exp8_sustained_6p9b_resident",
-        "source": str(src.name),
-        "n_steps": len(peaks),
-        "per_step_reserved_peak_mb": peaks,
-        "first_step_mb": peaks[0], "last_step_mb": peaks[-1],
-        "max_mb": max(peaks), "min_after_step1_mb": min(peaks[1:]) if len(peaks) > 1 else None,
-        "drift_last_minus_first_mb": round(peaks[-1] - peaks[0], 1),
-        "note": "reserved-memory peaks per training step; add %.0f MB CUDA "
-                "context for the no-miss total" % ctx,
-    }
+    jobs = {}
+    for f in sorted(R.glob("*/*_long.json")) + sorted(R.glob("*/*_serve.json")):
+        if "pilot_30step" in f.parts:
+            continue
+        d = json.load(open(f))
+        row = {k: d[k] for k in KEEP if k in d}
+        # stationarity: how far does the last decile's peak sit from the first's?
+        series = d.get("per_step") or d.get("per_request") or []
+        peaks = [r["peak_mb"] for r in series if r.get("peak_mb") is not None]
+        if len(peaks) >= 20:
+            n = max(1, len(peaks) // 10)
+            first_decile = max(peaks[:n])
+            last_decile = max(peaks[-n:])
+            row["peak_mb_first_decile_max"] = first_decile
+            row["peak_mb_last_decile_max"] = last_decile
+            row["peak_mb_last_minus_first_decile"] = round(last_decile - first_decile, 1)
+        jobs[f.parent.name] = row
+    out = {"run": "exp8_long_horizon_summary",
+           "note": "per-job long-horizon stability; pilot_30step/ holds the "
+                   "30-step sizing pilot (superseded)",
+           "jobs": jobs}
     dst = R / "sustained_summary.json"
-    json.dump(out, open(dst, "w"), indent=2)
-    print(json.dumps({k: v for k, v in out.items()
-                      if k != "per_step_reserved_peak_mb"}, indent=1))
+    json.dump(out, open(dst, "w"), indent=1)
+    for name, row in jobs.items():
+        done = row.get("n_steps_done") or row.get("n_requests_done")
+        print(f"{name:24s} done={done} avg_step={row.get('avg_step_s') or row.get('avg_request_s')} "
+              f"peak_band={row.get('peak_mb_band')} drift_decile={row.get('peak_mb_last_minus_first_decile')}")
     print("->", dst)
 
 

@@ -309,3 +309,5 @@ full-model export parity that underpins the equivalence claims.
 
 MIT (see `LICENSE`). The paper is not part of this repository; this is the artifact it
 points to.
+
+- **Long-horizon validation (exp8/exp9)**: every headline training and serving mode run for 128-2,048 consecutive steps / 500-2,000 requests with per-step cost recording, plus the validation-cost bridge and measurement self-checks; see REPRODUCE.md (long-horizon section).

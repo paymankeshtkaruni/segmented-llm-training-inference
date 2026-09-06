@@ -1,0 +1,152 @@
+{
+ "run": "exp8_long_horizon_train",
+ "preset": "large_8x2x2x8",
+ "device": "cpu",
+ "tech_code": "11100111000",
+ "update_style": "immediate",
+ "batch": 4,
+ "seq_len": 512,
+ "n_steps_target": 25,
+ "n_steps_done": 25,
+ "complete": false,
+ "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+ "memory_note": "per-step peak RSS (50 ms sampler)",
+ "wall_total_s": 1545.4,
+ "avg_step_s": 61.815,
+ "median_step_s": 61.784,
+ "step_s_p5_p95": [
+  61.159,
+  62.436
+ ],
+ "peak_mb_first": null,
+ "peak_mb_max": null,
+ "peak_mb_max_at_step": null,
+ "peak_mb_band": null,
+ "per_step": [
+  {
+   "step": 1,
+   "s": 61.474,
+   "peak_mb": null
+  },
+  {
+   "step": 2,
+   "s": 61.119,
+   "peak_mb": null
+  },
+  {
+   "step": 3,
+   "s": 61.234,
+   "peak_mb": null
+  },
+  {
+   "step": 4,
+   "s": 61.159,
+   "peak_mb": null
+  },
+  {
+   "step": 5,
+   "s": 61.623,
+   "peak_mb": null
+  },
+  {
+   "step": 6,
+   "s": 61.899,
+   "peak_mb": null
+  },
+  {
+   "step": 7,
+   "s": 61.273,
+   "peak_mb": null
+  },
+  {
+   "step": 8,
+   "s": 62.391,
+   "peak_mb": null
+  },
+  {
+   "step": 9,
+   "s": 61.653,
+   "peak_mb": null
+  },
+  {
+   "step": 10,
+   "s": 62.266,
+   "peak_mb": null
+  },
+  {
+   "step": 11,
+   "s": 62.744,
+   "peak_mb": null
+  },
+  {
+   "step": 12,
+   "s": 62.436,
+   "peak_mb": null
+  },
+  {
+   "step": 13,
+   "s": 61.857,
+   "peak_mb": null
+  },
+  {
+   "step": 14,
+   "s": 61.768,
+   "peak_mb": null
+  },
+  {
+   "step": 15,
+   "s": 62.073,
+   "peak_mb": null
+  },
+  {
+   "step": 16,
+   "s": 61.706,
+   "peak_mb": null
+  },
+  {
+   "step": 17,
+   "s": 61.678,
+   "peak_mb": null
+  },
+  {
+   "step": 18,
+   "s": 61.679,
+   "peak_mb": null
+  },
+  {
+   "step": 19,
+   "s": 61.799,
+   "peak_mb": null
+  },
+  {
+   "step": 20,
+   "s": 61.949,
+   "peak_mb": null
+  },
+  {
+   "step": 21,
+   "s": 61.615,
+   "peak_mb": null
+  },
+  {
+   "step": 22,
+   "s": 61.784,
+   "peak_mb": null
+  },
+  {
+   "step": 23,
+   "s": 62.264,
+   "peak_mb": null
+  },
+  {
+   "step": 24,
+   "s": 61.964,
+   "peak_mb": null
+  },
+  {
+   "step": 25,
+   "s": 61.979,
+   "peak_mb": null
+  }
+ ]
+}

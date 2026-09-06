@@ -168,3 +168,36 @@ Notes: per-rep metrics JSONs larger than 2 MB carry their raw sampling timelines
 stripped marker (the summary builders read only scalar fields); regenerate full traces by
 re-running the corresponding sbatch job. Every measurement runs via Slurm using the
 site-independent PROJECT_ROOT/PYTHON convention documented at the top of each sbatch file.
+
+## Long-horizon validation (exp8), validation-cost bridge (exp9), and measurement self-checks
+
+These back the paper's sustained-training/serving tables and figures and its
+Sec. "Long-Horizon Validation and Measurement Self-Checks".
+
+Scripts (in \`final_paper_scripts_results/segmented_model/memory_reduction_techniques/\`):
+- \`exp8_long_run.py\` / \`exp8_long_serve.py\` — training-realistic long runs
+  (no per-step validation, no allocator trimming, no tracer; per-step/-request
+  wall time + peak memory; rolling writes; \`--max-hours\` graceful stop).
+  Jobs: \`slurm/exp8_g1...g9.sbatch\`, \`slurm/exp8_ia...id.sbatch\`.
+- \`sustained_report.py\` — aggregates all runs into
+  \`results/exp8_sustained/sustained_summary.json\`.
+- \`exp8_plots.py\` — the per-experiment evolution figures
+  (\`results/exp8_sustained/plots/fig_exp8_{training,serving}.pdf\`) and the
+  validation-cost figure (\`fig_exp9_validation_cost.pdf\`).
+- \`exp9_bridge_report.py\` — validation-cost bridge from
+  \`results/exp9_validation_bridge/\` (5-step four-phase re-measurements;
+  job \`slurm/exp9_validation_bridge.sbatch\`) ->
+  \`results/exp9_validation_bridge/bridge_summary.json\`.
+- \`slurm/measurement_checks.sbatch\` + \`slurm/sampler_off_rerun.sbatch\` —
+  tracer-overhead bridge (profiled vs unprofiled serving, same node) and the
+  RSS-sampler paired control; results in \`results/measurement_checks/\`.
+
+Regenerate the derived artifacts from committed data (CPU-only, seconds):
+\`\`\`bash
+cd final_paper_scripts_results/segmented_model/memory_reduction_techniques
+python sustained_report.py && python exp9_bridge_report.py && python exp8_plots.py
+\`\`\`
+Per-rep JSONs carry raw per-step rows; large sampling timelines are replaced
+by a stripped marker (regenerate via the sbatch jobs). Step counts are scaled
+inversely to per-step cost so each configuration covers a comparable
+multi-hour horizon in one allocation.

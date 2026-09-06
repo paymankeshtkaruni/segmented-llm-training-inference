@@ -30,15 +30,19 @@ and analysis, decision to publish, or preparation of the manuscript.
 The measurement scripts, batch-job specifications, result summaries, and
 the code implementing segmented execution are available at:
 https://github.com/paymankeshtkaruni/segmented-llm-training-inference
-[CONFIRM final URL after the publication-repo sync (Step 5)]
+(synced, fresh-clone verified: 434 tests pass, all summaries/figures
+regenerate byte-identically; repository to be made public at submission).
 
 ## ORCID iDs — [CONFIRM: required at Editorial Manager submission]
 
-- Sadegh Keshtkar: [ORCID]
-- Saad Ahmad: [ORCID] — also CONFIRM current email (v3 carried
-  Saad.Ahmad@gmail.com with a verify flag)
-- Michael Bidollahkhani: [ORCID]
-- Julian Kunkel: [ORCID]
+- Sadegh Keshtkar: 0000-0002-4683-0136 [CANDIDATE from ORCID registry
+  search ("sadegh keshtkar", no public affiliation) — CONFIRM it is yours]
+- Saad Ahmad: [NO clear registry match — ask the co-author; also CONFIRM
+  current email (v3 carried Saad.Ahmad@gmail.com with a verify flag)]
+- Michael Bidollahkhani: 0000-0001-8122-4441 [CANDIDATE — registry lists
+  University of Göttingen; CONFIRM with co-author]
+- Julian Kunkel: 0000-0002-6915-1179 [CANDIDATE — top registry match;
+  CONFIRM with co-author]
 
 ## Declaration of Generative AI in scientific writing — [AUTHOR DECISION]
 

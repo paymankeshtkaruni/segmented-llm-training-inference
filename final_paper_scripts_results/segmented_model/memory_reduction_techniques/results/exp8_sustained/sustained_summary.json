@@ -1,43 +1,392 @@
 {
-  "run": "exp8_sustained_6p9b_resident",
-  "source": "T2sus_met.json.gz",
-  "n_steps": 30,
-  "per_step_reserved_peak_mb": [
-    27844.0,
-    27982.0,
-    27932.0,
-    27982.0,
-    27982.0,
-    27982.0,
-    27982.0,
-    27982.0,
-    27982.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27982.0,
-    27982.0,
-    27982.0,
-    27982.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27932.0,
-    27982.0,
-    27932.0,
-    27932.0,
-    27932.0
-  ],
-  "first_step_mb": 27844.0,
-  "last_step_mb": 27932.0,
-  "max_mb": 27982.0,
-  "min_after_step1_mb": 27932.0,
-  "drift_last_minus_first_mb": 88.0,
-  "note": "reserved-memory peaks per training step; add 490 MB CUDA context for the no-miss total"
+ "run": "exp8_long_horizon_summary",
+ "note": "per-job long-horizon stability; pilot_30step/ holds the 30-step sizing pilot (superseded)",
+ "jobs": {
+  "g1_084b_resident_imm": {
+   "n_steps_target": 2048,
+   "n_steps_done": 2048,
+   "complete": true,
+   "wall_total_s": 10721.9,
+   "avg_step_s": 5.234,
+   "median_step_s": 5.236,
+   "step_s_p5_p95": [
+    5.115,
+    5.343
+   ],
+   "peak_mb_first": 11477.7,
+   "peak_mb_max": 11477.7,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    11477.7,
+    11477.7
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cuda",
+   "tech_code": "11100111000",
+   "update_style": "immediate",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 11477.7,
+   "peak_mb_last_decile_max": 11477.7,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "g2_084b_resident_recomp": {
+   "n_steps_target": 2048,
+   "n_steps_done": 2048,
+   "complete": true,
+   "wall_total_s": 18540.2,
+   "avg_step_s": 9.052,
+   "median_step_s": 9.049,
+   "step_s_p5_p95": [
+    8.93,
+    9.18
+   ],
+   "peak_mb_first": 4173.3,
+   "peak_mb_max": 4173.3,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    4173.3,
+    4173.3
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cuda",
+   "tech_code": "11110111000",
+   "update_style": "after_full",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 4173.3,
+   "peak_mb_last_decile_max": 4173.3,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "g3_084b_streamed_def": {
+   "n_steps_target": 2048,
+   "n_steps_done": 2048,
+   "complete": true,
+   "wall_total_s": 55518.7,
+   "avg_step_s": 27.106,
+   "median_step_s": 28.238,
+   "step_s_p5_p95": [
+    24.345,
+    29.4
+   ],
+   "peak_mb_first": 652.2,
+   "peak_mb_max": 652.2,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    652.2,
+    652.2
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cuda",
+   "tech_code": "11111111100",
+   "update_style": "after_full",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 652.2,
+   "peak_mb_last_decile_max": 652.2,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "g4_084b_streamed_imm": {
+   "n_steps_target": 2048,
+   "n_steps_done": 2048,
+   "complete": true,
+   "wall_total_s": 33342.4,
+   "avg_step_s": 16.279,
+   "median_step_s": 16.274,
+   "step_s_p5_p95": [
+    16.116,
+    16.451
+   ],
+   "peak_mb_first": 681.6,
+   "peak_mb_max": 681.6,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    681.6,
+    681.6
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cuda",
+   "tech_code": "11111111100",
+   "update_style": "immediate",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 681.6,
+   "peak_mb_last_decile_max": 681.6,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "g5_69b_resident_recomp": {
+   "n_steps_target": 1024,
+   "n_steps_done": 1024,
+   "complete": true,
+   "wall_total_s": 42902.8,
+   "avg_step_s": 41.896,
+   "median_step_s": 41.939,
+   "step_s_p5_p95": [
+    40.251,
+    42.944
+   ],
+   "peak_mb_first": 29196.6,
+   "peak_mb_max": 29196.6,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    29196.6,
+    29196.6
+   ],
+   "preset": "xxl7b_8x2x2x8",
+   "device": "cuda",
+   "tech_code": "11110111000",
+   "update_style": "after_full",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 29196.6,
+   "peak_mb_last_decile_max": 29196.6,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "g6_69b_streamed_imm": {
+   "n_steps_target": 512,
+   "n_steps_done": 512,
+   "complete": true,
+   "wall_total_s": 52335.0,
+   "avg_step_s": 102.216,
+   "median_step_s": 102.101,
+   "step_s_p5_p95": [
+    101.651,
+    103.024
+   ],
+   "peak_mb_first": 2309.0,
+   "peak_mb_max": 2309.0,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    2309.0,
+    2309.0
+   ],
+   "preset": "xxl7b_8x2x2x8",
+   "device": "cuda",
+   "tech_code": "11111111100",
+   "update_style": "immediate",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 2309.0,
+   "peak_mb_last_decile_max": 2309.0,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "g7_084b_cpu_streamed_def": {
+   "n_steps_target": 512,
+   "n_steps_done": 512,
+   "complete": true,
+   "wall_total_s": 57577.1,
+   "avg_step_s": 112.454,
+   "median_step_s": 112.624,
+   "step_s_p5_p95": [
+    110.754,
+    113.32
+   ],
+   "peak_mb_first": 1933.3,
+   "peak_mb_max": 2086.6,
+   "peak_mb_max_at_step": 6,
+   "peak_mb_band": [
+    1737.3,
+    2086.6
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cpu",
+   "tech_code": "11111111100",
+   "update_style": "after_full",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak RSS (50 ms sampler)",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 2086.6,
+   "peak_mb_last_decile_max": 1941.5,
+   "peak_mb_last_minus_first_decile": -145.1
+  },
+  "g8_084b_cpu_resident_imm": {
+   "n_steps_target": 1024,
+   "n_steps_done": 1024,
+   "complete": true,
+   "wall_total_s": 52176.5,
+   "avg_step_s": 50.953,
+   "median_step_s": 50.322,
+   "step_s_p5_p95": [
+    49.275,
+    52.789
+   ],
+   "peak_mb_first": 20485.2,
+   "peak_mb_max": 21134.1,
+   "peak_mb_max_at_step": 1011,
+   "peak_mb_band": [
+    20443.3,
+    21134.1
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cpu",
+   "tech_code": "11100111000",
+   "update_style": "immediate",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak RSS (50 ms sampler)",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 21122.4,
+   "peak_mb_last_decile_max": 21134.1,
+   "peak_mb_last_minus_first_decile": 11.7
+  },
+  "g9_69b_cpu_streamed_imm": {
+   "n_steps_target": 128,
+   "n_steps_done": 128,
+   "complete": true,
+   "wall_total_s": 61188.5,
+   "avg_step_s": 478.034,
+   "median_step_s": 477.996,
+   "step_s_p5_p95": [
+    473.857,
+    483.149
+   ],
+   "peak_mb_first": 7931.6,
+   "peak_mb_max": 7931.6,
+   "peak_mb_max_at_step": 1,
+   "peak_mb_band": [
+    6680.7,
+    7931.6
+   ],
+   "preset": "xxl7b_8x2x2x8",
+   "device": "cpu",
+   "tech_code": "11111111100",
+   "update_style": "immediate",
+   "batch": 4,
+   "seq_len": 512,
+   "memory_note": "per-step peak RSS (50 ms sampler)",
+   "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
+   "peak_mb_first_decile_max": 7931.6,
+   "peak_mb_last_decile_max": 6998.0,
+   "peak_mb_last_minus_first_decile": -933.6
+  },
+  "ia_084b_cache": {
+   "n_requests_target": 2000,
+   "n_requests_done": 2000,
+   "complete": true,
+   "wall_total_s": 1988.6,
+   "avg_request_s": 0.993,
+   "avg_per_token_s": 0.031,
+   "request_s_p5_p95": [
+    0.969,
+    1.024
+   ],
+   "peak_mb_first": 3808.4,
+   "peak_mb_max": 3808.4,
+   "peak_mb_max_at_request": 1,
+   "peak_mb_band": [
+    3808.4,
+    3808.4
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cuda",
+   "engine": "torch",
+   "tech_code": "11100111000",
+   "prompt_len": 256,
+   "gen_tokens": 32,
+   "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
+   "peak_mb_first_decile_max": 3808.4,
+   "peak_mb_last_decile_max": 3808.4,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "ib_084b_streamed": {
+   "n_requests_target": 500,
+   "n_requests_done": 500,
+   "complete": true,
+   "wall_total_s": 19991.6,
+   "avg_request_s": 39.982,
+   "avg_per_token_s": 4.9978,
+   "request_s_p5_p95": [
+    39.733,
+    40.243
+   ],
+   "peak_mb_first": 165.7,
+   "peak_mb_max": 165.7,
+   "peak_mb_max_at_request": 1,
+   "peak_mb_band": [
+    165.7,
+    165.7
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cuda",
+   "engine": "torch",
+   "tech_code": "11101111101",
+   "prompt_len": 256,
+   "gen_tokens": 8,
+   "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
+   "peak_mb_first_decile_max": 165.7,
+   "peak_mb_last_decile_max": 165.7,
+   "peak_mb_last_minus_first_decile": 0.0
+  },
+  "ic_084b_onnx_disk": {
+   "n_requests_target": 500,
+   "n_requests_done": 500,
+   "complete": true,
+   "wall_total_s": 36251.7,
+   "avg_request_s": 72.503,
+   "avg_per_token_s": 9.0629,
+   "request_s_p5_p95": [
+    71.548,
+    74.036
+   ],
+   "peak_mb_first": 388.9,
+   "peak_mb_max": 389.4,
+   "peak_mb_max_at_request": 31,
+   "peak_mb_band": [
+    377.1,
+    389.4
+   ],
+   "preset": "large_8x2x2x8",
+   "device": "cpu",
+   "engine": "onnx",
+   "tech_code": null,
+   "prompt_len": 256,
+   "gen_tokens": 8,
+   "memory_note": "per-request peak RSS (50 ms sampler)",
+   "peak_mb_first_decile_max": 389.4,
+   "peak_mb_last_decile_max": 384.3,
+   "peak_mb_last_minus_first_decile": -5.1
+  },
+  "id_69b_cache": {
+   "n_requests_target": 1000,
+   "n_requests_done": 1000,
+   "complete": true,
+   "wall_total_s": 1118.0,
+   "avg_request_s": 1.117,
+   "avg_per_token_s": 0.0349,
+   "request_s_p5_p95": [
+    1.115,
+    1.121
+   ],
+   "peak_mb_first": 27846.0,
+   "peak_mb_max": 27846.0,
+   "peak_mb_max_at_request": 1,
+   "peak_mb_band": [
+    27846.0,
+    27846.0
+   ],
+   "preset": "xxl7b_8x2x2x8",
+   "device": "cuda",
+   "engine": "torch",
+   "tech_code": "11100111000",
+   "prompt_len": 256,
+   "gen_tokens": 32,
+   "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
+   "peak_mb_first_decile_max": 27846.0,
+   "peak_mb_last_decile_max": 27846.0,
+   "peak_mb_last_minus_first_decile": 0.0
+  }
+ }
 }

@@ -45,8 +45,9 @@ set by framework scheduling rather than by the computation, and present
 segmented execution: a GPT decoder is partitioned along four cut planes
 (attention head groups, feed-forward hidden units, embedding width, and
 vocabulary slices) and the parts are executed sequentially in time on the
-constrained device, so at most one small segment is ever resident, while
-everything else waits in host memory or on disk. Settings of a small number
+constrained device---one small segment computing at a time, and, in the
+streamed modes, at most one segment resident at all, while everything else
+waits in host memory or on disk. Settings of a small number
 of dials (activation recomputation, weight streaming, dropout, key--value
 caching, and the optimizer update schedule) define named operating modes
 that trade memory for time, and every mode is verified to compute the same
@@ -63,6 +64,13 @@ without a GPU or a training framework. The price is time, which we measure
 for every mode---from $5.4\times$ full-model step time at half its memory to
 $30\times$ at the memory floor---and capture in analytic memory and time
 laws validated by a pre-registered prediction on a held-out configuration.
+These are not snapshot measurements: every headline configuration is
+additionally trained for hundreds to thousands of consecutive steps and
+served for hundreds to thousands of requests, over which device memory is
+stationary to the byte on GPU and bounded on CPU, step times are reported
+as long-run averages, and the per-step cost of evaluation is priced
+separately; under these deployment conditions the resident serving mode
+answers at 31~ms per token.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -123,9 +131,12 @@ slices---but where tensor parallelism multiplexes the partitions across
 execution multiplexes them across \emph{time}: one device visits the parts in
 sequence, and the collectives degenerate into local concatenations and
 accumulations. We refer to this duality as \emph{temporal tensor parallelism}.
-An execution engine guarantees that at most one segment is resident on the
-constrained device; every other segment, gradient, and optimizer moment is
-parked in a backing store (host memory behind a GPU, disk behind a CPU). The
+An execution engine runs exactly one segment at a time; under weight
+streaming it further guarantees that at most one segment is \emph{resident}
+on the constrained device, every other segment, gradient, and optimizer
+moment parked in a backing store (host memory behind a GPU, disk behind a
+CPU), while the resident modes trade that memory floor for speed by keeping
+all segment weights on the device. The
 partition is a pure execution concern on an unchanged architecture, and we
 verify that segmented training reproduces full-model training to
 floating-point tolerance and matches its accuracy exactly at the prediction
@@ -147,8 +158,9 @@ dials govern inference, down to a 401~MB PyTorch-free serving mode.
 \paragraph{Contributions.}
 \begin{enumerate}
 \item \textbf{Segmented execution as temporal tensor parallelism:} a
-  four-axis partition of an unchanged GPT decoder executed under a
-  one-resident-segment invariant, with the reassembly identities stated as
+  four-axis partition of an unchanged GPT decoder executed one segment at
+  a time---down to a one-resident-segment floor when streamed---with the
+  reassembly identities stated as
   propositions and exactness across all operating modes established at the
   forward, gradient, optimizer-step, and prediction levels
   (Secs.~\ref{sec:design} and \ref{sec:exact}).
@@ -349,11 +361,16 @@ are computed analytically and are exact.
 \end{proposition}
 
 \subsection{The Residency Invariant}\label{sec:invariant}
-A strict loader enforces a \textbf{one-active-segment invariant}: at most one
-segment's weights are materialized on the constrained device at any time.
-Non-resident state---segment weights, gradients, optimizer moments, and
-activation records---lives in a backing store whose medium is fixed by the
-device class: host memory behind a GPU, disk behind a CPU. We report both
+A strict loader enforces a \textbf{one-active-segment invariant}: exactly
+one segment is ever \emph{executing}, so the transient activations and
+gradient workspace of at most one segment exist at any time. Weight
+residency is a separate dial (Sec.~\ref{sec:modes}): under \emph{streaming}
+at most one segment's weights are materialized on the constrained device,
+and all non-resident state---segment weights, gradients, optimizer moments,
+and activation records---lives in a backing store whose medium is fixed by
+the device class (host memory behind a GPU, disk behind a CPU); in the
+\emph{resident} modes all segment weights stay on the device and the
+invariant bounds the activation and workspace terms only. We report both
 device memory and the host footprint for every measurement, since the store
 is part of the bargain.
 
@@ -643,6 +660,41 @@ PCIe/NVMe-class hardware, though the cost model of Sec.~\ref{sec:model}
 separates bandwidth-bound from compute-bound terms. The cost-model
 validation is pre-registered: the predicted time and memory of the held-out
 3.09B cell were committed to the repository before the job ran.
+
+\subsection{Long-Horizon Validation and Measurement Self-Checks}\label{sec:longhorizon}
+The per-step protocol above times a four-phase step (forward, backward,
+update, and a validation pass) under a per-operation memory tracer, with
+the allocator trimmed each step---the right instrument for comparing modes
+on equal terms, but not what a deployed trainer runs. We therefore validate
+every headline configuration under a \emph{training-realistic} protocol:
+128--2{,}048 consecutive steps (step counts scaled inversely to per-step
+cost, so each configuration is observed over a comparable multi-hour
+horizon within one scheduler allocation), no per-step validation, no
+allocator trimming, no tracer; serving analogously for 500--2{,}000
+requests. Three self-checks reconcile the protocols. (i) \emph{Validation
+pricing}: each configuration re-measured for five steps under the
+four-phase protocol yields the validation pass's direct cost, 0.3--80~s
+per step depending on mode and scale (Fig.~\ref{fig:valcost}).
+(ii) \emph{Tracer overhead}: profiled and unprofiled serving measured
+back-to-back on one node shows the per-operation tracer inflates
+sub-second decoding $5.9\times$ while leaving slow modes within
+$1.16\times$---fast-decode latencies are therefore quoted from the
+untraced protocol. (iii) \emph{Sampler and environment}: the 50~ms
+resident-set sampler used on CPU changes step time by less than $0.3\%$
+(paired same-node control), and residual step-time variance traces to
+co-tenant load on the shared nodes---verified for the largest excursion,
+where a step-time drop aligns to the minute with another user's jobs
+ending on the same node.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_exp9_validation_cost.pdf}
+\caption{The directly priced per-step validation pass (red) on top of the
+training-only long-run step time (blue), per configuration. Adding the red
+component converts a training-realistic step into the four-phase
+measurement protocol's step.}
+\label{fig:valcost}
+\end{figure}
 
 % ============================================================================
 \section{Exactness}\label{sec:exact}
@@ -950,10 +1002,54 @@ serves in \textbf{401~MB total} on CPU---no GPU, no PyTorch, no
 host-resident weight copy---at 9.2~s/token. The excluded baked-per-segment
 design (11.6~GB, Sec.~\ref{sec:onnxrt}) is dominated at both ends.
 
+Sustained serving (Table~\ref{tab:sustainedserve},
+Fig.~\ref{fig:sustainedserve}) extends each mode to 500--2{,}000
+consecutive requests: the resident 6.9B server holds exactly 27.8~GB
+(reserved) for 1{,}000 requests, and the PyTorch-free disk-streamed server
+answers 500 requests inside 377--389~MB---12~MB of runtime-arena wobble, no
+trend, no session leak. Under this instrumentation-free protocol the cache
+modes' latency is \textbf{0.031~s/token} (0.84B) and \textbf{0.035~s/token}
+(6.9B): the per-operation tracer inside the mode-comparison protocol
+inflates sub-second decoding $5.9\times$ (measured back-to-back on one
+node, Sec.~\ref{sec:longhorizon}) while slow modes agree within
+2--16\%. Table~\ref{tab:infer} therefore remains the \emph{relative}
+comparison across modes under equal instrumentation; deployment latencies
+are those of Table~\ref{tab:sustainedserve}.
+
+\begin{table}[t]
+\caption{Long-horizon serving: sustained footprint (GPU: reserved + CUDA
+context; CPU: resident set), band over the whole session, and
+instrumentation-free latency.}
+\label{tab:sustainedserve}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Serving mode & Requests & Footprint & Band & s/token \\
+\midrule
+0.84B GPU resident + KV cache & 2{,}000 & 4{,}298\,MB & 0\,MB & 0.031 \\
+0.84B GPU streamed + recompute & 500 & 656\,MB & 0\,MB & 5.00 \\
+0.84B CPU ONNX, disk-streamed & 500 & 377--389\,MB & 12\,MB & 9.06 \\
+6.9B GPU resident + KV cache & 1{,}000 & 28{,}336\,MB & 0\,MB & 0.035 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_exp8_serving.pdf}
+\caption{Long-horizon serving, per experiment: per-request peak memory and
+latency with its running average, over the full session.}
+\label{fig:sustainedserve}
+\end{figure}
+
 \begin{table}[t]
 \caption{Inference at 0.84B (prompt 256, greedy decode, batch 1; medians
 of three). GPU cells: device peak / host RSS / s per token; CPU cells:
-RAM / s per token.}
+RAM / s per token. All rows share the per-operation tracing
+instrumentation; deployment latencies for the fast modes are in
+Table~\ref{tab:sustainedserve}.}
 \label{tab:infer}
 \centering
 \small
@@ -999,11 +1095,53 @@ all of them on the single 40~GB card, three ways. Resident with
 recomputation, 6.9B trains at 28.5~GB and 58.1~s per step---a model whose
 conventional training exceeds the largest single accelerator sold, on a
 mid-range card, with $71\%$ of the device left over at 3B (14.0~GB).
-Sustained training confirms the cell is representative rather than a
-snapshot: over 30 consecutive resident steps at 6.9B, the per-step reserved
-peak stays within a 138~MB band (27{,}844--27{,}982~MB, first-to-last drift
-$+88$~MB)---no allocator creep toward the 40~GB ceiling, the failure mode a
-short measurement could hide.
+Sustained training confirms every cell is representative rather than a
+snapshot (Table~\ref{tab:sustainedtrain}, Fig.~\ref{fig:sustainedtrain}):
+each headline mode runs 128--2{,}048 consecutive steps over 3--17 hours
+under the training-realistic protocol of Sec.~\ref{sec:longhorizon}. On
+GPU the per-step peak is \emph{identical to the byte} on every step of
+every run---including 1{,}024 steps of the 6.9B resident configuration at
+29.2~GB and 2{,}048 steps of the memory-floor mode---with no allocator
+trimming. On CPU the resident set oscillates between allocator plateaus
+within a bounded band ($\le$691~MB at 0.84B; transient first-touch
+excursions at 6.9B settle within ten steps) with no trend. Step times are
+stationary; their residual variance is co-tenant noise on the shared nodes
+(Sec.~\ref{sec:longhorizon}), reported as the p5--p95 spread.
+
+\begin{table}[t]
+\caption{Long-horizon training: sustained peaks (GPU: reserved + CUDA
+context; CPU: resident set), the peak band over the whole run, the
+training-only long-run step time, and the directly priced per-step
+validation pass that converts to the four-phase protocol.}
+\label{tab:sustainedtrain}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Mode & Steps & Sustained peak & Band & Step & +valid. \\
+\midrule
+0.84B GPU retained, resident, in-backw. & 2{,}048 & 11{,}968\,MB & 0\,MB & 5.23\,s & +0.3\,s \\
+0.84B GPU recomp., resident, deferred & 2{,}048 & 4{,}663\,MB & 0\,MB & 9.05\,s & +0.3\,s \\
+0.84B GPU recomp., streamed, deferred & 2{,}048 & 1{,}142\,MB & 0\,MB & 27.11\,s & +6.6\,s \\
+0.84B GPU recomp., streamed, in-backw. & 2{,}048 & 1{,}172\,MB & 0\,MB & 16.28\,s & +6.6\,s \\
+6.9B GPU recomp., resident, deferred & 1{,}024 & 29{,}687\,MB & 0\,MB & 41.90\,s & +1.6\,s \\
+6.9B GPU recomp., streamed, in-backw. & 512 & 2{,}799\,MB & 0\,MB & 102.2\,s & +37.4\,s \\
+0.84B CPU recomp., streamed, deferred & 512 & 2{,}087\,MB & 349\,MB & 112.5\,s & +14.0\,s \\
+0.84B CPU retained, resident, in-backw. & 1{,}024 & 21{,}134\,MB & 691\,MB & 50.95\,s & +6.2\,s \\
+6.9B CPU recomp., streamed, in-backw. & 128 & 7{,}932\,MB & 1{,}251\,MB & 478.0\,s & +79.9\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[height=0.94\textheight]{figures/fig_exp8_training.pdf}
+\caption{Long-horizon training, per experiment: per-step peak memory
+(left; band annotated) and whole-step wall time with its running average
+(right), from the first to the last step.}
+\label{fig:sustainedtrain}
+\end{figure*}
 Streamed, the same models train in 1.7--2.6~GB (deferred) or at
 $1.3\times$ less time with in-backward updates; device memory grows only
 through the widest segment---from 0.84B to 6.9B ($8.2\times$ the
@@ -1079,7 +1217,7 @@ engineering.
 \toprule
 Quantity & Temporal (this paper) & Spatial (tensor parallel) \\
 \midrule
-Parts co-resident & 1 (invariant) & $P$, one per device \\
+Parts co-resident & 1 (streamed floor) & $P$, one per device \\
 Peak per device & Eq.~(\ref{eq:memlaw}), measured & same law per rank \\
 Step time & $\sum_i t_i$, measured & $\max_i t_i$ + collectives \\
 Join operations & local concat/add & all-gather / all-reduce \\
@@ -1108,7 +1246,11 @@ kernel launches; the 2~s constant absorbs framework overhead. Memory: the slope 
 $s_v$ bundles the resident slice with its gradient, transients, and
 allocator rounding; the $d_\text{model}$ term carries shared parameters and
 per-layer records. Both laws were fitted \emph{once} on the seven
-configurations of Table~\ref{tab:costmodel} and then frozen.
+configurations of Table~\ref{tab:costmodel} and then frozen. Both laws
+describe the four-phase measurement protocol of Sec.~\ref{sec:discipline};
+the long-horizon runs of Table~\ref{tab:sustainedtrain} give the
+corresponding training-only step times, and the directly priced validation
+pass (Fig.~\ref{fig:valcost}) converts between the two.
 
 \begin{table}[t]
 \caption{Cost-model accuracy. Fitted on the seven configurations above the
@@ -1264,8 +1406,10 @@ and quantized optimizer states are orthogonal to the partition and would
 shrink absolute footprints on \emph{both} sides of every comparison,
 shifting the out-of-memory boundaries of Table~\ref{tab:scale} without
 changing the structure of the memory law. Wall-clock results are specific
-to the measured PCIe- and NVMe-class node; the cost model's segment and
-parameter coefficients would refit on other hardware, its form should not.
+to the measured PCIe- and NVMe-class node and, on the shared partition,
+carry co-tenant variance, which we quantify rather than control; the cost
+model's segment and parameter coefficients would refit on other hardware,
+its form should not.
 Inference is batch-one greedy decoding with a single-sequence KV path;
 batched serving under the residency invariant is unexplored. The exactness
 matrix is exhaustive at the mode level but the architecture is one family:
@@ -1312,8 +1456,9 @@ independently placeable---is what this paper establishes.
 This paper treats device memory as a budget to be scheduled rather than a
 requirement to be met. One idea carries the whole construction: partition
 an unchanged GPT decoder along the four cut planes of tensor parallelism,
-but multiplex the parts through a single device in time, under a verified
-one-segment residency invariant. Everything else is disciplined
+but multiplex the parts through a single device in time, one segment
+executing at a time, down to a verified one-resident-segment floor when
+streamed. Everything else is disciplined
 consequence. The reassembly identities make the partition exact; the
 identity campaign---including a control that measures the framework
 against itself---shows every one of 12 training and 4 inference modes at

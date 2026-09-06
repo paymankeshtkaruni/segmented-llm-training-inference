@@ -1,0 +1,130 @@
+{
+ "run": "exp8_long_horizon_serve",
+ "engine": "torch",
+ "preset": "large_8x2x2x8",
+ "device": "cuda",
+ "tech_code": "11101111101",
+ "onnx_dir": null,
+ "prompt_len": 256,
+ "gen_tokens": 8,
+ "n_requests_target": 20,
+ "n_requests_done": 20,
+ "complete": true,
+ "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
+ "wall_total_s": 756.2,
+ "avg_request_s": 37.811,
+ "avg_per_token_s": 4.7264,
+ "request_s_p5_p95": [
+  37.452,
+  38.149
+ ],
+ "peak_mb_first": 165.7,
+ "peak_mb_max": 165.7,
+ "peak_mb_max_at_request": 1,
+ "peak_mb_band": [
+  165.7,
+  165.7
+ ],
+ "per_request": [
+  {
+   "req": 1,
+   "s": 37.286,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 2,
+   "s": 37.452,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 3,
+   "s": 37.516,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 4,
+   "s": 37.482,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 5,
+   "s": 37.574,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 6,
+   "s": 37.68,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 7,
+   "s": 37.814,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 8,
+   "s": 37.819,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 9,
+   "s": 37.817,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 10,
+   "s": 37.903,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 11,
+   "s": 37.914,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 12,
+   "s": 37.868,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 13,
+   "s": 37.882,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 14,
+   "s": 37.979,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 15,
+   "s": 37.985,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 16,
+   "s": 38.051,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 17,
+   "s": 38.032,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 18,
+   "s": 38.149,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 19,
+   "s": 38.071,
+   "peak_mb": 165.7
+  },
+  {
+   "req": 20,
+   "s": 37.954,
+   "peak_mb": 165.7
+  }
+ ]
+}
