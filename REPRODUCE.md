@@ -188,6 +188,10 @@ Scripts (in \`final_paper_scripts_results/segmented_model/memory_reduction_techn
   \`results/exp9_validation_bridge/\` (5-step four-phase re-measurements;
   job \`slurm/exp9_validation_bridge.sbatch\`) ->
   \`results/exp9_validation_bridge/bridge_summary.json\`.
+- \`table_enrichment_report.py\` — full-model anchors, per-mode ratios vs
+  the full model (Table VI), and long-run deltas vs the short cost protocol
+  (Table IX), from committed results only (job
+  \`slurm/table_enrichment.sbatch\`) -> \`results/table_enrichment.json\`.
 - \`slurm/measurement_checks.sbatch\` + \`slurm/sampler_off_rerun.sbatch\` —
   tracer-overhead bridge (profiled vs unprofiled serving, same node) and the
   RSS-sampler paired control; results in \`results/measurement_checks/\`.
@@ -195,7 +199,7 @@ Scripts (in \`final_paper_scripts_results/segmented_model/memory_reduction_techn
 Regenerate the derived artifacts from committed data (CPU-only, seconds):
 \`\`\`bash
 cd final_paper_scripts_results/segmented_model/memory_reduction_techniques
-python sustained_report.py && python exp9_bridge_report.py && python exp8_plots.py
+python sustained_report.py && python exp9_bridge_report.py && python exp8_plots.py && python table_enrichment_report.py
 \`\`\`
 Per-rep JSONs carry raw per-step rows; large sampling timelines are replaced
 by a stripped marker (regenerate via the sbatch jobs). Step counts are scaled

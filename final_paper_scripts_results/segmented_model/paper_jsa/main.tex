@@ -39,31 +39,24 @@ Research (BMBF), Germany, under the AI service center KISSKI (grant nos.\
 \begin{abstract}
 Devices with limited memory---edge nodes, commodity CPUs, single mid-range
 accelerators---are widely considered unable to train or even load large
-language models (LLMs). We argue this limit is set by framework scheduling
-rather than by the computation, and present segmented execution: a GPT
-decoder is partitioned along four cut planes (attention head groups,
-feed-forward hidden units, embedding width, and vocabulary slices) and
-executed sequentially---one small segment computing at a time, and, in the
-streamed modes, at most one segment resident, while everything else waits
-in host memory or on disk. A small set of dials (recomputation, weight
-streaming, dropout, key--value caching, and the update schedule) defines
-operating modes that trade memory for time, and every mode is verified to
-compute the same model: bit-deterministic on CPU, with identical
-predictions across all engines including a PyTorch-free ONNX runtime---the
-data never has to leave the device that owns it. A 0.84-billion-parameter
-decoder trains in 1.1~GB of device memory, 23 times below full-model
-training and 20 times below the DeepSpeed ZeRO-Offload floor; a
-6.9-billion-parameter model, whose full-model training aborts even on a
-94~GB accelerator, trains on a CPU-only node in 9.3~GB of RAM, on a single
-40~GB accelerator, or in 2.6~GB when streamed; and the smallest serving
-mode answers queries in 401~MB without a GPU or a training framework. The
-price is time---$5.4\times$ full-model step time at half its memory to
-$30\times$ at the memory floor---captured in analytic memory and time laws
-validated by a pre-registered prediction on a held-out configuration.
-Every headline mode is further validated over hundreds to thousands of
-consecutive training steps and serving requests: device memory stationary
-to the byte on GPU and bounded on CPU, with long-run latencies down to
-31~ms per token for resident 0.84B serving.
+language models. We argue this limit is set by framework scheduling rather
+than by the computation, and present segmented execution: a GPT decoder is
+partitioned along four cut planes (attention head groups, feed-forward
+hidden units, embedding width, and vocabulary slices) and executed one
+segment at a time, with non-resident state parked in host memory or on
+disk. Our contributions are: a \emph{mode taxonomy}, in which a small set
+of binary dials yields twelve training and four inference modes trading
+memory for time; a \emph{verified exactness guarantee}---every mode
+computes the same model as unsegmented execution, bit-deterministic on CPU
+and prediction-identical across all engines, so no accuracy is traded; a
+\emph{PyTorch-free serving runtime} for deployment without a training
+framework; and \emph{analytic memory and time laws}, validated by a
+pre-registered prediction on a held-out configuration and by long-horizon
+runs of hundreds to thousands of consecutive steps. On this substrate, a
+6.9-billion-parameter model whose full-model training aborts on a 94~GB
+accelerator trains on a single 40~GB device, and every mode runs at a
+fraction of full-model device memory. The price is time, not correctness;
+the data never has to leave the device that owns it.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -189,44 +182,18 @@ dials govern inference, down to a 401~MB PyTorch-free serving mode.
   and three partitions) and validated by a pre-registered prediction on a
   never-measured configuration, conservative by 7\% in time and 5\% in
   memory (Sec.~\ref{sec:model}).
-\item \textbf{The framework-artifact argument:} a decomposition showing the
-  residual time cost is dominated by schedulable data movement and
-  per-segment dispatch, not by essential computation or link bandwidth---with
-  the PyTorch-free runtime as direct evidence (Sec.~\ref{sec:disc}).
+\item \textbf{The framework memory model and framework-artifact argument:}
+  an analysis showing that every term of peak training memory is a
+  scheduling choice with a memory-frugal substitute
+  (Sec.~\ref{sec:memmodel}), and that the residual time cost is dominated
+  by schedulable data movement and per-segment dispatch, not by essential
+  computation or link bandwidth---with the PyTorch-free runtime as direct
+  evidence (Sec.~\ref{sec:disc}).
 \end{enumerate}
 
 % ============================================================================
-\section{Background and Related Work}\label{sec:background}
+\section{Related Work}\label{sec:background}
 % ============================================================================
-\subsection{The Framework Memory Model}\label{sec:memmodel}
-To argue that memory is a budget rather than a requirement, we separate what
-the \emph{computation} needs from what the \emph{framework} takes. The peak
-memory of a standard training step is, to first order,
-\begin{equation*}
-\begin{split}
-\text{peak} \approx{}& \text{params} + \text{grads} + \text{opt\_state}\\
-&+ \text{retained\_activations} + \text{runtime}.
-\end{split}
-\end{equation*}
-For $P$ parameters in 32-bit with Adam the first three terms are $\approx
-16P$ bytes, independent of batch or sequence length; the retained activation
-graph scales with depth$\times$width$\times$batch$\times$sequence and
-frequently dominates; the runtime term is the CUDA context ($\sim$0.5\,GB)
-plus caching-allocator slack. Each exists for \emph{speed under abundant
-memory}, not correctness. \emph{Eager execution with an autograd tape} keeps
-all forward activations resident until backward so backpropagation is one
-fast reverse sweep. The \emph{caching allocator} reserves large pools so
-allocation leaves the critical path; reserved memory routinely exceeds live
-memory. \emph{Kernels, fused attention, and the KV cache} favour large
-resident operands and trade memory for speed. These choices target one
-regime---\emph{memory is abundant, maximize FLOP/s}---and the field's
-trajectory (larger HBM, faster interconnect, paged KV caches, deeper fusion)
-entrenches it; resource-limited users are underserved by \emph{priority}, not
-physics. Because every term is a scheduling choice, each has a memory-frugal
-alternative: the activation graph can be \emph{recomputed}, parameters and
-state can be \emph{streamed}, and logits and scores can be \emph{bounded}.
-The rest of the paper makes these substitutions and measures their cost.
-
 \subsection{Scaling Out vs.\ Scaling Down}
 Most systems work on large-model training scales \emph{out}:
 tensor~\cite{shoeybi2019megatron,narayanan2021megatron} and
@@ -388,6 +355,35 @@ schedule changes.}
 \end{figure*}
 
 % ============================================================================
+\subsection{The Framework Memory Model: Why the Limit Is Scheduling}\label{sec:memmodel}
+To argue that memory is a budget rather than a requirement, we separate what
+the \emph{computation} needs from what the \emph{framework} takes. The peak
+memory of a standard training step is, to first order,
+\begin{equation*}
+\begin{split}
+\text{peak} \approx{}& \text{params} + \text{grads} + \text{opt\_state}\\
+&+ \text{retained\_activations} + \text{runtime}.
+\end{split}
+\end{equation*}
+For $P$ parameters in 32-bit with Adam the first three terms are $\approx
+16P$ bytes, independent of batch or sequence length; the retained activation
+graph scales with depth$\times$width$\times$batch$\times$sequence and
+frequently dominates; the runtime term is the CUDA context ($\sim$0.5\,GB)
+plus caching-allocator slack. Each exists for \emph{speed under abundant
+memory}, not correctness. \emph{Eager execution with an autograd tape} keeps
+all forward activations resident until backward so backpropagation is one
+fast reverse sweep. The \emph{caching allocator} reserves large pools so
+allocation leaves the critical path; reserved memory routinely exceeds live
+memory. \emph{Kernels, fused attention, and the KV cache} favour large
+resident operands and trade memory for speed. These choices target one
+regime---\emph{memory is abundant, maximize FLOP/s}---and the field's
+trajectory (larger HBM, faster interconnect, paged KV caches, deeper fusion)
+entrenches it; resource-limited users are underserved by \emph{priority}, not
+physics. Because every term is a scheduling choice, each has a memory-frugal
+alternative: the activation graph can be \emph{recomputed}, parameters and
+state can be \emph{streamed}, and logits and scores can be \emph{bounded}.
+The rest of the paper makes these substitutions and measures their cost.
+
 \subsection{Partition and Reassembly Identities}\label{sec:partition}
 The architecture is unchanged; segmentation is a pure execution concern, and
 the union of segment weights reassembles the reference model exactly. A
@@ -1010,34 +1006,42 @@ phase entirely.}
 \end{figure}
 
 \begin{table*}[t]
-\caption{The 12 training modes at 0.84B (medians of three isolated runs;
-batch 4, seq.\ 512). Graph: retained vs.\ recomputed; weights: resident
-vs.\ streamed; update: deferred sweep vs.\ optimizer-in-backward. GPU
-columns: peak device memory, host-side store (RSS), step time, optimizer
-phase. CPU columns: peak RAM, step time, optimizer phase. Every row
-computes the same model (Sec.~\ref{sec:exact}).}
+\caption{The 12 training modes at 0.84B with the unsegmented full model as
+anchor (medians of three isolated runs; batch 4, seq.\ 512). Dial columns
+are binary: Drop.\ = dropout on; Rec.\ = activation recomputation (off =
+retained graph); Str.\ = weight streaming (off = all segments resident);
+In-b.\ = optimizer-in-backward (off = deferred sweep). $\times$full columns
+give the ratio to the full-model anchor---memory as a fraction, step time
+as a multiple; GPU rows use the dropout-matched anchor, CPU rows the single
+(dropout) CPU anchor. Every segmented row computes the same model
+(Sec.~\ref{sec:exact}); ratios from the committed
+\texttt{table\_enrichment\_report.py}.}
 \label{tab:grid}
 \centering
 \small
-\begin{tabular}{@{}cccc rrrr rrr@{}}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}cccc rrrrrr rrrrr@{}}
 \toprule
- & & & & \multicolumn{4}{c}{GPU (A100-40GB)} & \multicolumn{3}{c}{CPU} \\
-\cmidrule(lr){5-8}\cmidrule(l){9-11}
-Dropout & Graph & Weights & Update & VRAM & Host & Step & Opt.\ & RAM & Step & Opt.\ \\
- & & & & (MB) & (GB) & (s) & (s) & (MB) & (s) & (s) \\
+ & & & & \multicolumn{6}{c}{GPU (A100-40GB)} & \multicolumn{5}{c}{CPU} \\
+\cmidrule(lr){5-10}\cmidrule(l){11-15}
+Drop. & Rec. & Str. & In-b. & VRAM & $\times$full & Host & Step & $\times$full & Opt.\ & RAM & $\times$full & Step & $\times$full & Opt.\ \\
+ & & & & (MB) & & (GB) & (s) & & (s) & (MB) & & (s) & & (s) \\
 \midrule
-\checkmark & retained & resident & deferred & 11{,}486 & 19.8 & 5.77 & 4.13 & 19{,}692 & 84.0 & 27.9 \\
-\checkmark & recomp. & resident & deferred & 4{,}488 & 20.9 & 6.41 & 4.07 & 4{,}520 & 113.9 & 27.1 \\
-\checkmark & recomp. & streamed & deferred & 1{,}080 & 19.8 & 28.27 & 8.24 & 1{,}288 & 155.6 & 35.8 \\
---- & retained & resident & deferred & 11{,}316 & 20.7 & 5.76 & 4.10 & 10{,}736 & 66.6 & 29.7 \\
---- & recomp. & resident & deferred & 4{,}464 & 21.2 & 6.43 & 4.17 & 4{,}694 & 76.0 & 28.0 \\
---- & recomp. & streamed & deferred & 1{,}030 & 19.6 & 28.26 & 8.29 & 1{,}304 & 119.2 & 40.5 \\
-\checkmark & retained & resident & in-backward & 11{,}454 & 19.0 & 3.89 & 0.11 & 19{,}702 & 72.0 & 0.03 \\
-\checkmark & recomp. & resident & in-backward & 4{,}608 & 17.6 & 3.94 & 0.10 & 4{,}569 & 106.1 & 0.03 \\
-\checkmark & recomp. & streamed & in-backward & 1{,}158 & 15.8 & 21.69 & 0.11 & 1{,}388 & 136.2 & 0.03 \\
---- & retained & resident & in-backward & 11{,}284 & 18.0 & 3.87 & 0.11 & 10{,}747 & 54.1 & 0.03 \\
---- & recomp. & resident & in-backward & 4{,}584 & 17.8 & 3.92 & 0.11 & 4{,}669 & 66.1 & 0.03 \\
---- & recomp. & streamed & in-backward & 1{,}126 & 16.3 & 21.69 & 0.11 & 1{,}374 & 101.1 & 0.03 \\
+\multicolumn{4}{@{}l}{\emph{full model, dropout}} & 25{,}406 & 1.00 & --- & 0.72 & 1.0 & --- & 26{,}934 & 1.00 & 28.8 & 1.0 & --- \\
+\multicolumn{4}{@{}l}{\emph{full model, no dropout}} & 24{,}148 & 1.00 & --- & 0.71 & 1.0 & --- & --- & --- & --- & --- & --- \\
+\midrule
+\checkmark & --- & --- & --- & 11{,}486 & 0.45 & 19.8 & 5.77 & 8.0 & 4.13 & 19{,}692 & 0.73 & 84.0 & 2.9 & 27.9 \\
+\checkmark & \checkmark & --- & --- & 4{,}488 & 0.18 & 20.9 & 6.41 & 8.9 & 4.07 & 4{,}520 & 0.17 & 113.9 & 4.0 & 27.1 \\
+\checkmark & \checkmark & \checkmark & --- & 1{,}080 & 0.04 & 19.8 & 28.27 & 39.3 & 8.24 & 1{,}288 & 0.05 & 155.6 & 5.4 & 35.8 \\
+--- & --- & --- & --- & 11{,}316 & 0.47 & 20.7 & 5.76 & 8.1 & 4.10 & 10{,}736 & 0.40 & 66.6 & 2.3 & 29.7 \\
+--- & \checkmark & --- & --- & 4{,}464 & 0.18 & 21.2 & 6.43 & 9.1 & 4.17 & 4{,}694 & 0.17 & 76.0 & 2.6 & 28.0 \\
+--- & \checkmark & \checkmark & --- & 1{,}030 & 0.04 & 19.6 & 28.26 & 40.0 & 8.29 & 1{,}304 & 0.05 & 119.2 & 4.1 & 40.5 \\
+\checkmark & --- & --- & \checkmark & 11{,}454 & 0.45 & 19.0 & 3.89 & 5.4 & 0.11 & 19{,}702 & 0.73 & 72.0 & 2.5 & 0.03 \\
+\checkmark & \checkmark & --- & \checkmark & 4{,}608 & 0.18 & 17.6 & 3.94 & 5.5 & 0.10 & 4{,}569 & 0.17 & 106.1 & 3.7 & 0.03 \\
+\checkmark & \checkmark & \checkmark & \checkmark & 1{,}158 & 0.05 & 15.8 & 21.69 & 30.1 & 0.11 & 1{,}388 & 0.05 & 136.2 & 4.7 & 0.03 \\
+--- & --- & --- & \checkmark & 11{,}284 & 0.47 & 18.0 & 3.87 & 5.5 & 0.11 & 10{,}747 & 0.40 & 54.1 & 1.9 & 0.03 \\
+--- & \checkmark & --- & \checkmark & 4{,}584 & 0.19 & 17.8 & 3.92 & 5.5 & 0.11 & 4{,}669 & 0.17 & 66.1 & 2.3 & 0.03 \\
+--- & \checkmark & \checkmark & \checkmark & 1{,}126 & 0.05 & 16.3 & 21.69 & 30.7 & 0.11 & 1{,}374 & 0.05 & 101.1 & 3.5 & 0.03 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -1201,29 +1205,36 @@ stationary; their residual variance is co-tenant noise on the shared nodes
 \begin{table}[t]
 \caption{Long-horizon training: sustained peak and band in MB (GPU:
 reserved + CUDA context; CPU: resident set), the training-only long-run
-step time, and the directly priced per-step validation pass (+val.) that
-converts to the four-phase protocol.}
+step time, and the directly priced per-step validation pass (+val.).
+$\Delta$pk and $\Delta$t compare against the corresponding short-protocol
+cell (Tables~\ref{tab:grid} and~\ref{tab:scale}); the time comparison adds
++val.\ first so both sides include validation. Memory deltas reflect
+measurement-basis and CPU-allocator differences; time deltas are dominated
+by node co-tenancy and the protocol's tracing overhead, both quantified in
+Sec.~\ref{sec:longhorizon}---the per-step behavior itself is stationary
+(band; Fig.~\ref{fig:sustainedtrain}). Deltas from the committed
+\texttt{table\_enrichment\_report.py}.}
 \label{tab:sustainedtrain}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{@{}lrrrrr@{}}
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
-Mode & Steps & Peak & Band & Step & +val. \\
+Mode & Steps & Peak & $\Delta$pk & Band & Step & +val. & $\Delta$t \\
 \midrule
-\multicolumn{6}{@{}l}{\emph{0.84B, GPU}} \\
-\enspace retained, resident, in-backward & 2{,}048 & 11{,}968 & 0 & 5.23\,s & +0.3\,s \\
-\enspace recompute, resident, deferred & 2{,}048 & 4{,}663 & 0 & 9.05\,s & +0.3\,s \\
-\enspace recompute, streamed, deferred & 2{,}048 & 1{,}142 & 0 & 27.11\,s & +6.6\,s \\
-\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}172 & 0 & 16.28\,s & +6.6\,s \\
-\multicolumn{6}{@{}l}{\emph{6.9B, GPU}} \\
-\enspace recompute, resident, deferred & 1{,}024 & 29{,}687 & 0 & 41.90\,s & +1.6\,s \\
-\enspace recompute, streamed, in-backward & 512 & 2{,}799 & 0 & 102.2\,s & +37.4\,s \\
-\multicolumn{6}{@{}l}{\emph{0.84B, CPU}} \\
-\enspace recompute, streamed, deferred & 512 & 2{,}087 & 349 & 112.5\,s & +14.0\,s \\
-\enspace retained, resident, in-backward & 1{,}024 & 21{,}134 & 691 & 50.95\,s & +6.2\,s \\
-\multicolumn{6}{@{}l}{\emph{6.9B, CPU}} \\
-\enspace recompute, streamed, in-backward & 128 & 7{,}932 & 1{,}251 & 478.0\,s & +79.9\,s \\
+\multicolumn{8}{@{}l}{\emph{0.84B, GPU}} \\
+\enspace retained, resident, in-backward & 2{,}048 & 11{,}968 & +4.5\% & 0 & 5.23\,s & +0.3\,s & +43\% \\
+\enspace recompute, resident, deferred & 2{,}048 & 4{,}663 & +3.9\% & 0 & 9.05\,s & +0.3\,s & +46\% \\
+\enspace recompute, streamed, deferred & 2{,}048 & 1{,}142 & +5.8\% & 0 & 27.11\,s & +6.6\,s & +19\% \\
+\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}172 & +1.2\% & 0 & 16.28\,s & +6.6\,s & +5\% \\
+\multicolumn{8}{@{}l}{\emph{6.9B, GPU}} \\
+\enspace recompute, resident, deferred & 1{,}024 & 29{,}687 & +4.2\% & 0 & 41.90\,s & +1.6\,s & $-$25\% \\
+\enspace recompute, streamed, in-backward & 512 & 2{,}799 & +2.2\% & 0 & 102.2\,s & +37.4\,s & $-$19\% \\
+\multicolumn{8}{@{}l}{\emph{0.84B, CPU}} \\
+\enspace recompute, streamed, deferred & 512 & 2{,}087 & +62\% & 349 & 112.5\,s & +14.0\,s & $-$19\% \\
+\enspace retained, resident, in-backward & 1{,}024 & 21{,}134 & +7.3\% & 691 & 50.95\,s & +6.2\,s & $-$21\% \\
+\multicolumn{8}{@{}l}{\emph{6.9B, CPU}} \\
+\enspace recompute, streamed, in-backward & 128 & 7{,}932 & $-$15\% & 1{,}251 & 478.0\,s & +79.9\,s & $-$11\% \\
 \bottomrule
 \end{tabular}
 \end{table}

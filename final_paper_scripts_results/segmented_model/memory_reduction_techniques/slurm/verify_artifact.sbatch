@@ -22,7 +22,7 @@ echo "=== 2. test suite ==="
 PYTHONPATH=src "$PY" -m pytest tests/ -q 2>&1 | tail -2
 echo "=== 3. regenerate summaries + cost model + sustained report ==="
 cd final_paper_scripts_results/segmented_model/memory_reduction_techniques
-"$PY" build_exp_summaries.py && "$PY" eval_cost_laws.py && "$PY" sustained_report.py && "$PY" exp9_bridge_report.py && "$PY" exp8_plots.py
+"$PY" build_exp_summaries.py && "$PY" eval_cost_laws.py && "$PY" sustained_report.py && "$PY" exp9_bridge_report.py && "$PY" exp8_plots.py && "$PY" table_enrichment_report.py
 echo "=== 4. regenerate figures ==="
 cd ../paper_jsa && "$PY" paper_v4_figures.py
 echo "=== 5. diff verdict (JSON outputs must be byte-identical; PDFs excluded) ==="
