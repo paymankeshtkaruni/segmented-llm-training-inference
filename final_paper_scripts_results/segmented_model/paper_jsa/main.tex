@@ -234,7 +234,11 @@ pipeline~\cite{huang2019gpipe} parallelism and sharded data-parallel
 training~\cite{rajbhandari2020zero,zhao2023fsdp} partition a model across
 \emph{many} accelerators so that their aggregate memory suffices; 2D
 tensor-parallel schemes additionally partition the hidden and embedding
-width~\cite{wang2022tesseract}. This is complementary to, but the opposite
+width~\cite{wang2022tesseract}, and EdgeATP applies the same intra-layer
+decomposition of attention heads and feed-forward blocks across
+heterogeneous edge devices~\cite{wang2026edgeatp}---splitting in space
+the very structures this paper executes sequentially in time on one
+device. This is complementary to, but the opposite
 of, our goal: it lowers memory \emph{per device} only by adding devices,
 whereas we lower the memory a \emph{single} device needs below a chosen
 target. Mixed-precision training~\cite{micikevicius2018mixed} shrinks several
@@ -258,7 +262,9 @@ optimizes host-memory fragmentation and pinned buffers for SSD-offloaded
 LLM fine-tuning on exactly the limited-resource hardware we
 target~\cite{liaw2026memascend}, and recent planners co-optimize GPU and
 CPU memory for fine-tuning under tight
-budgets~\cite{ding2026heteropipeline,zhang2026memorysafe}.
+budgets~\cite{ding2026heteropipeline,zhang2026memorysafe}; peak memory
+has likewise been promoted to a first-class scheduling constraint for
+multi-tenant inference on memory-limited edge GPUs~\cite{lee2026peakmem}.
 \emph{Layer-granular streaming.} Layer-to-layer
 execution~\cite{pudipeddi2020l2l}, working-window
 offload~\cite{sun2022stronghold}, chunk-based heterogeneous memory
@@ -272,14 +278,19 @@ to low rank~\cite{zhao2024galore}; factored and quantized
 moments~\cite{shazeer2018adafactor,dettmers2022eightbit} and zeroth-order
 updates~\cite{malladi2023mezo} shrink or eliminate optimizer state, the
 latter approximately.
-\emph{Memory-bounded inference.} Placement policies over GPU, CPU, and
-disk~\cite{sheng2023flexgen}, flash-resident weights~\cite{alizadeh2024llmflash},
+\emph{Memory-bounded inference.} Incremental weight loading with
+data-layout reorganization bounded DNN inference memory on edge systems
+before the LLM era~\cite{ji2021incremental}; today, placement policies
+over GPU, CPU, and disk~\cite{sheng2023flexgen}, flash-resident weights~\cite{alizadeh2024llmflash},
 and layer-wise fetch~\cite{rajbhandari2021zeroinfinity} serve models beyond
 device memory; the widely deployed llama.cpp
 runtime~\cite{gerganov2023llamacpp} memory-maps quantized weights for
 CPU-class inference; TPI-LLM pages tensor-parallel weight slices through
 low-resource devices at inference time~\cite{li2025tpillm}; collaborative
-serving distributes layers across peers~\cite{borzunov2023petals}.
+serving distributes layers across peers~\cite{borzunov2023petals}. A
+recent survey organizes this inference-optimization landscape by the
+granularity of repeated transformer-block execution~\cite{kim2026langgiants}%
+---precisely the abstraction level at which our partition operates.
 
 \subsection{Memory-Efficient Kernels and Lossy Compression}
 Fused attention computes exact attention without materializing the score
@@ -302,7 +313,11 @@ that cannot be exported---but typically assume small models or update only a
 parameter subset. Lightweight inference runtimes such as ONNX Runtime execute
 an exported graph without a training framework; we exploit this directly as
 evidence that a share of what is called ``model memory'' is in fact runtime
-overhead.
+overhead. Measured characterization of quantized language models on
+Jetson-, Raspberry~Pi-, and microcontroller-class boards identifies model
+footprint and streaming execution as the dominant deployment
+levers~\cite{firpo2026convagent}; our cost model quantifies exactly these
+levers for the segmented regime.
 
 \subsection{Positioning}
 Table~\ref{tab:landscape} situates this work among the closest systems, by
