@@ -10,7 +10,7 @@ Rows:
 
 The full-model row of the paper table comes from the matched fresh training run
 (seg_full_train_b1.py output). Metric and loop are IDENTICAL for both engines:
-left-padded batches, greedy argmax, EOS stop, string exact-match on labels.
+equal-length batches (no padding), greedy argmax, EOS stop, string exact-match on labels.
 """
 from __future__ import annotations
 
