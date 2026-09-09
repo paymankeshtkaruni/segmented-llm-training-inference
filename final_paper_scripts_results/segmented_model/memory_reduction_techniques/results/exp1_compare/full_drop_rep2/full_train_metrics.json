@@ -1,0 +1,40 @@
+{
+  "run": "full_cost_scale",
+  "mode": "train",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "model_config": {
+    "vocab_size": 50257,
+    "max_seq_len": 512,
+    "n_layers": 36,
+    "d_model": 1280,
+    "n_heads": 20,
+    "d_ff": 5120,
+    "dropout": 0.1,
+    "architecture": "gpt_decoder",
+    "pad_token_id": null,
+    "eos_token_id": null
+  },
+  "params_estimate_million": 837.10208,
+  "batch_size": 4,
+  "seq_len": 512,
+  "n_steps": 3,
+  "device_total_mb": 40442.4,
+  "measurement": "reference full model (src GPTDecoder), standard resident execution; mirrors full_model/scripts/_cost_lib.py conventions",
+  "oom": false,
+  "params_million": 837.7,
+  "avg_step_time_s": 0.7199305896647274,
+  "step_times_s": [
+    0.72,
+    0.72,
+    0.72
+  ],
+  "overall": {
+    "cuda_context_mb": 490.0,
+    "vram_alloc_peak_mb": 23308.4,
+    "vram_reserved_peak_mb": 24916.0,
+    "vram_hw_reserved_peak_mb": 24916.0,
+    "vram_hw_total_peak_mb": 25406.0,
+    "rss_peak_sampled_mb": 3768.4
+  }
+}

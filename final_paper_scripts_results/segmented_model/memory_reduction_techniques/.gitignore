@@ -7,3 +7,8 @@ __pycache__/
 *.pyc
 results/**/*_metrics.json
 results/**/_work/
+# full-model anchor summaries (per-run peak + step time, ~1 KB each): the
+# table_enrichment_report.py inputs; kept despite the *_metrics.json rule above
+!results/exp1_compare/full_drop_rep*/full_train_metrics.json
+!results/exp1_compare/full_nodrop_rep*/full_train_metrics.json
+!results/exp2_anchor/cpu_full_rep*/full_train_metrics.json

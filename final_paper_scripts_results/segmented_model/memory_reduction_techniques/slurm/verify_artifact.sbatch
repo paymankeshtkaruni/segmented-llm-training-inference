@@ -19,16 +19,21 @@ git clone -q --depth 1 "file://$PUB" "$CL" && echo clone-ok || exit 1
 cd "$CL"
 export PROJECT_ROOT="$CL" PYTHON="$PY"
 echo "=== 2. test suite ==="
-PYTHONPATH=src "$PY" -m pytest tests/ -q 2>&1 | tail -2
+PYTHONPATH=src "$PY" -m pytest tests/ -q 2>&1 | tail -2; RC_TEST=${PIPESTATUS[0]}
 echo "=== 3. regenerate summaries + cost model + sustained report ==="
 cd final_paper_scripts_results/segmented_model/memory_reduction_techniques
-"$PY" build_exp_summaries.py && "$PY" eval_cost_laws.py && "$PY" sustained_report.py && "$PY" exp9_bridge_report.py && "$PY" exp8_plots.py && "$PY" table_enrichment_report.py
+"$PY" build_exp_summaries.py && "$PY" eval_cost_laws.py && "$PY" sustained_report.py && "$PY" exp9_bridge_report.py && "$PY" exp8_plots.py && "$PY" table_enrichment_report.py; RC_REGEN=$?
 echo "=== 4. regenerate figures ==="
-cd ../paper_jsa && "$PY" paper_v4_figures.py
+cd ../paper_jsa && "$PY" paper_v4_figures.py; RC_FIG=$?
 echo "=== 5. diff verdict (JSON outputs must be byte-identical; PDFs excluded) ==="
 cd "$CL"
 CHANGED=$(git status --porcelain | grep -v '\.pdf$' || true)
-if [ -z "$CHANGED" ]; then echo "VERDICT: PASS — all regenerated JSONs byte-identical"; else echo "VERDICT: DIFFS FOUND:"; echo "$CHANGED"; git diff --stat | tail -5; fi
+if [ "$RC_TEST" != 0 ] || [ "$RC_REGEN" != 0 ] || [ "$RC_FIG" != 0 ]; then
+  echo "VERDICT: FAIL — a step exited nonzero (tests=$RC_TEST regenerate=$RC_REGEN figures=$RC_FIG); the diff below is NOT a pass"
+  VERDICT_RC=1
+elif [ -z "$CHANGED" ]; then echo "VERDICT: PASS — every step exited 0 and all regenerated JSONs are byte-identical"; VERDICT_RC=0
+else echo "VERDICT: FAIL — regenerated outputs differ from committed:"; echo "$CHANGED"; git diff --stat | tail -5; VERDICT_RC=1; fi
 echo "=== 6. smoke train (tiny, cpu) ==="
 PYTHONPATH=src timeout 900 "$PY" scripts/train_segmented.py --epochs 1 --batch-size 2 --n-layers 2 --d-model 128 --n-heads 4 --d-ff 256 --attention-segments 2 --mlp-chunks 2 --checkpoint-dir "$TMPDIR/smoke" --device cpu --max-train-steps 3 --max-val-steps 3 2>&1 | tail -2
 echo "Done: $(date)"
+exit $VERDICT_RC
