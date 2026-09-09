@@ -123,7 +123,7 @@
   },
   "serving": {
    "ctx_mib": 500.0,
-   "n_reps": 24,
+   "n_reps": 12,
    "min": 490.0,
    "max": 500.0
   }

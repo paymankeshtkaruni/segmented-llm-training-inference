@@ -150,7 +150,7 @@ def main():
     ctx_train = calibrated_ctx([RES / "exp3_grid/gpu_*_rep*/*_met.json",
                                 RES / "exp5_scale/gpu40_*_rep*/*_met.json"],
                                "vram_hw_total_peak_mb", "vram_hw_reserved_peak_mb")
-    ctx_serve = calibrated_ctx([RES / "exp4_infer/gpu_I*_rep*/*.json"],
+    ctx_serve = calibrated_ctx([RES / "exp4_infer/gpu_I*_rep*/*_met.json"],
                                "vram_hw_total_peak_mb", "vram_reserved_peak_sampled_mb")
     out["cuda_context_mib"] = {"training": ctx_train, "serving": ctx_serve}
     deltas = {}
