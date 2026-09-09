@@ -1,6 +1,7 @@
 {
  "run": "exp8_long_horizon_summary",
  "note": "per-job long-horizon stability; pilot_30step/ holds the 30-step sizing pilot (superseded)",
+ "memory_unit": "MiB (raw per-step rows are decimal MB; converted here, factor 1e6/2**20); GPU values are reserved peaks without the CUDA context, which table_enrichment_report.py adds",
  "jobs": {
   "g1_084b_resident_imm": {
    "n_steps_target": 2048,
@@ -13,12 +14,12 @@
     5.115,
     5.343
    ],
-   "peak_mb_first": 11477.7,
-   "peak_mb_max": 11477.7,
+   "peak_mb_first": 10946.0,
+   "peak_mb_max": 10946.0,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    11477.7,
-    11477.7
+    10946.0,
+    10946.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cuda",
@@ -28,8 +29,8 @@
    "seq_len": 512,
    "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 11477.7,
-   "peak_mb_last_decile_max": 11477.7,
+   "peak_mb_first_decile_max": 10946.0,
+   "peak_mb_last_decile_max": 10946.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "g2_084b_resident_recomp": {
@@ -43,12 +44,12 @@
     8.93,
     9.18
    ],
-   "peak_mb_first": 4173.3,
-   "peak_mb_max": 4173.3,
+   "peak_mb_first": 3980.0,
+   "peak_mb_max": 3980.0,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    4173.3,
-    4173.3
+    3980.0,
+    3980.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cuda",
@@ -58,8 +59,8 @@
    "seq_len": 512,
    "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 4173.3,
-   "peak_mb_last_decile_max": 4173.3,
+   "peak_mb_first_decile_max": 3980.0,
+   "peak_mb_last_decile_max": 3980.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "g3_084b_streamed_def": {
@@ -73,12 +74,12 @@
     24.345,
     29.4
    ],
-   "peak_mb_first": 652.2,
-   "peak_mb_max": 652.2,
+   "peak_mb_first": 622.0,
+   "peak_mb_max": 622.0,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    652.2,
-    652.2
+    622.0,
+    622.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cuda",
@@ -88,8 +89,8 @@
    "seq_len": 512,
    "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 652.2,
-   "peak_mb_last_decile_max": 652.2,
+   "peak_mb_first_decile_max": 622.0,
+   "peak_mb_last_decile_max": 622.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "g4_084b_streamed_imm": {
@@ -103,12 +104,12 @@
     16.116,
     16.451
    ],
-   "peak_mb_first": 681.6,
-   "peak_mb_max": 681.6,
+   "peak_mb_first": 650.0,
+   "peak_mb_max": 650.0,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    681.6,
-    681.6
+    650.0,
+    650.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cuda",
@@ -118,8 +119,8 @@
    "seq_len": 512,
    "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 681.6,
-   "peak_mb_last_decile_max": 681.6,
+   "peak_mb_first_decile_max": 650.0,
+   "peak_mb_last_decile_max": 650.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "g5_69b_resident_recomp": {
@@ -133,12 +134,12 @@
     40.251,
     42.944
    ],
-   "peak_mb_first": 29196.6,
-   "peak_mb_max": 29196.6,
+   "peak_mb_first": 27844.0,
+   "peak_mb_max": 27844.0,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    29196.6,
-    29196.6
+    27844.0,
+    27844.0
    ],
    "preset": "xxl7b_8x2x2x8",
    "device": "cuda",
@@ -148,8 +149,8 @@
    "seq_len": 512,
    "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 29196.6,
-   "peak_mb_last_decile_max": 29196.6,
+   "peak_mb_first_decile_max": 27844.0,
+   "peak_mb_last_decile_max": 27844.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "g6_69b_streamed_imm": {
@@ -163,12 +164,12 @@
     101.651,
     103.024
    ],
-   "peak_mb_first": 2309.0,
-   "peak_mb_max": 2309.0,
+   "peak_mb_first": 2202.0,
+   "peak_mb_max": 2202.0,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    2309.0,
-    2309.0
+    2202.0,
+    2202.0
    ],
    "preset": "xxl7b_8x2x2x8",
    "device": "cuda",
@@ -178,8 +179,8 @@
    "seq_len": 512,
    "memory_note": "per-step peak reserved (allocator high-water mark, reset each step); add the CUDA context for no-miss totals",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 2309.0,
-   "peak_mb_last_decile_max": 2309.0,
+   "peak_mb_first_decile_max": 2202.0,
+   "peak_mb_last_decile_max": 2202.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "g7_084b_cpu_streamed_def": {
@@ -193,12 +194,12 @@
     110.754,
     113.32
    ],
-   "peak_mb_first": 1933.3,
-   "peak_mb_max": 2086.6,
+   "peak_mb_first": 1843.7,
+   "peak_mb_max": 1989.9,
    "peak_mb_max_at_step": 6,
    "peak_mb_band": [
-    1737.3,
-    2086.6
+    1656.8,
+    1989.9
    ],
    "preset": "large_8x2x2x8",
    "device": "cpu",
@@ -208,9 +209,9 @@
    "seq_len": 512,
    "memory_note": "per-step peak RSS (50 ms sampler)",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 2086.6,
-   "peak_mb_last_decile_max": 1941.5,
-   "peak_mb_last_minus_first_decile": -145.1
+   "peak_mb_first_decile_max": 1989.9,
+   "peak_mb_last_decile_max": 1851.6,
+   "peak_mb_last_minus_first_decile": -138.4
   },
   "g8_084b_cpu_resident_imm": {
    "n_steps_target": 1024,
@@ -223,12 +224,12 @@
     49.275,
     52.789
    ],
-   "peak_mb_first": 20485.2,
-   "peak_mb_max": 21134.1,
+   "peak_mb_first": 19536.2,
+   "peak_mb_max": 20155.0,
    "peak_mb_max_at_step": 1011,
    "peak_mb_band": [
-    20443.3,
-    21134.1
+    19496.3,
+    20155.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cpu",
@@ -238,9 +239,9 @@
    "seq_len": 512,
    "memory_note": "per-step peak RSS (50 ms sampler)",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 21122.4,
-   "peak_mb_last_decile_max": 21134.1,
-   "peak_mb_last_minus_first_decile": 11.7
+   "peak_mb_first_decile_max": 20143.9,
+   "peak_mb_last_decile_max": 20155.0,
+   "peak_mb_last_minus_first_decile": 11.2
   },
   "g9_69b_cpu_streamed_imm": {
    "n_steps_target": 128,
@@ -253,12 +254,12 @@
     473.857,
     483.149
    ],
-   "peak_mb_first": 7931.6,
-   "peak_mb_max": 7931.6,
+   "peak_mb_first": 7564.2,
+   "peak_mb_max": 7564.2,
    "peak_mb_max_at_step": 1,
    "peak_mb_band": [
-    6680.7,
-    7931.6
+    6371.2,
+    7564.2
    ],
    "preset": "xxl7b_8x2x2x8",
    "device": "cpu",
@@ -268,9 +269,9 @@
    "seq_len": 512,
    "memory_note": "per-step peak RSS (50 ms sampler)",
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
-   "peak_mb_first_decile_max": 7931.6,
-   "peak_mb_last_decile_max": 6998.0,
-   "peak_mb_last_minus_first_decile": -933.6
+   "peak_mb_first_decile_max": 7564.2,
+   "peak_mb_last_decile_max": 6673.8,
+   "peak_mb_last_minus_first_decile": -890.4
   },
   "ia_084b_cache": {
    "n_requests_target": 2000,
@@ -283,12 +284,12 @@
     0.969,
     1.024
    ],
-   "peak_mb_first": 3808.4,
-   "peak_mb_max": 3808.4,
+   "peak_mb_first": 3632.0,
+   "peak_mb_max": 3632.0,
    "peak_mb_max_at_request": 1,
    "peak_mb_band": [
-    3808.4,
-    3808.4
+    3632.0,
+    3632.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cuda",
@@ -297,8 +298,8 @@
    "prompt_len": 256,
    "gen_tokens": 32,
    "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
-   "peak_mb_first_decile_max": 3808.4,
-   "peak_mb_last_decile_max": 3808.4,
+   "peak_mb_first_decile_max": 3632.0,
+   "peak_mb_last_decile_max": 3632.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "ib_084b_streamed": {
@@ -312,12 +313,12 @@
     39.733,
     40.243
    ],
-   "peak_mb_first": 165.7,
-   "peak_mb_max": 165.7,
+   "peak_mb_first": 158.0,
+   "peak_mb_max": 158.0,
    "peak_mb_max_at_request": 1,
    "peak_mb_band": [
-    165.7,
-    165.7
+    158.0,
+    158.0
    ],
    "preset": "large_8x2x2x8",
    "device": "cuda",
@@ -326,8 +327,8 @@
    "prompt_len": 256,
    "gen_tokens": 8,
    "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
-   "peak_mb_first_decile_max": 165.7,
-   "peak_mb_last_decile_max": 165.7,
+   "peak_mb_first_decile_max": 158.0,
+   "peak_mb_last_decile_max": 158.0,
    "peak_mb_last_minus_first_decile": 0.0
   },
   "ic_084b_onnx_disk": {
@@ -341,12 +342,12 @@
     71.548,
     74.036
    ],
-   "peak_mb_first": 388.9,
-   "peak_mb_max": 389.4,
+   "peak_mb_first": 370.9,
+   "peak_mb_max": 371.4,
    "peak_mb_max_at_request": 31,
    "peak_mb_band": [
-    377.1,
-    389.4
+    359.6,
+    371.4
    ],
    "preset": "large_8x2x2x8",
    "device": "cpu",
@@ -355,9 +356,9 @@
    "prompt_len": 256,
    "gen_tokens": 8,
    "memory_note": "per-request peak RSS (50 ms sampler)",
-   "peak_mb_first_decile_max": 389.4,
-   "peak_mb_last_decile_max": 384.3,
-   "peak_mb_last_minus_first_decile": -5.1
+   "peak_mb_first_decile_max": 371.4,
+   "peak_mb_last_decile_max": 366.5,
+   "peak_mb_last_minus_first_decile": -4.9
   },
   "id_69b_cache": {
    "n_requests_target": 1000,
@@ -370,12 +371,12 @@
     1.115,
     1.121
    ],
-   "peak_mb_first": 27846.0,
-   "peak_mb_max": 27846.0,
+   "peak_mb_first": 26556.0,
+   "peak_mb_max": 26556.0,
    "peak_mb_max_at_request": 1,
    "peak_mb_band": [
-    27846.0,
-    27846.0
+    26556.0,
+    26556.0
    ],
    "preset": "xxl7b_8x2x2x8",
    "device": "cuda",
@@ -384,8 +385,8 @@
    "prompt_len": 256,
    "gen_tokens": 32,
    "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
-   "peak_mb_first_decile_max": 27846.0,
-   "peak_mb_last_decile_max": 27846.0,
+   "peak_mb_first_decile_max": 26556.0,
+   "peak_mb_last_decile_max": 26556.0,
    "peak_mb_last_minus_first_decile": 0.0
   }
  }

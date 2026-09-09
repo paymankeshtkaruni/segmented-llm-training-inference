@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """exp8: per-step / per-request evolution plots for every long-horizon job.
 
-For each training job (g1-g9): two stacked panels — per-step peak memory (MB)
+For each training job (g1-g9): two stacked panels — per-step peak memory (MiB,
+printed as MB like every other table; raw rows are decimal MB, converted here)
 and per-step wall time (s) with the running average overlaid — from step 1 to
 the last step. Same per request for the serving jobs (ia-id). These are the
 "how do time and memory change throughout the steps" plots; the running
@@ -22,6 +23,7 @@ import matplotlib.pyplot as plt
 HERE = Path(__file__).resolve().parent
 R = HERE / "results" / "exp8_sustained"
 OUT = R / "plots"
+MIB_PER_MB = 1e6 / 2**20          # decimal MB -> MiB, the paper-wide unit
 OUT.mkdir(exist_ok=True)
 
 
@@ -71,7 +73,7 @@ def plot(kind, series_key, xlabel, fname, title):
     for row, (name, d) in enumerate(jobs):
         rows = d[series_key]
         x = [r.get("step") or r.get("req") for r in rows]
-        mem = [r["peak_mb"] for r in rows]
+        mem = [r["peak_mb"] * MIB_PER_MB if r["peak_mb"] is not None else None for r in rows]
         t = [r["s"] for r in rows]
         am, at = axes[row][0], axes[row][1]
         if all(m is not None for m in mem):

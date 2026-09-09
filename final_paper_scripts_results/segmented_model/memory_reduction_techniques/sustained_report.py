@@ -10,6 +10,12 @@ kept as the sizing pilot under results/exp8_sustained/pilot_30step/.
 
 This script aggregates every completed job under results/exp8_sustained/
 into one committed summary: results/exp8_sustained/sustained_summary.json.
+
+Units: the runners record peak memory in decimal megabytes (bytes/1e6). The
+four-phase cost protocol (seg_cost_lib.py) reports mebibytes (bytes/2**20),
+and the paper prints every memory figure on that basis. This summary
+therefore converts every peak to MiB (factor 1e6/2**20 = 0.95367) so the
+long-horizon tables share the unit of every other table.
 """
 from __future__ import annotations
 
@@ -17,6 +23,8 @@ import json
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+MIB_PER_MB = 1e6 / 2**20          # decimal MB -> MiB
+MEM_KEYS = ("peak_mb_first", "peak_mb_max")
 R = HERE / "results" / "exp8_sustained"
 
 KEEP = ["n_steps_target", "n_steps_done", "n_requests_target", "n_requests_done",
@@ -35,20 +43,28 @@ def main():
             continue
         d = json.load(open(f))
         row = {k: d[k] for k in KEEP if k in d}
+        for k in MEM_KEYS:
+            if row.get(k) is not None:
+                row[k] = round(row[k] * MIB_PER_MB, 1)
+        if row.get("peak_mb_band"):
+            row["peak_mb_band"] = [round(v * MIB_PER_MB, 1) for v in row["peak_mb_band"]]
         # stationarity: how far does the last decile's peak sit from the first's?
         series = d.get("per_step") or d.get("per_request") or []
-        peaks = [r["peak_mb"] for r in series if r.get("peak_mb") is not None]
+        peaks = [r["peak_mb"] * MIB_PER_MB for r in series if r.get("peak_mb") is not None]
         if len(peaks) >= 20:
             n = max(1, len(peaks) // 10)
             first_decile = max(peaks[:n])
             last_decile = max(peaks[-n:])
-            row["peak_mb_first_decile_max"] = first_decile
-            row["peak_mb_last_decile_max"] = last_decile
+            row["peak_mb_first_decile_max"] = round(first_decile, 1)
+            row["peak_mb_last_decile_max"] = round(last_decile, 1)
             row["peak_mb_last_minus_first_decile"] = round(last_decile - first_decile, 1)
         jobs[f.parent.name] = row
     out = {"run": "exp8_long_horizon_summary",
            "note": "per-job long-horizon stability; pilot_30step/ holds the "
                    "30-step sizing pilot (superseded)",
+           "memory_unit": "MiB (raw per-step rows are decimal MB; converted here, "
+                          "factor 1e6/2**20); GPU values are reserved peaks without "
+                          "the CUDA context, which table_enrichment_report.py adds",
            "jobs": jobs}
     dst = R / "sustained_summary.json"
     json.dump(out, open(dst, "w"), indent=1)

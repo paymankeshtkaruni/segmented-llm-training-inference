@@ -20,8 +20,11 @@ Output: results/table_enrichment.json
 
 Ratio conventions: GPU rows divide by the dropout-matched GPU full anchor;
 all CPU rows divide by the single (dropout) CPU full anchor - stated in the
-paper caption. Long-run GPU peaks add the 490 MB CUDA context so both sides
-of the delta use the same basis as the grid (hw-total).
+paper caption. Long-run GPU peaks (MiB, from sustained_summary.json) add the
+CUDA context calibrated by the four-phase protocol itself (median of
+hw_total - reserved over the committed GPU reps: one value for the training
+cells, one for the serving cells) so both sides of the delta use the same
+basis and the same unit as the grid (hw-total, MiB).
 
 Delta conventions: delta_time_pct compares (long-run step + directly timed
 per-step validation) against the protocol step, i.e. protocol-fair after the
@@ -35,7 +38,20 @@ from glob import glob
 from pathlib import Path
 
 RES = Path("results")
-CUDA_CTX_MB = 490.0
+MIB_PER_MB = 1e6 / 2**20   # raw exp8 per-step rows are decimal MB
+
+
+def calibrated_ctx(patterns, total_key, reserved_key):
+    """CUDA context (MiB) as the four-phase protocol measured it: hw_total minus
+    peak reserved, median over every committed GPU rep matching the patterns."""
+    vals = []
+    for pat in patterns:
+        for f in glob(str(pat)):
+            o = json.load(open(f)).get("overall", {})
+            if o.get(total_key) and o.get(reserved_key):
+                vals.append(o[total_key] - o[reserved_key])
+    assert vals, f"no reps for {patterns}"
+    return {"ctx_mib": med(vals), "n_reps": len(vals), "min": min(vals), "max": max(vals)}
 
 
 def med(xs):
@@ -131,13 +147,19 @@ def main():
         "g7": ("grid", "T3", "cpu"), "g8": ("grid", "T7", "cpu"),
         "g9": ("scale", "cpu_xxl7b_T9", "cpu"),
     }
+    ctx_train = calibrated_ctx([RES / "exp3_grid/gpu_*_rep*/*_met.json",
+                                RES / "exp5_scale/gpu40_*_rep*/*_met.json"],
+                               "vram_hw_total_peak_mb", "vram_hw_reserved_peak_mb")
+    ctx_serve = calibrated_ctx([RES / "exp4_infer/gpu_I*_rep*/*.json"],
+                               "vram_hw_total_peak_mb", "vram_reserved_peak_sampled_mb")
+    out["cuda_context_mib"] = {"training": ctx_train, "serving": ctx_serve}
     deltas = {}
     for gid, (src, cell, dev) in MAPPING.items():
         job_key = next(k for k in sust if k.startswith(gid + "_"))
         job = sust[job_key]
         proto_mem, proto_step = (grid_cell(cell, dev) if src == "grid"
                                  else scale_cell(cell))
-        long_peak = job["peak_mb_max"] + (CUDA_CTX_MB if dev == "gpu" else 0.0)
+        long_peak = job["peak_mb_max"] + (ctx_train["ctx_mib"] if dev == "gpu" else 0.0)
         val = bridge[gid]["exp9_validation_phase_s_direct"]
         long_step_fair = job["avg_step_s"] + val
         deltas[gid] = {
@@ -154,6 +176,24 @@ def main():
         }
     out["longrun_vs_protocol"] = deltas
 
+    # ---- 3b. long-run serving footprints on the same basis (Table VII) -----
+    serving = {}
+    for job_key, job in sust.items():
+        if not job_key[0] == "i":
+            continue
+        gpu = job.get("device") == "cuda"
+        band = job.get("peak_mb_band") or [job["peak_mb_max"], job["peak_mb_max"]]
+        ctx = ctx_serve["ctx_mib"] if gpu else 0.0
+        serving[job_key] = {
+            "requests": job.get("n_requests_done"),
+            "footprint_mib": round(job["peak_mb_max"] + ctx, 1),
+            "footprint_band_mib": [round(band[0] + ctx, 1), round(band[1] + ctx, 1)],
+            "band_mib": round(band[1] - band[0], 1),
+            "per_token_s": job.get("avg_per_token_s"),
+            "basis": "reserved + calibrated CUDA context" if gpu else "resident set",
+        }
+    out["longrun_serving"] = serving
+
     # ---- 4. within-run spread: max vs min over the whole run --------------
     # The stability question the long-horizon table answers: over the run
     # itself, how far apart are the largest and smallest per-step peak
@@ -163,7 +203,7 @@ def main():
         job_dir = next((RES / "exp8_sustained").glob(gid + "_*"))
         raw = json.load(open(next(job_dir.glob("*_long.json"))))
         ps = raw["per_step"]
-        mems = [r["peak_mb"] for r in ps]
+        mems = [r["peak_mb"] * MIB_PER_MB for r in ps]   # decimal MB -> MiB
         ts = [r["s"] for r in ps]
         drift[gid] = {
             "job": job_dir.name, "n_steps": len(ps),
