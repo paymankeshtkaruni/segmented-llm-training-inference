@@ -15,12 +15,12 @@
       "note": "gradient-level checks; update style cannot alter gradients",
       "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
       "determinism_deltas": {
-        "mlp_chunk0_L0": 2.0954757928848267e-09,
-        "attn_q_seg0_L0": 5.602487362921238e-10,
+        "mlp_chunk0_L0": 1.979060471057892e-09,
+        "attn_q_seg0_L0": 6.184563972055912e-10,
         "output_head_seg0": 0.0,
         "final_norm_w": 0.0
       },
-      "determinism_max_delta": 2.0954757928848267e-09
+      "determinism_max_delta": 1.979060471057892e-09
     },
     {
       "mode": "T2_drop_recompute_after",
@@ -30,19 +30,19 @@
       "note": "gradient-level checks; update style cannot alter gradients",
       "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
       "determinism_deltas": {
-        "mlp_chunk0_L0": 2.153683453798294e-09,
-        "attn_q_seg0_L0": 5.384208634495735e-10,
+        "mlp_chunk0_L0": 2.495653461664915e-09,
+        "attn_q_seg0_L0": 6.039044819772243e-10,
         "output_head_seg0": 0.0,
         "final_norm_w": 0.0
       },
-      "determinism_max_delta": 2.153683453798294e-09,
+      "determinism_max_delta": 2.495653461664915e-09,
       "vs_T1_anchor_deltas": {
-        "mlp_chunk0_L0": 2.8812792152166367e-09,
-        "attn_q_seg0_L0": 7.457856554538012e-10,
+        "mlp_chunk0_L0": 3.4924596548080444e-09,
+        "attn_q_seg0_L0": 8.440110832452774e-10,
         "output_head_seg0": 6.984919309616089e-10,
         "final_norm_w": 9.313225746154785e-10
       },
-      "vs_T1_anchor_max_delta": 2.8812792152166367e-09
+      "vs_T1_anchor_max_delta": 3.4924596548080444e-09
     },
     {
       "mode": "T3_drop_streaming_after",
@@ -52,19 +52,19 @@
       "note": "gradient-level checks; update style cannot alter gradients",
       "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
       "determinism_deltas": {
-        "mlp_chunk0_L0": 2.3283064365386963e-09,
-        "attn_q_seg0_L0": 5.748006515204906e-10,
+        "mlp_chunk0_L0": 2.0372681319713593e-09,
+        "attn_q_seg0_L0": 5.675246939063072e-10,
         "output_head_seg0": 0.0,
         "final_norm_w": 0.0
       },
-      "determinism_max_delta": 2.3283064365386963e-09,
+      "determinism_max_delta": 2.0372681319713593e-09,
       "vs_T1_anchor_deltas": {
-        "mlp_chunk0_L0": 3.1723175197839737e-09,
-        "attn_q_seg0_L0": 7.566995918750763e-10,
+        "mlp_chunk0_L0": 3.0850060284137726e-09,
+        "attn_q_seg0_L0": 7.09405867382884e-10,
         "output_head_seg0": 6.984919309616089e-10,
         "final_norm_w": 9.313225746154785e-10
       },
-      "vs_T1_anchor_max_delta": 3.1723175197839737e-09
+      "vs_T1_anchor_max_delta": 3.0850060284137726e-09
     },
     {
       "mode": "T4_nodrop_resident_after",
@@ -74,16 +74,26 @@
       "clip": 1.0,
       "forward_hidden_max_delta": 1.2189149856567383e-05,
       "grad_slice_deltas": {
-        "mlp_chunk0_L0": 6.984919309616089e-09,
-        "attn_q_seg0_L0": 1.7171259969472885e-09,
+        "mlp_chunk0_L0": 7.1158865466713905e-09,
+        "attn_q_seg0_L0": 1.811713445931673e-09,
         "output_head_seg0": 1.1059455573558807e-08,
         "final_norm_w": 7.683411240577698e-09
       },
       "grad_max_delta": 1.1059455573558807e-08,
-      "step1_all_params_max_delta": 5.366397090256214e-05,
-      "step1_worst_param": "blocks.2.attention.output_projection.weight",
-      "step4_all_params_max_delta": 5.3833238780498505e-05,
-      "step4_worst_param": "blocks.2.attention.output_projection.weight"
+      "step1_all_params_max_delta": 4.494496897677891e-05,
+      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 332,
+        "n_elements_gt_1e-6": 45082,
+        "n_elements": 837703680
+      },
+      "step4_all_params_max_delta": 4.49707149527967e-05,
+      "step4_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_counts": {
+        "n_elements_gt_1e-5": 431,
+        "n_elements_gt_1e-6": 52886,
+        "n_elements": 837703680
+      }
     },
     {
       "mode": "T5_nodrop_recompute_after",
@@ -93,16 +103,26 @@
       "clip": 1.0,
       "forward_hidden_max_delta": 1.2189149856567383e-05,
       "grad_slice_deltas": {
-        "mlp_chunk0_L0": 7.290509529411793e-09,
-        "attn_q_seg0_L0": 1.6880221664905548e-09,
+        "mlp_chunk0_L0": 7.392372936010361e-09,
+        "attn_q_seg0_L0": 1.775333657860756e-09,
         "output_head_seg0": 1.1059455573558807e-08,
         "final_norm_w": 8.032657206058502e-09
       },
       "grad_max_delta": 1.1059455573558807e-08,
-      "step1_all_params_max_delta": 4.143081605434418e-05,
+      "step1_all_params_max_delta": 4.439009353518486e-05,
       "step1_worst_param": "blocks.2.attention.output_projection.weight",
-      "step4_all_params_max_delta": 4.156655631959438e-05,
-      "step4_worst_param": "blocks.2.attention.output_projection.weight"
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 326,
+        "n_elements_gt_1e-6": 45450,
+        "n_elements": 837703680
+      },
+      "step4_all_params_max_delta": 4.453491419553757e-05,
+      "step4_worst_param": "blocks.2.attention.output_projection.weight",
+      "step4_all_params_counts": {
+        "n_elements_gt_1e-5": 438,
+        "n_elements_gt_1e-6": 53161,
+        "n_elements": 837703680
+      }
     },
     {
       "mode": "T6_nodrop_streaming_after",
@@ -113,15 +133,25 @@
       "forward_hidden_max_delta": 1.2189149856567383e-05,
       "grad_slice_deltas": {
         "mlp_chunk0_L0": 7.334165275096893e-09,
-        "attn_q_seg0_L0": 1.7316779121756554e-09,
+        "attn_q_seg0_L0": 1.7462298274040222e-09,
         "output_head_seg0": 1.1059455573558807e-08,
         "final_norm_w": 8.032657206058502e-09
       },
       "grad_max_delta": 1.1059455573558807e-08,
-      "step1_all_params_max_delta": 4.331069067120552e-05,
+      "step1_all_params_max_delta": 4.852237179875374e-05,
       "step1_worst_param": "blocks.2.attention.output_projection.weight",
-      "step4_all_params_max_delta": 4.345201887190342e-05,
-      "step4_worst_param": "blocks.2.attention.output_projection.weight"
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 336,
+        "n_elements_gt_1e-6": 45340,
+        "n_elements": 837703680
+      },
+      "step4_all_params_max_delta": 4.86795324832201e-05,
+      "step4_worst_param": "blocks.2.attention.output_projection.weight",
+      "step4_all_params_counts": {
+        "n_elements_gt_1e-5": 453,
+        "n_elements_gt_1e-6": 53145,
+        "n_elements": 837703680
+      }
     },
     {
       "mode": "T7_drop_resident_immed",
@@ -129,7 +159,7 @@
       "dropout": 0.1,
       "update_style": "immediate",
       "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
-      "imm_vs_afterfull_all_params_max_delta": 7.170664321165532e-05,
+      "imm_vs_afterfull_all_params_max_delta": 8.962943684309721e-05,
       "worst_param": "blocks.1.mlp.output_projection.weight"
     },
     {
@@ -138,8 +168,8 @@
       "dropout": 0.1,
       "update_style": "immediate",
       "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
-      "imm_vs_afterfull_all_params_max_delta": 8.022948168218136e-05,
-      "worst_param": "blocks.1.attention.output_projection.weight"
+      "imm_vs_afterfull_all_params_max_delta": 0.00010345247574150562,
+      "worst_param": "blocks.0.mlp.output_projection.weight"
     },
     {
       "mode": "T9_drop_streaming_immed",
@@ -147,7 +177,7 @@
       "dropout": 0.1,
       "update_style": "immediate",
       "eval_forward_hidden_max_delta": 1.2189149856567383e-05,
-      "imm_vs_afterfull_all_params_max_delta": 0.0001359080197289586,
+      "imm_vs_afterfull_all_params_max_delta": 0.0001301388256251812,
       "worst_param": "blocks.0.mlp.output_projection.weight"
     },
     {
@@ -157,10 +187,20 @@
       "update_style": "immediate",
       "clip": null,
       "forward_hidden_max_delta": 1.2189149856567383e-05,
-      "step1_all_params_max_delta": 0.0003788960166275501,
+      "step1_all_params_max_delta": 0.0003431545337662101,
       "step1_worst_param": "blocks.1.mlp.output_projection.weight",
-      "step4_all_params_max_delta": 0.00037964212242513895,
-      "step4_worst_param": "blocks.1.mlp.output_projection.weight"
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 5980,
+        "n_elements_gt_1e-6": 76423,
+        "n_elements": 837703680
+      },
+      "step4_all_params_max_delta": 0.00034374906681478024,
+      "step4_worst_param": "blocks.1.mlp.output_projection.weight",
+      "step4_all_params_counts": {
+        "n_elements_gt_1e-5": 7498,
+        "n_elements_gt_1e-6": 142495,
+        "n_elements": 837703680
+      }
     },
     {
       "mode": "T11_nodrop_recompute_immed",
@@ -169,10 +209,20 @@
       "update_style": "immediate",
       "clip": null,
       "forward_hidden_max_delta": 1.2189149856567383e-05,
-      "step1_all_params_max_delta": 0.00034332211362197995,
-      "step1_worst_param": "blocks.0.mlp.output_projection.weight",
-      "step4_all_params_max_delta": 0.0003433607635088265,
-      "step4_worst_param": "blocks.0.mlp.output_projection.weight"
+      "step1_all_params_max_delta": 0.00035265437327325344,
+      "step1_worst_param": "blocks.1.mlp.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 5971,
+        "n_elements_gt_1e-6": 76225,
+        "n_elements": 837703680
+      },
+      "step4_all_params_max_delta": 0.0003532745176926255,
+      "step4_worst_param": "blocks.1.mlp.output_projection.weight",
+      "step4_all_params_counts": {
+        "n_elements_gt_1e-5": 7737,
+        "n_elements_gt_1e-6": 143007,
+        "n_elements": 837703680
+      }
     },
     {
       "mode": "T12_nodrop_streaming_immed",
@@ -181,10 +231,20 @@
       "update_style": "immediate",
       "clip": null,
       "forward_hidden_max_delta": 1.2189149856567383e-05,
-      "step1_all_params_max_delta": 0.0003221553924959153,
+      "step1_all_params_max_delta": 0.0003148101386614144,
       "step1_worst_param": "blocks.0.mlp.output_projection.weight",
-      "step4_all_params_max_delta": 0.00032218635897152126,
-      "step4_worst_param": "blocks.0.mlp.output_projection.weight"
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 5963,
+        "n_elements_gt_1e-6": 76274,
+        "n_elements": 837703680
+      },
+      "step4_all_params_max_delta": 0.00031483807833865285,
+      "step4_worst_param": "blocks.0.mlp.output_projection.weight",
+      "step4_all_params_counts": {
+        "n_elements_gt_1e-5": 7759,
+        "n_elements_gt_1e-6": 143359,
+        "n_elements": 837703680
+      }
     }
   ]
 }

@@ -82,8 +82,18 @@
       "grad_max_delta": 1.862645149230957e-08,
       "step1_all_params_max_delta": 2.0541774574667215e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 2.054162905551493e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T5_nodrop_recompute_after",
@@ -101,8 +111,18 @@
       "grad_max_delta": 1.4901161193847656e-08,
       "step1_all_params_max_delta": 5.204725312069058e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 5.204638000577688e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T6_nodrop_streaming_after",
@@ -120,8 +140,18 @@
       "grad_max_delta": 1.4901161193847656e-08,
       "step1_all_params_max_delta": 5.204725312069058e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 5.204638000577688e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T7_drop_resident_immed",
@@ -159,8 +189,18 @@
       "forward_hidden_max_delta": 7.152557373046875e-07,
       "step1_all_params_max_delta": 3.612600266933441e-06,
       "step1_worst_param": "blocks.1.attention.qkv_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 3.612600266933441e-06,
-      "step2_worst_param": "blocks.1.attention.qkv_projection.weight"
+      "step2_worst_param": "blocks.1.attention.qkv_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 14,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T11_nodrop_recompute_immed",
@@ -171,8 +211,18 @@
       "forward_hidden_max_delta": 7.152557373046875e-07,
       "step1_all_params_max_delta": 7.5432180892676115e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 4,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 7.543130777776241e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 12,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T12_nodrop_streaming_immed",
@@ -183,8 +233,18 @@
       "forward_hidden_max_delta": 7.152557373046875e-07,
       "step1_all_params_max_delta": 7.5432180892676115e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 4,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 7.543130777776241e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 12,
+        "n_elements": 464256
+      }
     }
   ]
 }

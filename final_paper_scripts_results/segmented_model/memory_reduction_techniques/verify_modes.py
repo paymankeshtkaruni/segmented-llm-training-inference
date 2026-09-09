@@ -93,14 +93,23 @@ def _shared_state(shared):
 
 
 def _max_delta_all_params(ref, store, shared, m, s):
+    """Worst |delta| over every reassembled parameter, plus the number of
+    elements above 1e-5 and 1e-6 over ALL parameters -- the same counts
+    control_fp32_floor.py reports, so the two are comparable like for like."""
     sd = reassemble_state_dict(store, _shared_state(shared), m, s)
     worst, worst_name = 0.0, ""
+    n5 = n6 = ntot = 0
     rsd = ref.state_dict()
     for k, v in sd.items():
-        d = (rsd[k].detach().to("cpu") - v.to("cpu")).abs().max().item()
+        diff = (rsd[k].detach().to("cpu") - v.to("cpu")).abs()
+        d = diff.max().item()
         if d > worst:
             worst, worst_name = d, k
-    return worst, worst_name
+        n5 += int((diff > 1e-5).sum().item())
+        n6 += int((diff > 1e-6).sum().item())
+        ntot += diff.numel()
+    return worst, worst_name, {"n_elements_gt_1e-5": n5, "n_elements_gt_1e-6": n6,
+                               "n_elements": ntot}
 
 
 def _grad_slices(gstore, shared_grads, m, s):
@@ -201,8 +210,9 @@ def verify_nodrop(name, code, device, store_kind, store_root, preset_name, batch
         opt.step_shared(shared_grads)                # segments already updated in-backward
     else:
         opt.step(shared_grads, clip_norm=clip)
-    d1, n1 = _max_delta_all_params(ref, store, shared, m, s)
+    d1, n1, c1 = _max_delta_all_params(ref, store, shared, m, s)
     out["step1_all_params_max_delta"], out["step1_worst_param"] = d1, n1
+    out["step1_all_params_counts"] = c1
 
     for step in range(1, n_steps):
         x, lab = _batch(m, step, batch, seq)
@@ -219,8 +229,9 @@ def verify_nodrop(name, code, device, store_kind, store_root, preset_name, batch
             opt.step_shared(sg)
         else:
             opt.step(sg, clip_norm=clip)
-    dn, nn_ = _max_delta_all_params(ref, store, shared, m, s)
+    dn, nn_, cn = _max_delta_all_params(ref, store, shared, m, s)
     out[f"step{n_steps}_all_params_max_delta"], out[f"step{n_steps}_worst_param"] = dn, nn_
+    out[f"step{n_steps}_all_params_counts"] = cn
     return out
 
 

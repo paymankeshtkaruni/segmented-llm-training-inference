@@ -82,8 +82,18 @@
       "grad_max_delta": 6.51925802230835e-09,
       "step1_all_params_max_delta": 6.3649495132267475e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 3,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 6.364891305565834e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 3,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T5_nodrop_recompute_after",
@@ -101,8 +111,18 @@
       "grad_max_delta": 7.450580596923828e-09,
       "step1_all_params_max_delta": 5.785346729680896e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 5.785288522019982e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T6_nodrop_streaming_after",
@@ -120,8 +140,18 @@
       "grad_max_delta": 7.450580596923828e-09,
       "step1_all_params_max_delta": 5.785346729680896e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 5.785288522019982e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 2,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T7_drop_resident_immed",
@@ -159,8 +189,18 @@
       "forward_hidden_max_delta": 0.0,
       "step1_all_params_max_delta": 9.602983482182026e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 4,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 9.602837963029742e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 8,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T11_nodrop_recompute_immed",
@@ -171,8 +211,18 @@
       "forward_hidden_max_delta": 0.0,
       "step1_all_params_max_delta": 8.759612683206797e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 4,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 8.759467164054513e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 7,
+        "n_elements": 464256
+      }
     },
     {
       "mode": "T12_nodrop_streaming_immed",
@@ -183,8 +233,18 @@
       "forward_hidden_max_delta": 0.0,
       "step1_all_params_max_delta": 8.759612683206797e-06,
       "step1_worst_param": "blocks.3.attention.output_projection.weight",
+      "step1_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 4,
+        "n_elements": 464256
+      },
       "step2_all_params_max_delta": 8.759467164054513e-06,
-      "step2_worst_param": "blocks.3.attention.output_projection.weight"
+      "step2_worst_param": "blocks.3.attention.output_projection.weight",
+      "step2_all_params_counts": {
+        "n_elements_gt_1e-5": 0,
+        "n_elements_gt_1e-6": 7,
+        "n_elements": 464256
+      }
     }
   ]
 }
