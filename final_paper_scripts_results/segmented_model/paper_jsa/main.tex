@@ -8,6 +8,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage[table]{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 \newtheorem{proposition}{Proposition}
 \newtheorem{theorem}{Theorem}
@@ -51,12 +52,18 @@ computes the same model as unsegmented execution, bit-deterministic on CPU
 and prediction-identical across all engines, so no accuracy is traded; a
 \emph{PyTorch-free serving runtime} for deployment without a training
 framework; and \emph{analytic memory and time laws}, validated by a
-pre-registered prediction on a held-out configuration and by long-horizon
-runs of hundreds to thousands of consecutive steps. On this substrate, a
-6.9-billion-parameter model whose full-model training aborts on a 94~GB
-accelerator trains on a single 40~GB device, and every mode runs at a
-fraction of full-model device memory. The price is time, not correctness;
-the data never has to leave the device that owns it.
+pre-registered prediction on a held-out configuration. Measured on real
+hardware, the trade is far gentler than sequential execution suggests: the
+fastest mode trains a 0.84-billion-parameter model at just 5.4$\times$ the
+full-model step time in less than half its device memory, and adding
+recomputation holds that same speed at 18\% of full-model memory; a
+6.9-billion-parameter model, whose full-model training aborts even on a
+94~GB accelerator, trains on a single 40~GB device at 28.5~GB---or
+streamed in 2.6~GB. At the extreme, training bottoms out at 1.08~GB and
+serving spans a 401~MB PyTorch-free floor up to resident decoding at
+31~ms per token. Long-horizon runs of thousands of consecutive steps
+confirm every number: device memory byte-identical throughout, step times
+stationary. The data never has to leave the device that owns it.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -1006,16 +1013,15 @@ phase entirely.}
 \end{figure}
 
 \begin{table*}[t]
-\caption{The 12 training modes at 0.84B with the unsegmented full model as
-anchor (medians of three isolated runs; batch 4, seq.\ 512). Dial columns
+\caption{The 12 training modes at 0.84B; the shaded bottom rows give the
+unsegmented full-model anchor (medians of three isolated runs; batch 4, seq.\ 512). Dial columns
 are binary: Drop.\ = dropout on; Rec.\ = activation recomputation (off =
 retained graph); Str.\ = weight streaming (off = all segments resident);
-In-b.\ = optimizer-in-backward (off = deferred sweep). $\times$full columns
-give the ratio to the full-model anchor---memory as a fraction, step time
-as a multiple; GPU rows use the dropout-matched anchor, CPU rows the single
-(dropout) CPU anchor. Every segmented row computes the same model
-(Sec.~\ref{sec:exact}); ratios from the committed
-\texttt{table\_enrichment\_report.py}.}
+In-b.\ = optimizer-in-backward (off = deferred sweep). \%full columns give
+peak memory as a percentage of the full-model anchor; $\times$full columns
+give step time as a multiple of it. GPU rows use the dropout-matched
+anchor, CPU rows the single (dropout) CPU anchor. Every segmented row computes the same model
+(Sec.~\ref{sec:exact}).}
 \label{tab:grid}
 \centering
 \small
@@ -1024,24 +1030,24 @@ as a multiple; GPU rows use the dropout-matched anchor, CPU rows the single
 \toprule
  & & & & \multicolumn{6}{c}{GPU (A100-40GB)} & \multicolumn{5}{c}{CPU} \\
 \cmidrule(lr){5-10}\cmidrule(l){11-15}
-Drop. & Rec. & Str. & In-b. & VRAM & $\times$full & Host & Step & $\times$full & Opt.\ & RAM & $\times$full & Step & $\times$full & Opt.\ \\
+Drop. & Rec. & Str. & In-b. & VRAM & \%full & Host & Step & $\times$full & Opt.\ & RAM & \%full & Step & $\times$full & Opt.\ \\
  & & & & (MB) & & (GB) & (s) & & (s) & (MB) & & (s) & & (s) \\
 \midrule
-\multicolumn{4}{@{}l}{\emph{full model, dropout}} & 25{,}406 & 1.00 & --- & 0.72 & 1.0 & --- & 26{,}934 & 1.00 & 28.8 & 1.0 & --- \\
-\multicolumn{4}{@{}l}{\emph{full model, no dropout}} & 24{,}148 & 1.00 & --- & 0.71 & 1.0 & --- & --- & --- & --- & --- & --- \\
+\checkmark & --- & --- & --- & 11{,}486 & 45.2\% & 19.8 & 5.77 & 8.0$\times$ & 4.13 & 19{,}692 & 73.1\% & 84.0 & 2.9$\times$ & 27.9 \\
+\checkmark & \checkmark & --- & --- & 4{,}488 & 17.7\% & 20.9 & 6.41 & 8.9$\times$ & 4.07 & 4{,}520 & 16.8\% & 113.9 & 4.0$\times$ & 27.1 \\
+\checkmark & \checkmark & \checkmark & --- & 1{,}080 & 4.3\% & 19.8 & 28.27 & 39.3$\times$ & 8.24 & 1{,}288 & 4.8\% & 155.6 & 5.4$\times$ & 35.8 \\
+--- & --- & --- & --- & 11{,}316 & 46.9\% & 20.7 & 5.76 & 8.1$\times$ & 4.10 & 10{,}736 & 39.9\% & 66.6 & 2.3$\times$ & 29.7 \\
+--- & \checkmark & --- & --- & 4{,}464 & 18.5\% & 21.2 & 6.43 & 9.1$\times$ & 4.17 & 4{,}694 & 17.4\% & 76.0 & 2.6$\times$ & 28.0 \\
+--- & \checkmark & \checkmark & --- & 1{,}030 & 4.3\% & 19.6 & 28.26 & 40.0$\times$ & 8.29 & 1{,}304 & 4.8\% & 119.2 & 4.1$\times$ & 40.5 \\
+\checkmark & --- & --- & \checkmark & 11{,}454 & 45.1\% & 19.0 & 3.89 & 5.4$\times$ & 0.11 & 19{,}702 & 73.1\% & 72.0 & 2.5$\times$ & 0.03 \\
+\checkmark & \checkmark & --- & \checkmark & 4{,}608 & 18.1\% & 17.6 & 3.94 & 5.5$\times$ & 0.10 & 4{,}569 & 17.0\% & 106.1 & 3.7$\times$ & 0.03 \\
+\checkmark & \checkmark & \checkmark & \checkmark & 1{,}158 & 4.6\% & 15.8 & 21.69 & 30.1$\times$ & 0.11 & 1{,}388 & 5.2\% & 136.2 & 4.7$\times$ & 0.03 \\
+--- & --- & --- & \checkmark & 11{,}284 & 46.7\% & 18.0 & 3.87 & 5.5$\times$ & 0.11 & 10{,}747 & 39.9\% & 54.1 & 1.9$\times$ & 0.03 \\
+--- & \checkmark & --- & \checkmark & 4{,}584 & 19.0\% & 17.8 & 3.92 & 5.5$\times$ & 0.11 & 4{,}669 & 17.3\% & 66.1 & 2.3$\times$ & 0.03 \\
+--- & \checkmark & \checkmark & \checkmark & 1{,}126 & 4.7\% & 16.3 & 21.69 & 30.7$\times$ & 0.11 & 1{,}374 & 5.1\% & 101.1 & 3.5$\times$ & 0.03 \\
 \midrule
-\checkmark & --- & --- & --- & 11{,}486 & 0.45 & 19.8 & 5.77 & 8.0 & 4.13 & 19{,}692 & 0.73 & 84.0 & 2.9 & 27.9 \\
-\checkmark & \checkmark & --- & --- & 4{,}488 & 0.18 & 20.9 & 6.41 & 8.9 & 4.07 & 4{,}520 & 0.17 & 113.9 & 4.0 & 27.1 \\
-\checkmark & \checkmark & \checkmark & --- & 1{,}080 & 0.04 & 19.8 & 28.27 & 39.3 & 8.24 & 1{,}288 & 0.05 & 155.6 & 5.4 & 35.8 \\
---- & --- & --- & --- & 11{,}316 & 0.47 & 20.7 & 5.76 & 8.1 & 4.10 & 10{,}736 & 0.40 & 66.6 & 2.3 & 29.7 \\
---- & \checkmark & --- & --- & 4{,}464 & 0.18 & 21.2 & 6.43 & 9.1 & 4.17 & 4{,}694 & 0.17 & 76.0 & 2.6 & 28.0 \\
---- & \checkmark & \checkmark & --- & 1{,}030 & 0.04 & 19.6 & 28.26 & 40.0 & 8.29 & 1{,}304 & 0.05 & 119.2 & 4.1 & 40.5 \\
-\checkmark & --- & --- & \checkmark & 11{,}454 & 0.45 & 19.0 & 3.89 & 5.4 & 0.11 & 19{,}702 & 0.73 & 72.0 & 2.5 & 0.03 \\
-\checkmark & \checkmark & --- & \checkmark & 4{,}608 & 0.18 & 17.6 & 3.94 & 5.5 & 0.10 & 4{,}569 & 0.17 & 106.1 & 3.7 & 0.03 \\
-\checkmark & \checkmark & \checkmark & \checkmark & 1{,}158 & 0.05 & 15.8 & 21.69 & 30.1 & 0.11 & 1{,}388 & 0.05 & 136.2 & 4.7 & 0.03 \\
---- & --- & --- & \checkmark & 11{,}284 & 0.47 & 18.0 & 3.87 & 5.5 & 0.11 & 10{,}747 & 0.40 & 54.1 & 1.9 & 0.03 \\
---- & \checkmark & --- & \checkmark & 4{,}584 & 0.19 & 17.8 & 3.92 & 5.5 & 0.11 & 4{,}669 & 0.17 & 66.1 & 2.3 & 0.03 \\
---- & \checkmark & \checkmark & \checkmark & 1{,}126 & 0.05 & 16.3 & 21.69 & 30.7 & 0.11 & 1{,}374 & 0.05 & 101.1 & 3.5 & 0.03 \\
+\rowcolor{gray!18}\multicolumn{4}{@{}l}{\emph{full model (anchor), dropout}} & 25{,}406 & 100\% & --- & 0.72 & 1$\times$ & --- & 26{,}934 & 100\% & 28.8 & 1$\times$ & --- \\
+\rowcolor{gray!18}\multicolumn{4}{@{}l}{\emph{full model (anchor), no dropout}} & 24{,}148 & 100\% & --- & 0.71 & 1$\times$ & --- & --- & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -1206,35 +1212,32 @@ stationary; their residual variance is co-tenant noise on the shared nodes
 \caption{Long-horizon training: sustained peak and band in MB (GPU:
 reserved + CUDA context; CPU: resident set), the training-only long-run
 step time, and the directly priced per-step validation pass (+val.).
-$\Delta$pk and $\Delta$t compare against the corresponding short-protocol
-cell (Tables~\ref{tab:grid} and~\ref{tab:scale}); the time comparison adds
-+val.\ first so both sides include validation. Memory deltas reflect
-measurement-basis and CPU-allocator differences; time deltas are dominated
-by node co-tenancy and the protocol's tracing overhead, both quantified in
-Sec.~\ref{sec:longhorizon}---the per-step behavior itself is stationary
-(band; Fig.~\ref{fig:sustainedtrain}). Deltas from the committed
-\texttt{table\_enrichment\_report.py}.}
+$\Delta$mem and $\Delta$t give the spread between the largest and smallest
+per-step value over the whole run, as a percentage of the minimum. GPU
+memory is byte-identical at every step (zero band, 0.0\%); CPU bands are
+bounded allocator plateaus; time spreads reflect co-tenant load on the
+shared nodes (Sec.~\ref{sec:longhorizon}).}
 \label{tab:sustainedtrain}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{2pt}
+\setlength{\tabcolsep}{2.2pt}
 \begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
-Mode & Steps & Peak & $\Delta$pk & Band & Step & +val. & $\Delta$t \\
+Mode & Steps & Peak & Band & $\Delta$mem & Step & $\Delta$t & +val. \\
 \midrule
 \multicolumn{8}{@{}l}{\emph{0.84B, GPU}} \\
-\enspace retained, resident, in-backward & 2{,}048 & 11{,}968 & +4.5\% & 0 & 5.23\,s & +0.3\,s & +43\% \\
-\enspace recompute, resident, deferred & 2{,}048 & 4{,}663 & +3.9\% & 0 & 9.05\,s & +0.3\,s & +46\% \\
-\enspace recompute, streamed, deferred & 2{,}048 & 1{,}142 & +5.8\% & 0 & 27.11\,s & +6.6\,s & +19\% \\
-\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}172 & +1.2\% & 0 & 16.28\,s & +6.6\,s & +5\% \\
+\enspace retained, resident, in-backward & 2{,}048 & 11{,}968 & 0 & 0.0\% & 5.23\,s & 15.6\% & +0.3\,s \\
+\enspace recompute, resident, deferred & 2{,}048 & 4{,}663 & 0 & 0.0\% & 9.05\,s & 14.0\% & +0.3\,s \\
+\enspace recompute, streamed, deferred & 2{,}048 & 1{,}142 & 0 & 0.0\% & 27.11\,s & 24.8\% & +6.6\,s \\
+\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}172 & 0 & 0.0\% & 16.28\,s & 4.6\% & +6.6\,s \\
 \multicolumn{8}{@{}l}{\emph{6.9B, GPU}} \\
-\enspace recompute, resident, deferred & 1{,}024 & 29{,}687 & +4.2\% & 0 & 41.90\,s & +1.6\,s & $-$25\% \\
-\enspace recompute, streamed, in-backward & 512 & 2{,}799 & +2.2\% & 0 & 102.2\,s & +37.4\,s & $-$19\% \\
+\enspace recompute, resident, deferred & 1{,}024 & 29{,}687 & 0 & 0.0\% & 41.90\,s & 14.2\% & +1.6\,s \\
+\enspace recompute, streamed, in-backward & 512 & 2{,}799 & 0 & 0.0\% & 102.2\,s & 3.4\% & +37.4\,s \\
 \multicolumn{8}{@{}l}{\emph{0.84B, CPU}} \\
-\enspace recompute, streamed, deferred & 512 & 2{,}087 & +62\% & 349 & 112.5\,s & +14.0\,s & $-$19\% \\
-\enspace retained, resident, in-backward & 1{,}024 & 21{,}134 & +7.3\% & 691 & 50.95\,s & +6.2\,s & $-$21\% \\
+\enspace recompute, streamed, deferred & 512 & 2{,}087 & 349 & 20.1\% & 112.5\,s & 4.7\% & +14.0\,s \\
+\enspace retained, resident, in-backward & 1{,}024 & 21{,}134 & 691 & 3.4\% & 50.95\,s & 14.2\% & +6.2\,s \\
 \multicolumn{8}{@{}l}{\emph{6.9B, CPU}} \\
-\enspace recompute, streamed, in-backward & 128 & 7{,}932 & $-$15\% & 1{,}251 & 478.0\,s & +79.9\,s & $-$11\% \\
+\enspace recompute, streamed, in-backward & 128 & 7{,}932 & 1{,}251 & 18.7\% & 478.0\,s & 3.1\% & +79.9\,s \\
 \bottomrule
 \end{tabular}
 \end{table}

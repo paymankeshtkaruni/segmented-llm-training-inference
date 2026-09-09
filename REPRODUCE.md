@@ -155,7 +155,13 @@ Mapping (paper -> source):
   control_fp32_floor_*.json, step_delta_analysis_*.json (jobs: slurm/x1_verify_*.sbatch)
 - Matched-pair learning + prediction agreement: results/quality_fresh_pair/*
   (jobs: slurm/quality_triple.sbatch, full_repaired.sbatch, onnx accuracy jobs)
-- Comparison + anchors: results/exp1_compare, exp2_anchor, deepspeed_baseline_16t*
+- Comparison + anchors: results/exp1_compare, exp2_anchor, deepspeed_baseline_16t*.
+  The naive-segmented anchor (partition only, every technique off: tech code
+  00000000000, dropout 0.1) is results/exp2_anchor/{gpu,cpu}_rep*/naive_anchor_met.json
+  (jobs: slurm/exp2_anchor_gpu.sbatch, slurm/exp2_anchor_cpu.sbatch); its medians,
+  host RSS, optimizer-phase time and ratios vs the full model are the
+  `naive_anchors` block of results/table_enrichment.json (Table V naive row and the
+  naive-anchor row of Table VI, both devices)
 - 12-mode grid: results/exp3_grid/grid_summary.json (slurm/exp3_grid_*.sbatch)
 - Inference modes + ONNX + full-decode anchors: results/exp4_infer/infer_summary.json
 - Scale: results/exp5_scale/scale_summary.json; fastest modes: results/exp6_fast/exp6_summary.json
@@ -188,9 +194,10 @@ Scripts (in \`final_paper_scripts_results/segmented_model/memory_reduction_techn
   \`results/exp9_validation_bridge/\` (5-step four-phase re-measurements;
   job \`slurm/exp9_validation_bridge.sbatch\`) ->
   \`results/exp9_validation_bridge/bridge_summary.json\`.
-- \`table_enrichment_report.py\` — full-model anchors, per-mode ratios vs
-  the full model (Table VI), and long-run deltas vs the short cost protocol
-  (Table IX), from committed results only (job
+- \`table_enrichment_report.py\` — full-model anchors, naive-segmented anchors
+  (every technique off; Table V and the anchor rows of Table VI), per-mode ratios vs
+  the full model (Table VI), long-run deltas vs the short cost protocol
+  (Table IX) and within-run spread (Table IX band columns), from committed results only (job
   \`slurm/table_enrichment.sbatch\`) -> \`results/table_enrichment.json\`.
 - \`slurm/measurement_checks.sbatch\` + \`slurm/sampler_off_rerun.sbatch\` —
   tracer-overhead bridge (profiled vs unprofiled serving, same node) and the

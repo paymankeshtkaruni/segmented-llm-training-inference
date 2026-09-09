@@ -8,6 +8,9 @@ Inputs (all committed results):
       -> GPU full-model anchors (vram_hw_total_peak_mb, avg_step_time_s)
   results/exp2_anchor/cpu_full_rep*/full_train_metrics.json
       -> CPU full-model anchor (rss_peak_sampled_mb, avg_step_time_s)
+  results/exp2_anchor/{gpu,cpu}_rep*/naive_anchor_met.json
+      -> naive-segmented anchors, every technique off (tech code 00000000000,
+         dropout 0.1); GPU vram_hw_total_peak_mb, CPU rss_peak_sampled_mb
   results/exp3_grid/grid_summary.json          -> 12-mode protocol cells
   results/exp5_scale/scale_summary.json        -> 6.9B protocol cells
   results/exp8_sustained/sustained_summary.json-> long-run peaks and step times
@@ -64,6 +67,29 @@ def main():
                                    "rss_peak_sampled_mb"),
     }
     out["full_anchors"] = anchors
+
+    # ---- 1b. naive-segmented anchors: partition only, every technique off --
+    # Same conventions as the grid cells: GPU host = rss_hw_peak_mb, CPU RAM =
+    # rss_peak_sampled_mb, optimizer phase = per_phase.optimizer.time_ms / 1000.
+    def naive_anchor(pattern, mem_key, host_key):
+        reps = [json.load(open(f)) for f in sorted(glob(str(pattern)))]
+        assert reps, f"no reps for {pattern}"
+        return {"peak_mb": med([d["overall"][mem_key] for d in reps]),
+                "host_rss_mb": med([d["overall"][host_key] for d in reps]) if host_key else None,
+                "step_s": med([d["avg_step_time_s"] for d in reps]),
+                "opt_phase_s": med([d["per_phase"]["optimizer"]["time_ms"] / 1000 for d in reps]),
+                "n_reps": len(reps)}
+    naive = {
+        "gpu_dropout": naive_anchor(RES / "exp2_anchor/gpu_rep*/naive_anchor_met.json",
+                                    "vram_hw_total_peak_mb", "rss_hw_peak_mb"),
+        "cpu_dropout": naive_anchor(RES / "exp2_anchor/cpu_rep*/naive_anchor_met.json",
+                                    "rss_peak_sampled_mb", None),
+    }
+    for k, v in naive.items():
+        v["naive_over_full_peak_pct"] = round(100 * v["peak_mb"] / anchors[k]["peak_mb"], 1)
+        v["full_over_naive_peak_x"] = round(anchors[k]["peak_mb"] / v["peak_mb"], 3)
+        v["naive_over_full_step_x"] = round(v["step_s"] / anchors[k]["step_s"], 3)
+    out["naive_anchors"] = naive
 
     # ---- 2. grid ratios vs. full model -----------------------------------
     grid = json.load(open(RES / "exp3_grid/grid_summary.json"))["modes"]
@@ -128,6 +154,28 @@ def main():
         }
     out["longrun_vs_protocol"] = deltas
 
+    # ---- 4. within-run spread: max vs min over the whole run --------------
+    # The stability question the long-horizon table answers: over the run
+    # itself, how far apart are the largest and smallest per-step peak
+    # memory and step time, as a percentage of the minimum.
+    drift = {}
+    for gid, (_, _, _) in MAPPING.items():
+        job_dir = next((RES / "exp8_sustained").glob(gid + "_*"))
+        raw = json.load(open(next(job_dir.glob("*_long.json"))))
+        ps = raw["per_step"]
+        mems = [r["peak_mb"] for r in ps]
+        ts = [r["s"] for r in ps]
+        drift[gid] = {
+            "job": job_dir.name, "n_steps": len(ps),
+            "peak_mb_min": round(min(mems), 1),
+            "peak_mb_max": round(max(mems), 1),
+            "spread_mem_pct": round((max(mems) - min(mems)) / min(mems) * 100, 1),
+            "step_s_min": round(min(ts), 3),
+            "step_s_max": round(max(ts), 3),
+            "spread_time_pct": round((max(ts) - min(ts)) / min(ts) * 100, 1),
+        }
+    out["longrun_drift"] = drift
+
     dst = RES / "table_enrichment.json"
     json.dump(out, open(dst, "w"), indent=1)
     print("wrote", dst)
@@ -136,6 +184,10 @@ def main():
         print(f"{gid}: peak {d['protocol_peak_mb']:.0f} -> {d['longrun_peak_mb']:.0f} MB "
               f"({d['delta_peak_pct']:+.1f}%), step {d['protocol_step_s']:.2f} -> "
               f"{d['longrun_step_plus_val_s']:.2f} s ({d['delta_time_pct']:+.1f}%)")
+    for gid in sorted(drift):
+        d = drift[gid]
+        print(f"{gid} spread: mem {d['spread_mem_pct']:.1f}%, time {d['spread_time_pct']:.1f}% "
+              f"(max vs min over {d['n_steps']} steps)")
 
 
 if __name__ == "__main__":
