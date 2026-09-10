@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Generate all figures for paper_v4_tpds from the committed result files.
+"""Generate all figures for paper_jsa from the committed result files.
 
 Reads ONLY files under memory_reduction_techniques/results/ (summaries,
-traces, quality logs). Writes PDF figures to paper_v4_tpds/figures/.
+traces, quality logs). Writes PDF figures to paper_jsa/figures/.
 Run via Slurm (slurm/figures.sbatch); nothing runs on the login node.
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-HERE = Path(__file__).resolve().parent                      # paper_v4_tpds/
+HERE = Path(__file__).resolve().parent                      # paper_jsa/
 R = HERE.parent / "memory_reduction_techniques" / "results"
 OUT = HERE / "figures"
 OUT.mkdir(exist_ok=True)
@@ -278,7 +278,7 @@ def fig_schematic():
     txt(14, 89, "GPT decoder — four segmentation axes", 7.5, w="bold")
     axes_boxes = [
         ("E — embedding", "split $d_{model}$, concat", "#4c72b0"),
-        ("A — attention", "head groups, shared $W_o$", "#55a868"),
+        ("A — attention", "head groups; $W_o$ its own segment", "#55a868"),
         ("M — MLP", "$d_{ff}$ chunks, running-sum", "#dd8452"),
         ("H — output head", "vocab slices, streamed CE", "#c44e52"),
     ]

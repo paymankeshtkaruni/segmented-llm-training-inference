@@ -38,37 +38,36 @@ Research (BMBF), Germany, under the AI service center KISSKI (grant nos.\
 \maketitle
 
 \begin{abstract}
-Devices with limited memory---edge nodes, commodity CPUs, single mid-range
-accelerators---are widely considered unable to train or even load large
-language models. We argue this limit is set by framework scheduling rather
-than by the computation, and present segmented execution: a GPT decoder is
-partitioned along four cut planes (attention head groups, feed-forward
-hidden units, embedding width, and vocabulary slices) and executed one
-segment at a time, with non-resident state parked in host memory or on
-disk. Our contributions are: a \emph{mode taxonomy}, in which a small set
-of binary dials yields twelve training and four inference modes trading
-memory for time; a \emph{verified exactness guarantee}---every mode
-computes the same model as unsegmented execution, bit-deterministic on CPU
-and prediction-identical across all engines, so no accuracy is traded; a
-\emph{PyTorch-free serving runtime} for deployment without a training
-framework; and \emph{analytic memory and time laws}, validated by a
-pre-registered prediction on a held-out configuration. Measured on real
-hardware, the trade is far gentler than sequential execution suggests: the
-fastest mode trains a 0.84-billion-parameter model at just 5.4$\times$ the
-full-model step time in less than half its device memory, and adding
-recomputation holds that same speed at 18\% of full-model memory; a
-6.9-billion-parameter model, whose full-model training aborts even on a
-94~GB accelerator, trains on a single 40~GB device at 28.5~GB---or
-streamed in 2.6~GB. At the extreme, training bottoms out at 1.08~GB and
-serving spans a 401~MB PyTorch-free floor up to resident decoding at
-31~ms per token. Long-horizon runs of thousands of consecutive steps
-confirm every number: device memory byte-identical throughout, step times
-stationary. The data never has to leave the device that owns it.
+Edge intelligence keeps data on the device that produces it, but the
+language models worth adapting to that data no longer fit the device, so
+training moves elsewhere and the data with it. We argue the limit is how
+frameworks schedule memory, not the computation, and present
+\emph{segmented execution}: full-parameter training and inference of a
+model larger than the device's memory, on that device. A GPT decoder is
+partitioned along four axes and executed one segment at a time, with
+non-resident state parked in host memory or on disk. The result is a
+\emph{measured menu} of twelve training and four inference modes trading
+memory for time: a fixed memory budget picks the mode that fits and knows
+its time cost. Every mode is verified on GPU and CPU to compute the same
+model as unsegmented execution, at the framework's own fp32 reordering
+scale, and every engine agrees on every prediction, so the menu never
+trades accuracy. In fp32 on one GPU, the 0.84-billion-parameter menu runs from
+11.5~GB at 5.4$\times$ the full-model step time to 1.08~GB at 39$\times$,
+twenty times below the ZeRO-Offload floor measured on the same node; on a
+CPU the same model trains in 1.29~GB at 5.4$\times$, and it serves in
+401~MB with neither GPU nor training framework. A 6.9-billion-parameter
+model whose full-model training aborts even on a 94~GB accelerator trains
+in 2.6~GB on a 40~GB GPU and in 9.3~GB of RAM on a CPU-only node. Over 128
+to 2{,}048 consecutive steps at both sizes, GPU memory is byte-identical on
+every step, CPU memory stays within a band of at most 1.19~GB, and step
+times show no drift beyond co-tenant noise on the shared nodes. Training
+and inference complete where the data is, so no raw records, gradients, or
+activations cross a network boundary.
 \end{abstract}
 
 \begin{IEEEkeywords}
 Large language models, on-device learning, edge intelligence,
-memory-efficient training, offloading, runtime systems.
+memory-efficient training, data locality, offloading, runtime systems.
 \end{IEEEkeywords}
 
 % ============================================================================
@@ -82,9 +81,9 @@ saturated, under which a simple rule holds: \emph{if the model, its optimizer
 state, and its activation graph do not fit, you cannot train it on that
 device.}
 
-A growing class of settings inverts these assumptions. Edge devices, IoT
-endpoints, and mobile phones are defined by tight, fixed memory; their compute
-is often idle, battery- or thermally limited, and latency-tolerant or entirely
+Edge intelligence inverts these assumptions. Edge devices, IoT (Internet of Things) endpoints,
+and mobile phones are defined by tight, fixed memory; their compute is often
+idle, battery- or thermally limited, and latency-tolerant or entirely
 offline. More fundamentally, much of the data that would most benefit from
 adaptation is private and non-exportable (health records, personal messages,
 on-device sensor streams, regulated enterprise data), so the only compliant
@@ -95,26 +94,17 @@ frameworks deny: that each resource-constrained participant can run training
 locally. This paper builds that missing substrate; the federated and
 distributed instantiations on top of it are our declared next step
 (Sec.~\ref{sec:limits}). Keeping training and inference on the device that
-owns the data removes the network and server-side attack surface entirely:
-no raw records, gradients, or activations ever cross a network boundary
-(threats that require physical or privileged access to the device itself
-are a separate matter; Sec.~\ref{sec:disc}). We note up
-front that our mechanism is orthogonal to the edge community's default
-lever, reduced precision: quantization and low-precision training shrink
-every memory term by a constant factor~\cite{nadalini2023reduced,micikevicius2018mixed},
-whereas segmentation bounds which terms must coexist at all---and the two
-compose \emph{productively}: quantized segments are smaller, so a fixed
-memory budget affords a coarser partition, and coarser partitions are the
-faster end of the granularity dial (Sec.~\ref{sec:gran}); quantization
-inside segmented execution therefore buys back time as well as memory. All
-results here are deliberately full-precision fp32 so that exactness can be
-verified end to end. For these
-settings the binding constraint is \emph{memory}, not FLOPs, and the question
-is not ``how do we make the model fit the machine?'' but ``how do we make the
-\emph{computation} fit a memory budget we are given?'' This memory-bound
-character is not unique to the edge: even large-batch data-center inference is
-now found to be bottlenecked by memory and DRAM bandwidth rather than
-compute~\cite{tazi2025memorygap}.
+owns the data removes the network and server-side attack surface: no raw
+records, gradients, or activations ever cross a network boundary (threats
+that require physical or privileged access to the device itself are a
+separate matter; Sec.~\ref{sec:disc}).
+
+For these settings the binding constraint is \emph{memory}, not FLOPs, and
+the question is not ``how do we make the model fit the machine?'' but ``how
+do we make the \emph{computation} fit a memory budget we are given?'' This
+memory-bound character is not unique to the edge: even large-batch
+data-center inference is now found to be bottlenecked by memory and DRAM
+bandwidth rather than compute~\cite{tazi2025memorygap}.
 
 This paper takes the position that \emph{memory is a budget, not a
 requirement}. The peak memory of a standard training step decomposes into
@@ -138,8 +128,21 @@ CPU), while the resident modes trade that memory floor for speed by keeping
 all segment weights on the device. The
 partition is a pure execution concern on an unchanged architecture, and we
 verify that segmented training reproduces full-model training to
-floating-point tolerance and matches its accuracy exactly at the prediction
-level. \emph{The learning is invariant; only the memory schedule changes.}
+floating-point tolerance and matches its accuracy to within the spread
+that fp32 roundoff alone produces over a full training run. \emph{The
+learning is invariant; only the memory schedule changes.}
+
+Our mechanism is orthogonal to the edge community's default lever, reduced
+precision: quantization and low-precision training shrink every memory
+term by a constant factor~\cite{nadalini2023reduced,micikevicius2018mixed},
+whereas segmentation bounds which terms must coexist at all. The two
+should compose \emph{productively}: quantized segments are smaller, so a
+fixed memory budget affords a coarser partition, and coarser partitions are
+the faster end of the granularity dial (Sec.~\ref{sec:gran}). Quantization
+inside segmented execution is therefore expected to buy back time as well
+as memory. We have not measured that combination; all results here
+are deliberately full-precision fp32 so that exactness can be verified end
+to end.
 
 Where prior single-device systems keep at least one full transformer
 \emph{layer} resident~\cite{pudipeddi2020l2l,ren2021zerooffload,sun2022stronghold,fang2022patrickstar},
@@ -148,11 +151,13 @@ partition, a small set of binary \emph{dials}---activation recomputation,
 weight streaming, dropout, key--value caching at inference, and the optimizer
 update schedule---defines a lattice of named \emph{operating modes}, in the
 way ZeRO names its stages~\cite{rajbhandari2020zero}: a practitioner reads a
-memory or time budget and selects a row. The modes span, on one 40~GB
-accelerator for a 0.84B-parameter decoder, from 11.5~GB at $5.4\times$
-full-model step time to 1.16~GB at $30\times$ (1.08~GB at $39\times$ with
-the deferred update schedule); a fine partition reaches 890~MB. The same
-dials govern inference, down to a 401~MB PyTorch-free serving mode.
+memory or time budget and selects a row. For a 0.84B-parameter decoder the
+modes span, on one 40~GB accelerator, from 11.5~GB at $5.4\times$
+full-model step time to 1.08~GB at $39\times$ (1.16~GB at $30\times$ with
+the in-backward update schedule), and on one CPU node from a 26.9~GB
+full-model anchor to 1.29~GB at $5.4\times$; a fine partition reaches
+890~MB on the GPU. The same dials govern inference, down to a 401~MB
+PyTorch-free serving mode.
 
 \paragraph{Contributions.}
 \begin{enumerate}
@@ -174,21 +179,34 @@ dials govern inference, down to a 401~MB PyTorch-free serving mode.
   28~s${\to}$0.03~s on CPU), making the fastest resident mode $5.4\times$
   full-model step time and cutting streamed-mode time by 23\% and its host
   store by 4~GB (Sec.~\ref{sec:eval}).
-\item \textbf{Capability results:} 0.84B trains in 1.08~GB (20$\times$ below
-  the DeepSpeed ZeRO-Offload floor we measure); a 6.9B model whose full-model
+\item \textbf{Capability results on both device classes:} 0.84B trains in
+  1.08~GB on a GPU (20$\times$ below the DeepSpeed ZeRO-Offload floor we
+  measure) and in 1.29~GB of RAM on a CPU. A 6.9B model whose full-model
   training aborts on a 94~GB H100 trains \emph{resident} on a single 40~GB
-  A100 at 28.5~GB, moving the single-device wall past 6.9B
-  (Sec.~\ref{sec:eval}).
+  A100 at 28.5~GB, streamed in 2.6~GB, and CPU-only in 9.3~GB of RAM where
+  full-model training needs 111.6~GB, moving the single-device wall past
+  6.9B (Sec.~\ref{sec:eval}).
+\item \textbf{Sustained operation under a training-realistic protocol:}
+  every headline mode run for 128--2{,}048 consecutive steps (3--17 hours)
+  and every headline server for 500--2{,}000 requests. GPU memory is
+  byte-identical on every step at both 0.84B and 6.9B, CPU memory stays within a
+  bounded band of at most 1.19~GB, step times show no drift beyond
+  co-tenant noise, and serving shows no session leak
+  (Sec.~\ref{sec:longhorizon}, Tables~\ref{tab:sustainedtrain}
+  and~\ref{tab:sustainedserve}).
 \item \textbf{An exactness methodology with a falsification control:} the
-  deviation of segmented from full-model execution is bounded \emph{below}
-  the deviation of plain PyTorch from itself under a routine batch split, and
-  all engines and modes, including the ONNX runtime, agree on every one of
+  deviation of segmented from full-model execution is a small multiple of
+  the deviation of plain PyTorch from itself under a routine batch split,
+  and an order of magnitude below the learning-rate scale under the clipped
+  recipe. Six serving pipelines across both engines, four of them
+  PyTorch-free (two placements on two providers), agree on every one of
   11{,}654 test predictions (Sec.~\ref{sec:exact}).
 \item \textbf{An analytic cost model over size and partition,} fitted once
   on the measured grid (memory law within 8.7\% worst-case across five sizes
   and three partitions) and validated by a pre-registered prediction on a
   never-measured configuration, conservative by 7\% in time and 5\% in
-  memory (Sec.~\ref{sec:model}).
+  memory. A runtime handed a memory budget can thus select a mode for a
+  size or partition it has never run (Sec.~\ref{sec:model}).
 \item \textbf{The framework memory model and framework-artifact argument:}
   an analysis showing that every term of peak training memory is a
   scheduling choice with a memory-frugal substitute
@@ -206,7 +224,7 @@ Most systems work on large-model training scales \emph{out}:
 tensor~\cite{shoeybi2019megatron,narayanan2021megatron} and
 pipeline~\cite{huang2019gpipe} parallelism and sharded data-parallel
 training~\cite{rajbhandari2020zero,zhao2023fsdp} partition a model across
-\emph{many} accelerators so that their aggregate memory suffices; 2D
+\emph{many} accelerators so that their aggregate memory suffices. 2D
 tensor-parallel schemes additionally partition the hidden and embedding
 width~\cite{wang2022tesseract}, and EdgeATP applies the same intra-layer
 decomposition of attention heads and feed-forward blocks across
@@ -239,6 +257,11 @@ CPU memory for fine-tuning under tight
 budgets~\cite{ding2026heteropipeline,zhang2026memorysafe}; peak memory
 has likewise been promoted to a first-class scheduling constraint for
 multi-tenant inference on memory-limited edge GPUs~\cite{lee2026peakmem}.
+Peak-memory figures in this literature are seldom accompanied by the
+allocator controls under which they were taken; we found the same
+configuration measured at 1.2 or 4.2~GB depending only on what preceded it
+in the process, and isolate every cell in a fresh process
+(Sec.~\ref{sec:discipline}).
 \emph{Layer-granular streaming.} Layer-to-layer
 execution~\cite{pudipeddi2020l2l}, working-window
 offload~\cite{sun2022stronghold}, chunk-based heterogeneous memory
@@ -279,19 +302,35 @@ LoRA/QLoRA~\cite{hu2022lora,dettmers2023qlora}) reduce memory by changing
 \emph{what} is computed and are therefore lossy; they are orthogonal and
 composable with our lossless partitioning.
 
-\subsection{On-Device, Edge, and Private Computation}
+\subsection{Edge Intelligence and Private Computation}
 On-device training under kilobytes to megabytes of
 memory~\cite{lin2022ondevice} and federated learning~\cite{mcmahan2017federated}
 are driven by the same constraints we target---fixed device memory and data
 that cannot be exported---but typically assume small models or update only a
-parameter subset. Lightweight inference runtimes such as ONNX Runtime execute
-an exported graph without a training framework; we exploit this directly as
-evidence that a share of what is called ``model memory'' is in fact runtime
-overhead. Measured characterization of quantized language models on
-Jetson-, Raspberry~Pi-, and microcontroller-class boards identifies model
-footprint and streaming execution as the dominant deployment
+parameter subset. Our contribution to privacy is data locality alone:
+training and serving complete on the device that owns the data, so no raw
+records, gradients, or activations cross a network boundary
+(Sec.~\ref{sec:disc}). That is a precondition, not a mechanism. When updates
+do leave the device, as in the federated extension of
+Sec.~\ref{sec:limits}, the field's protections apply on top of it unchanged:
+secure aggregation hides any individual client's update from the
+server~\cite{bonawitz2017secureagg}, and differentially private training
+bounds what a released model reveals about any single training
+example~\cite{abadi2016dpsgd,mcmahan2018dpfedavg}. Locality also does not
+address memorization: a model trained on private data can reproduce it when
+queried~\cite{carlini2021extracting}, and keeping the model on the device
+bounds who can query it, not what it has learned. Protection of user data
+submitted to online LLM services~\cite{bai2025safeguarding} addresses the
+complementary setting in which the model, rather than the data, stays
+remote. Measured characterization of quantized language models on Jetson-,
+Raspberry~Pi-, and microcontroller-class boards identifies model footprint
+and streaming execution as the dominant deployment
 levers~\cite{firpo2026convagent}; our cost model quantifies exactly these
-levers for the segmented regime.
+levers for the segmented regime, and our PyTorch-free serving runtime, which
+executes an exported graph on ONNX Runtime with no training framework
+present, is direct evidence for the footprint lever, since a share of what
+is called ``model memory'' is in fact runtime overhead
+(Sec.~\ref{sec:onnxrt}).
 
 \subsection{Positioning}
 Table~\ref{tab:landscape} situates this work among the closest systems, by
@@ -301,7 +340,7 @@ layer (or the whole model). Our claim is that the floor can be pushed one
 level lower, to one \emph{segment} of one layer, by applying the cut planes
 of tensor parallelism~\cite{shoeybi2019megatron} temporally rather than
 spatially---and that this can be done \emph{exactly}, with the deviation from
-full-model execution bounded below the run-to-run deviation of the framework
+full-model execution at the run-to-run reordering scale of the framework
 itself. Where prior work ships an operating point or a solver-chosen
 policy~\cite{sheng2023flexgen}, we characterize the whole configuration space
 as a small lattice of named modes and validate an analytic cost model over
@@ -384,7 +423,7 @@ allocation leaves the critical path; reserved memory routinely exceeds live
 memory. \emph{Kernels, fused attention, and the KV cache} favour large
 resident operands and trade memory for speed. These choices target one
 regime---\emph{memory is abundant, maximize FLOP/s}---and the field's
-trajectory (larger HBM, faster interconnect, paged KV caches, deeper fusion)
+trajectory (larger HBM (high-bandwidth memory), faster interconnect, paged KV caches, deeper fusion)
 entrenches it; resource-limited users are underserved by \emph{priority}, not
 physics. Because every term is a scheduling choice, each has a memory-frugal
 alternative: the activation graph can be \emph{recomputed}, parameters and
@@ -398,10 +437,13 @@ configuration is written $E{\times}A{\times}M{\times}H$: the token and
 position embeddings are split into $E$ slices along the model width
 $d_\text{model}$; each attention block into $A$ head groups; each feed-forward
 block into $M$ chunks along the hidden width $d_\text{ff}$; and the output
-head into $H$ vocabulary slices. Layer norms, the attention output projection
-$W_o$, and biases are shared parameters outside the partition. Exactness
-rests on three algebraic identities; Fig.~\ref{fig:schematic} summarizes
-the partition axes and the two residency regimes.
+head into $H$ vocabulary slices. Layer norms and the feed-forward output
+bias are shared parameters outside the partition; every other bias travels
+with its segment. The attention output projection $W_o$ is executed as
+its own per-layer segment: it stays on the device in the resident modes and
+streams with the rest in the streamed modes (Sec.~\ref{sec:modes}).
+Exactness rests on three algebraic identities; Fig.~\ref{fig:schematic}
+summarizes the partition axes and the two residency regimes.
 
 \begin{proposition}[Concatenative reassembly]\label{prop:concat}
 The embedding of a token is the concatenation over slices of the per-slice
@@ -427,7 +469,7 @@ the online log-sum-exp recurrence~\cite{milakov2018online}: the normalizer is
 accumulated slice by slice, so the $[B,T,V]$ logit tensor is never formed and
 the resident term is $[B,T,V/H]$. The loss value and its gradient agree with
 the fused computation at unit-roundoff level; the per-slice weight gradients
-are computed analytically and are exact.
+are computed in closed form rather than by automatic differentiation.
 \end{proposition}
 
 \subsection{The Residency Invariant}\label{sec:invariant}
@@ -447,19 +489,28 @@ is part of the bargain.
 \subsection{The Always-On Base}\label{sec:base}
 Peak memory is a \emph{maximum} over independent terms, and each term is
 bounded by one mechanism. Six such bounds are always on; each is exact
-(Sec.~\ref{sec:exact}), each is essentially free in time, and each defends a
-term that would otherwise dominate at some configuration:
-fused scaled-dot-product attention (no materialized score
-matrix)~\cite{dao2022flashattention,rabe2021selfattention}; chunked
-feed-forward evaluation with running-sum accumulation
-(Proposition~\ref{prop:sum}); chunked cross-entropy with streaming log-sum-exp
-(Proposition~\ref{prop:lse})~\cite{wijmans2025cce}; checkpoint offloading (layer-input
-records parked in the store between forward and backward); gradient
-offloading; and optimizer-state offloading~\cite{ren2021zerooffload}. On
-GPU the last two are near no-ops \emph{by construction}---the engine already
-keeps per-segment gradients and moments off-device---and bind only the
-shared-parameter remainder; on CPU they move hundreds of megabytes to disk
-and additionally save time.
+(Sec.~\ref{sec:exact}), and each defends a term that would otherwise
+dominate at some configuration. Their aggregate effect is measured
+directly: with dropout on and the other three dials off, switching the six
+on takes the naive segmented anchor at 0.84B from 18.2~GB and 6.2~s to
+11.5~GB and 5.8~s per step on the GPU, and from 20.5~GB and 77.4~s to
+19.7~GB and 84.0~s on the CPU, where a retained graph holds the full
+activation set regardless (Sec.~\ref{sec:anchors}, Table~\ref{tab:grid}).
+The six
+are: fused scaled-dot-product attention (no
+materialized score matrix)~\cite{dao2022flashattention,rabe2021selfattention};
+chunked feed-forward evaluation with running-sum accumulation
+(Proposition~\ref{prop:sum}); chunked cross-entropy with streaming
+log-sum-exp (Proposition~\ref{prop:lse})~\cite{wijmans2025cce}; checkpoint
+offloading (layer-input records parked in the store between forward and
+backward); gradient offloading; and optimizer-state
+offloading~\cite{ren2021zerooffload}. Per-segment optimizer moments live in
+the store in every mode, on both device classes, and per-segment gradients
+are either parked there (deferred schedule) or consumed on the device the
+moment they are final (optimizer-in-backward); the last two bounds
+therefore act only on the shared-parameter remainder, and on $W_o$ when it
+is resident, parking their gradients and moments in host memory behind a
+GPU, where they would otherwise stay on the device.
 
 \subsection{Dials and the Mode Lattice}\label{sec:modes}
 On top of the base, execution is configured by binary \emph{dials}:
@@ -470,10 +521,16 @@ On top of the base, execution is configured by binary \emph{dials}:
 \item \textbf{Weight streaming} (training and inference): non-resident
   segments live in the store and are fetched per use; off means all segments
   stay resident (the partition still bounds \emph{activation} terms). The
-  output head streams with the rest.
+  output head and the attention output projection stream with the rest.
 \item \textbf{Dropout} (training): the stochastic regularizer of the training
   recipe; a dial because it carries its own memory term (stored masks in the
-  retained-graph regime).
+  retained-graph regime). Dropout on the residual stream is applied where
+  the reference model applies it---at the embedding output, after $W_o$,
+  and after the reassembled feed-forward sum---never inside a chunk, so its
+  statistics match the unsegmented model; attention-probability dropout is
+  necessarily drawn per head group, which is why segmented and full models
+  agree only distributionally under dropout
+  (Theorem~\ref{thm:invariance}).
 \item \textbf{Update schedule} (training): \emph{deferred} (a separate
   optimizer sweep after backward, supporting global gradient-norm clipping)
   or \emph{optimizer-in-backward}~\cite{lv2024lomo} (each segment updated the
@@ -486,7 +543,7 @@ On top of the base, execution is configured by binary \emph{dials}:
 Three dependencies constrain the lattice: streaming requires recomputation
 (a retained graph would pin all weights on the device); checkpoint
 offloading acts only under recomputation (otherwise there are no records);
-and dropout under recomputation requires deterministic RNG capture and
+and dropout under recomputation requires deterministic RNG (random-number generator) capture and
 replay, a \emph{correctness requirement} rather than a dial---recomputing
 with fresh masks would differentiate a different function than the one whose
 loss was computed. The admissible settings yield \textbf{12 training modes}
@@ -497,11 +554,12 @@ stages~\cite{rajbhandari2020zero}. The PyTorch-free runtime adds its own
 weight-placement dial (Sec.~\ref{sec:impl}).
 
 \begin{theorem}[Mode invariance]\label{thm:invariance}
-With dropout disabled, every training mode computes the same training map as
+Under an identical update rule (gradient clipping included), and with
+dropout disabled, every training mode computes the same training map as
 the reference full model up to reordered-reduction roundoff: forward states,
 per-parameter gradients, and post-step parameters agree at unit-roundoff
-scale, and the reassembly operations of Proposition~\ref{prop:concat} are bitwise
-exact. With dropout enabled, all modes draw identical masks and are mutually
+scale, and the reassembly operations of Proposition~\ref{prop:concat} are
+bitwise exact. With dropout enabled, all modes draw identical masks and are mutually
 equivalent at the same level (on CPU, bit-identical run-to-run); the
 segmented and full models are then distributionally rather than bitwise
 equivalent, because per-group draws cannot reproduce a single all-heads
@@ -514,17 +572,20 @@ restriction of the full gradient to its slice, by linearity of the chain
 rule over concatenation and addition; recomputation reproduces the recorded
 forward exactly under RNG replay. The update schedule cannot change values:
 no updated weight is read again within a step, since the backward visits
-layers in reverse and a layer's weights are last used by its own gradient.
-Empirical verification, including a control that bounds our deviation below
-the framework's own run-to-run noise, is in Sec.~\ref{sec:exact}. \hfill$\square$
+layers in reverse, a layer's forward is rebuilt before that layer is
+differentiated, and its weights are last read by its own gradient.
+Empirical verification, including a control that places our deviation at
+the framework's own reordering scale, is in Sec.~\ref{sec:exact}.
+\hfill$\square$
 
 \subsection{Analytic Memory Model}\label{sec:memlaw}
 Under the invariant, peak device memory is the maximum over execution phases
 of a sum of bounded terms: the CUDA context, resident shared parameters, one
 segment, its transient activations, and (per mode) the retained graph or the
-recomputation records. Writing $s_{v}$ for the vocabulary-tied slice pair in
-MB---the embedding slice plus the output-head slice,
-$s_v = 4V d_\text{model}(1/E + 1/H)$ bytes, the widest streamed blocks in
+recomputation records. Writing $s_{v}$ for the vocabulary-tied slice
+pair---the embedding slice plus the output-head slice,
+$s_v = 4V d_\text{model}(1/E + 1/H)$ bytes, expressed in units of $10^6$
+bytes (the unit in which $c_1$ was fitted), the widest streamed blocks in
 every measured configuration---the streamed-training peak is captured by
 \begin{equation}\label{eq:memlaw}
 M \;=\; c_0 + c_1\, s_{v} + c_2\, d_\text{model}\quad[\text{MB}],
@@ -537,7 +598,7 @@ gradient, its transients, and allocator rounding; the $d_\text{model}$
 term collects the resident shared parameters and per-layer records. The same
 accounting predicts which term binds at any configuration---why, for
 example, a fine partition reaches 890~MB where the standard one stops at
-1.08~GB. A full per-term derivation is given in the supplementary material.
+1.08~GB.
 
 % ============================================================================
 \section{Two Runtimes}\label{sec:impl}
@@ -553,12 +614,20 @@ Sec.~\ref{sec:exact} shows them prediction-equivalent on every test example.
 \paragraph{Loader and stores.}
 A segment loader mediates every weight access. Under streaming it admits one
 segment at a time, releasing the previous segment's device copy before the
-next is materialized; with streaming off it pins all segments resident and
+next is materialized; with streaming off it keeps all segments resident and
 the invariant applies to activations only. The backing store is chosen by
-device class---page-locked host memory behind a GPU, memory-mapped files on
-disk behind a CPU---and holds everything non-resident: segment weights,
-parked gradients, optimizer moments, and layer-input records. Store traffic
-overlaps compute where the medium allows it.
+device class---host memory behind a GPU, a file per segment on disk behind
+a CPU---and holds everything non-resident: segment weights, parked
+gradients, optimizer moments, and layer-input records. Every fetch is
+synchronous: the engine does not prefetch the next segment or overlap store
+traffic with compute, so that the one-segment residency floor is exactly
+what is measured. Sec.~\ref{sec:disc} prices what this costs and
+Sec.~\ref{sec:limits} names the overlapped design as the successor. Every
+segmented cost measurement builds its segments directly from the
+configuration and never materializes the full model; only the identity and
+matched-pair runs
+of Sec.~\ref{sec:exact} slice a reference model built once on the host, so
+that their starting weights are those of the full model.
 
 \paragraph{Backward over segments.}
 With recomputation on, the forward retains no autograd graph; it deposits
@@ -573,15 +642,19 @@ immediately, as follows.
 \paragraph{Two update schedules.}
 Under the \emph{deferred} schedule, backward parks all gradients and a
 separate optimizer sweep re-fetches each segment with its gradient and
-moments, applies AdamW, and writes the result back; the global gradient norm
-is available for clipping. Under \emph{optimizer-in-backward}~\cite{lv2024lomo}
-the engine invokes the update at the point in the backward where a segment's
-gradient is final---after the last read of the segment's weights, which is
-safe because the reverse sweep never reads a weight after differentiating its
-layer. The gradient is consumed on the device and never enters the store, and
-the optimizer sweep vanishes from the timeline; Sec.~\ref{sec:eval} shows this
-removes the entire update phase on both devices. Optimizer moments live in
-the store in either schedule and travel with their segment.
+moments, applies AdamW, and writes the result back. Global gradient-norm
+clipping is available without ever assembling the gradient: a first pass
+accumulates the squared norm segment by segment, and the sweep folds the
+resulting scale into each update, so clipping respects the residency floor.
+Under \emph{optimizer-in-backward}~\cite{lv2024lomo} the engine invokes the
+update at the point in the backward where a segment's gradient is
+final---after the last read of the segment's weights, an ordering the engine
+enforces explicitly rather than assumes, which is safe because the reverse
+sweep never reads a weight after differentiating its layer. The gradient is
+consumed on the device and never enters the store, and the optimizer sweep
+vanishes from the timeline; Sec.~\ref{sec:eval} shows this removes the
+entire update phase on both devices. Optimizer moments live in the store in
+either schedule and travel with their segment.
 
 \paragraph{Deterministic replay.}
 Dropout under recomputation is correct only if the rebuilt subgraph draws the
@@ -598,9 +671,10 @@ Both fixes are part of the verified engine.
 
 \subsection{The PyTorch-Free Serving Runtime}\label{sec:onnxrt}
 The serving runtime executes exported ONNX segment graphs with ONNX Runtime
-and NumPy only---no PyTorch at inference time. Reassembly glue
-(layer norms, residual additions, the attention output projection, and the
-running argmax across vocabulary slices) runs in NumPy per
+and NumPy only---no PyTorch at inference time. Reassembly glue---layer norms, residual additions, the running argmax
+across vocabulary slices, and the attention output projection, which this
+runtime applies as a chunked NumPy matmul rather than exporting it as a
+segment graph---runs in NumPy per
 Propositions~\ref{prop:concat}--\ref{prop:lse}.
 
 \paragraph{Weights as inputs.}
@@ -623,8 +697,25 @@ external-data format; the whole model resident; the fastest torch-free
 mode), \emph{preloaded} (weights-as-inputs, store in host memory), and
 \emph{disk-streamed} (weights-as-inputs, store on disk; segment weights are
 read per use and the resident set is one session plus one segment's
-weights---the smallest serving footprint we measure, 401~MB total).
-Sec.~\ref{sec:eval} reports all three on both device classes.
+weights---the smallest serving footprint we measure, 401~MB total). On the
+GPU provider the runtime keeps a single session alive at a time and
+rebuilds it on a shape change, so the device footprint of the
+weights-as-inputs modes counts one session's arena; on the CPU provider all
+shape sessions stay cached. Sec.~\ref{sec:eval} reports all three modes on
+both device classes.
+
+\paragraph{A third hazard.}
+Transplanting the reassembly glue onto a second engine surfaced one more
+defect of the kind Sec.~\ref{sec:torchrt} describes: the NumPy layer norm
+must keep its epsilon as a 32-bit value, because a Python float promotes
+the normalized activation to double precision, and a double-precision
+tensor fed to the runtime's single-precision graph input yields wrong
+values rather than an error. The fix is part of the verified serving
+runtime, and the prediction-agreement check of Sec.~\ref{sec:predagree} is
+what guards against its recurrence. Session options are fixed for every
+measurement (memory-pattern optimization off, one inter-op thread, intra-op
+threads equal to the OpenMP thread count of Sec.~\ref{sec:hw}) so that the
+serving footprints are comparable across modes.
 
 % ============================================================================
 \section{Experimental Methodology}\label{sec:method}
@@ -637,7 +728,7 @@ Secs.~\ref{sec:exact}--\ref{sec:model} were produced.
 \subsection{Three Configuration Tiers}\label{sec:tiers}
 \textbf{Accuracy tier (${\approx}$0.5M).} Learning-quality questions are
 answered on a compact decoder (4 layers, $d_\text{model}{=}64$, 4 heads,
-$d_\text{ff}{=}256$, 2k-token BPE vocabulary, context 128) trained end to end
+$d_\text{ff}{=}256$, 2k-token BPE (byte-pair encoding) vocabulary, context 128) trained end to end
 on a system-log labeling task rendered as next-token generation: the log line
 is the prompt and the model generates its label, with 32{,}569 training,
 11{,}521 validation, and 11{,}654 evaluated test examples. The tier is
@@ -649,28 +740,43 @@ tensor sizes, so exactness established here carries to the larger tiers.
 
 \textbf{Cost tier (${\approx}$0.84B).} Memory and time are measured on a
 GPT-2-vocabulary decoder ($V{=}50{,}257$, context 512, 36 layers,
-$d_\text{model}{=}1280$, 20 heads, $d_\text{ff}{=}5120$): the largest
-configuration at which the \emph{full-model} reference still fits the 40~GB
-device, so every mode can be compared against a full-model anchor measured on
-the same hardware. The default partition is $8{\times}2{\times}2{\times}8$
-(embedding~$\times$~attention~$\times$~MLP~$\times$~vocabulary); the
+$d_\text{model}{=}1280$, 20 heads, $d_\text{ff}{=}5120$): the largest GPT-2 configuration at which the \emph{full-model} reference
+fits the 40~GB device with headroom (the 1.5B reference fits only at the
+edge, 39.0~GB, Table~\ref{tab:scale}), so every mode and every baseline can
+be compared against a full-model anchor measured on the same hardware. The default partition is $8{\times}2{\times}2{\times}8$
+(embedding~$\times$~attention~$\times$~feed-forward (MLP)~$\times$~vocabulary); the
 granularity study varies it. Cost runs draw synthetic token sequences, so no
 tokenizer or data pipeline contributes to the measured footprint.
 
-\textbf{Scale tier (1.5B--6.9B).} Configurations at ${\approx}$1.5B, 3.09B,
-and 6.9B parameters probe the regime where full-model training no longer fits
-the device; the 3.09B cell is additionally held out of the cost-model fit of
-Sec.~\ref{sec:model} for pre-registered validation.
+\textbf{Scale tier (1.5B--6.9B).} Configurations at ${\approx}$1.5B (36
+layers, $d_\text{model}{=}1792$, 14 heads, $d_\text{ff}{=}7168$), 3.1B
+(36, 2560, 20, 10240), 5.1B (36, 3328, 26, 13312), and 6.9B (32, 4096, 32,
+16384) parameters, all with the GPT-2 vocabulary and context 512, probe the
+regime where full-model training no longer fits the device; the 3.1B
+model at the $16{\times}4{\times}4{\times}16$ partition is additionally
+held out of the cost-model fit of Sec.~\ref{sec:model} for pre-registered
+validation.
 
 \subsection{Hardware Control}\label{sec:hw}
-All GPU cells run on a single NVIDIA A100 (40~GB); the scheduler is pinned to
-one homogeneous node pool, so every GPU number in this paper comes from
-identical hardware. A 94~GB H100 is used only to establish that full-model
-training at the scale tier aborts even there. CPU cells run on one node class
-with 16 OpenMP threads and a pinned glibc allocator configuration (arena cap
+Every GPU cell except three full-model reference cells runs on a single
+NVIDIA A100 (40~GB); the scheduler is pinned to one homogeneous node pool,
+so every segmented GPU number in this paper comes from identical hardware. A 94~GB H100 and an 80~GB A100 serve only the full-model reference at the
+scale tier: the H100 measures the 3.1B full-model footprint (67.6~GB) and
+shows that 6.9B aborts even there, and the 80~GB card shows that 5.1B
+aborts on it; every segmented cell runs on the 40~GB card. CPU cells run on one node class---two AMD EPYC 7513 sockets (32 cores
+each) and 504~GiB of RAM, the GPU of the node allocated but unused---with 16 OpenMP threads and a pinned glibc allocator configuration (arena cap
 2, 128~KiB mmap and trim thresholds): with default allocator behavior,
-identical computations differed by hundreds of megabytes of retained RSS,
-which would have been misread as an algorithmic effect. No measurement runs
+identical computations differed by hundreds of megabytes of retained RSS (resident set size),
+which would have been misread as an algorithmic effect.
+The disk store behind every CPU cell, and behind the disk-streamed serving
+mode on both device classes, is a directory on the cluster's parallel
+network filesystem (Lustre), not a node-local SSD; a per-fetch cost of that store
+therefore includes network filesystem access.
+The software stack is PyTorch 2.7.0 with CUDA 12.8, ONNX Runtime 1.23.2
+(GPU build) for the serving runtime, DeepSpeed 0.19.2 for the baseline on
+the same PyTorch build, and NumPy 2.2.6.
+
+No measurement runs
 on a shared login node; every cell is a batch job.
 
 \subsection{Measurement Discipline}\label{sec:discipline}
@@ -686,10 +792,20 @@ discipline.
 memory}: the CUDA context plus the allocator's peak reserved bytes---what the
 device must actually provision, not merely the sum of live tensors. Host-side
 lifetime peak RSS is reported alongside, since the backing store is part of
-the bargain (Sec.~\ref{sec:invariant}). CPU cells report peak RSS, with the
-process baseline (interpreter, libraries) measured and subtracted where the
-net computation footprint is quoted. Following the store binding, GPU tables
-lead with device memory and time; CPU tables lead with RAM and time.
+the bargain (Sec.~\ref{sec:invariant}). CPU cells report the peak RSS of the
+whole process, interpreter and libraries included; the process baseline is
+recorded in every four-phase result file, and no figure in this paper
+subtracts it. Every memory figure in this paper is in mebibytes ($2^{20}$
+bytes), written MB, and GB denotes 1{,}000 of them. The long-horizon
+protocol of Sec.~\ref{sec:longhorizon}
+records decimal megabytes; its summaries convert to the same unit, and its
+GPU peaks add the CUDA context as the four-phase runs themselves calibrated
+it---508~MB for training cells and 500~MB for serving cells, medians over
+the committed GPU repetitions of the training grid and scale runs and of
+the inference grid, respectively---so the two protocols share one basis.
+Following the store
+binding, GPU tables lead with device memory and time; CPU tables lead with
+RAM and time.
 
 \textbf{Timing.} Training cells time full optimizer steps
 (forward{+}backward{+}update), averaged after warmup; inference cells time
@@ -700,10 +816,13 @@ within 0.6\% of itself.
 
 \textbf{Anchors.} Both anchors are measured fresh on the pinned nodes: the
 full-model reference (unsegmented, standard retained-graph training) and a
-\emph{naive segmented} anchor---the partition with every dial off---which
-separates what the partition alone buys from what the dials add.
-DeepSpeed ZeRO-Offload stages 2 and 3~\cite{ren2021zerooffload} are measured
-on the same node and model configuration, not quoted from the literature.
+\emph{naive segmented} anchor---the partition with every technique off,
+the six always-on bounds among them---which separates what the partition
+alone buys from what the bounds and dials add. DeepSpeed
+ZeRO-Offload~\cite{ren2021zerooffload} is measured on the same node and
+model configuration, not quoted from the literature: stage 2 offloads
+optimizer state to pinned CPU memory, stage 3 offloads parameters and
+optimizer state.
 
 \subsection{Accuracy Protocol}\label{sec:accproto}
 Quality is established in two stages. First, \emph{identity}: forward states,
@@ -711,8 +830,10 @@ gradients, and post-step parameters of every mode are compared against the
 full-model reference and against each other at machine precision
 (Sec.~\ref{sec:exact}), including a control that measures the framework's own
 run-to-run noise on identical hardware. Only then is the expensive question
-asked once: the fastest segmented mode is trained to convergence and compared
-with the matched full-model run epoch by epoch under identical seeds.
+asked once: two segmented modes,
+retained-graph and recomputation under the deferred schedule, are trained
+to convergence and compared with the matched full-model run epoch by epoch
+under identical seeds.
 Prediction-level evaluation batches sequences by equal length; we found and
 fixed a left-padding pitfall in which padded batch layouts shift absolute
 positions and produce spurious cross-engine disagreements.
@@ -725,11 +846,16 @@ evaluation pitfall above. All three were fixed before any number in this
 paper was produced, and the campaign was re-run from scratch afterwards. Two
 scope limits are stated up front: all measurements are fp32 (mixed precision
 is orthogonal and would shrink absolute footprints on both sides of every
-comparison), and wall-clock results are specific to the measured
-PCIe/NVMe-class hardware, though the cost model of Sec.~\ref{sec:model}
-separates bandwidth-bound from compute-bound terms. The cost-model
-validation is pre-registered: the predicted time and memory of the held-out
-3.09B cell were committed to the repository before the job ran.
+comparison), and wall-clock results are specific to the measured hardware: an A100 whose
+host traffic crosses PCIe from pageable host memory, and a CPU node whose
+disk store is a parallel network filesystem rather than a local SSD. The
+cost model of Sec.~\ref{sec:model} separates bandwidth-bound from
+compute-bound terms, and the store medium bounds only the transport share
+of a streamed step, which Sec.~\ref{sec:disc} prices at under a tenth of
+the streamed GPU step; the CPU rows are not decomposed the same way. The cost-model validation is pre-registered: the predicted time and memory
+of the held-out cell (3.1B at $16{\times}4{\times}4{\times}16$) were
+committed to the development repository before the job ran, and the
+artifact records both timestamps (Sec.~\ref{sec:model}).
 
 \subsection{Long-Horizon Validation and Measurement Self-Checks}\label{sec:longhorizon}
 The per-step protocol above times a four-phase step (forward, backward,
@@ -740,8 +866,8 @@ every headline configuration under a \emph{training-realistic} protocol:
 128--2{,}048 consecutive steps (step counts scaled inversely to per-step
 cost, so each configuration is observed over a comparable multi-hour
 horizon within one scheduler allocation), no per-step validation, no
-allocator trimming, no tracer; serving analogously for 500--2{,}000
-requests. Three self-checks reconcile the protocols. (i) \emph{Validation
+allocator trimming, no tracer; serving analogously for 500--2{,}000 requests of 256-token prompts
+generating 32 tokens (resident modes) or 8 (streamed modes). Three self-checks reconcile the protocols. (i) \emph{Validation
 pricing}: each configuration re-measured for five steps under the
 four-phase protocol yields the validation pass's direct cost, 0.3--80~s
 per step depending on mode and scale (Fig.~\ref{fig:valcost}).
@@ -749,21 +875,41 @@ per step depending on mode and scale (Fig.~\ref{fig:valcost}).
 measured back-to-back on one node shows the per-operation tracer inflates
 sub-second decoding $5.9\times$ while leaving slow modes within
 $1.16\times$---fast-decode latencies are therefore quoted from the
-untraced protocol. For training, the same five-step re-measurements price
-the four-phase protocol's total remainder beyond the validation pass
-(tracer, per-step allocator trimming, and node placement together) at
-2.3--63~s per step across the nine configurations (all values in the
-artifact's bridge summary); the four-phase tables are therefore
-\emph{protocol-inclusive} and internally comparable across modes, while
-Table~\ref{tab:sustainedtrain} gives deployment step times, the two
-reconciled per mode by Fig.~\ref{fig:valcost} plus these priced
-overheads. Table~\ref{tab:protocols} states which measurements carry
-which components. (iii) \emph{Sampler and environment}: the 50~ms
+untraced protocol. For training, the same five-step re-measurements, taken on the long-run
+node itself, price the four-phase protocol's total remainder beyond the
+validation pass (tracer and per-step allocator trimming) at 2.3--63~s per
+step across the nine configurations (all values in the artifact's bridge
+summary); Fig.~\ref{fig:valcost} plus these overheads therefore convert a
+training-realistic step into a four-phase step \emph{on the same node}.
+The four-phase tables of Sec.~\ref{sec:eval} and the long-run
+Table~\ref{tab:sustainedtrain} were measured in separate campaigns whose
+node placement differs, and on the shared partition step time moves with
+co-tenant load by up to about $1.5\times$ in either direction (the
+paper-protocol cell of Sec.~\ref{sec:model} ran at 28.3~s on one placement
+and 42.2~s on another). Step times are therefore comparable \emph{within}
+a table and must not be subtracted across tables; the four-phase tables
+remain internally comparable across modes, and Table~\ref{tab:sustainedtrain}
+gives deployment step times on its own placement. Memory carries no such
+caveat: peaks are placement-independent, and the two protocols are
+reconciled directly below. Table~\ref{tab:protocols} states which
+measurements carry which components. (iii) \emph{Sampler and environment}: the 50~ms
 resident-set sampler used on CPU changes step time by less than $0.3\%$
 (paired same-node control), and residual step-time variance traces to
 co-tenant load on the shared nodes---verified for the largest excursion,
 where a step-time drop aligns to the minute with another user's jobs
 ending on the same node.
+In memory the two protocols need no bridge: on the shared basis of
+Sec.~\ref{sec:discipline}, the long-run GPU peaks equal the four-phase
+peaks of the same modes to the mebibyte for three of the six GPU
+configurations and lie within 1\% for two more (Table~\ref{tab:sustainedtrain}
+against Tables~\ref{tab:grid} and~\ref{tab:scale}; the four-phase cell of
+the 6.9B streamed in-backward mode, 2{,}738~MB, is not printed in
+Table~\ref{tab:scale}); the one exception, the streamed deferred mode at
+0.84B, runs 50~MB (4.6\%) above its four-phase cell over 2{,}048 steps.
+On the GPU, the per-step allocator trim and the tracer of the four-phase
+protocol therefore change the step time, not the peak. On CPU the long-run
+resident set differs from the four-phase cell by allocator plateaus alone:
+19\% below at 6.9B, and 2\% and 54\% above for the two 0.84B modes.
 
 \begin{table}[t]
 \caption{What each measurement protocol includes, and which results it
@@ -780,7 +926,7 @@ Per-step validation pass & \checkmark & --- \\
 Per-operation memory tracer & \checkmark & --- \\
 Per-step allocator trim & \checkmark & --- \\
 Steps / requests per run & 2--5 & 128--2{,}048 / 500--2{,}000 \\
-Produces & Tabs.~\ref{tab:compare}--\ref{tab:infer}, \ref{tab:scale}, \ref{tab:costmodel}, \ref{tab:sensitivity} & Tabs.~\ref{tab:sustainedtrain}--\ref{tab:sustainedserve} \\
+Produces & Tabs.~\ref{tab:compare}, \ref{tab:grid}, \ref{tab:infer}, \ref{tab:scale}, \ref{tab:costmodel}, \ref{tab:sensitivity} & Tabs.~\ref{tab:sustainedserve}, \ref{tab:sustainedtrain} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -795,104 +941,136 @@ measurement protocol's step.}
 \label{fig:valcost}
 \end{figure*}
 
+\paragraph{Artifact.} Code, batch files, the result file behind every
+number, and the pre-registration record are in the accompanying artifact
+repository (\url{https://github.com/paymankeshtkaruni/segmented-llm-training-inference}); every table and figure regenerates from
+the committed results in seconds, and the regeneration is checked from a
+fresh clone.
+
+
 % ============================================================================
 \section{Exactness}\label{sec:exact}
 % ============================================================================
 Before any cost is reported, we establish that every mode computes the model
 it claims to compute. All checks in this section run at the cost tier
-(0.84B, $8{\times}2{\times}2{\times}8$) with the paper-true store bindings,
+(0.84B, $8{\times}2{\times}2{\times}8$, batch 2, sequence 512) with the
+paper-true store bindings and AdamW at learning rate $3{\times}10^{-4}$,
 each mode under its own protocol: deferred modes with global gradient-norm
-clipping at 1.0, optimizer-in-backward modes without (Sec.~\ref{sec:torchrt}).
-All deltas are worst-case ($\max|\Delta|$ over all elements, and over all
-modes in the row's scope), not averages.
+clipping at 1.0, optimizer-in-backward modes without
+(Sec.~\ref{sec:torchrt}). All deltas are worst-case ($\max|\Delta|$
+over all elements, and over all modes in the row's scope), not averages.
 
 \subsection{Training Identity}\label{sec:trainexact}
 Table~\ref{tab:identity} summarizes the campaign. Forward hidden states
 agree with the unsegmented reference to $1.2{\times}10^{-5}$ after 36 layers
-of fp32 accumulation; per-slice gradients agree to $1.1{\times}10^{-8}$;
-post-step parameters after one and after four full AdamW steps agree to the
-$10^{-5}$ level across \emph{all} 840M parameters, reassembled and compared
-element by element. With dropout on, where no reference with identical masks
-exists, we verify determinism (repeat runs of the same mode) and cross-mode
-agreement (streamed, recomputed, and resident execution draw identical masks
-and produce gradients agreeing to $3.2{\times}10^{-9}$). On CPU the backward
-is bit-deterministic, and the optimizer-in-backward modes are \emph{bit-identical}
-to their deferred twins ($\Delta=0.0$); on GPU determinism is limited only by
-atomic-accumulation ordering at ${\sim}2{\times}10^{-9}$.
+of fp32 accumulation; representative gradient slices agree to
+$1.1{\times}10^{-8}$; post-step parameters after one and after four full
+AdamW steps, reassembled and compared element by element across all 840M
+parameters, agree to $5{\times}10^{-5}$ on GPU and $10^{-4}$ on CPU under
+the clipped deferred schedule, and to $4{\times}10^{-4}$ and
+$2{\times}10^{-4}$ under the unclipped in-backward schedule. With dropout
+on, where no reference
+with identical masks exists, we verify determinism (repeat runs of the same
+mode) and cross-mode agreement (streamed, recomputed, and resident execution
+draw identical masks and produce gradients agreeing to
+$3.5{\times}10^{-9}$). On CPU the backward is bit-deterministic, and the
+optimizer-in-backward modes are \emph{bit-identical} to their deferred twins
+run under the same unclipped rule with the same masks ($\Delta=0.0$); on
+GPU determinism is limited only by atomic-accumulation ordering at
+${\sim}2.5{\times}10^{-9}$.
 
 \begin{table}[t]
 \caption{Training identity at 0.84B. Worst-case $\max|\Delta|$ over all
 modes in scope; ``vs.\ ref.''\ compares against the unsegmented full model
-on identical seeds. The control rows run no segmentation code: the
-full model against itself, batch of 2 versus twice-accumulated batch of 1,
-in pure PyTorch.}
+on identical seeds. Element counts are taken over all 840M parameters after
+one step, worst over the modes in scope. The control rows run no segmentation code: the full model against
+itself, batch of 2 versus twice-accumulated batch of 1, in pure PyTorch,
+under the same two protocols.}
 \label{tab:identity}
 \centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Check (scope) & GPU & CPU \\
 \midrule
-Forward hidden state vs.\ ref.\ (all 12 modes) & $1.2{\times}10^{-5}$ & $3.8{\times}10^{-6}$ \\
+Forward hidden state vs.\ ref.\ (12 modes, eval forward) & $1.2{\times}10^{-5}$ & $3.8{\times}10^{-6}$ \\
 Gradient slices vs.\ ref.\ (no-dropout, deferred) & $1.1{\times}10^{-8}$ & $3.5{\times}10^{-9}$ \\
-Params.\ after 1 step vs.\ ref.\ (deferred, clip) & $5.4{\times}10^{-5}$ & $1.4{\times}10^{-5}$ \\
-Params.\ after 4 steps vs.\ ref.\ (deferred, clip) & $5.4{\times}10^{-5}$ & $1.1{\times}10^{-4}$ \\
-Params.\ after 4 steps vs.\ ref.\ (in-backward, no clip) & $3.8{\times}10^{-4}$ & $1.8{\times}10^{-4}$ \\
-Backward determinism, repeat run (dropout on) & $2.3{\times}10^{-9}$ & $\mathbf{0.0}$ \\
-Cross-mode gradients vs.\ anchor (dropout on) & $3.2{\times}10^{-9}$ & $1.8{\times}10^{-9}$ \\
-In-backward vs.\ deferred twin, all params.\ (dropout on) & $1.4{\times}10^{-4}$ & $\mathbf{0.0}$ \\
+Params.\ after 1 step vs.\ ref.\ (deferred, clip) & $4.9{\times}10^{-5}$ & $1.4{\times}10^{-5}$ \\
+Params.\ after 4 steps vs.\ ref.\ (deferred, clip) & $4.9{\times}10^{-5}$ & $1.1{\times}10^{-4}$ \\
+Params.\ after 4 steps vs.\ ref.\ (in-backward, no clip) & $3.5{\times}10^{-4}$ & $1.8{\times}10^{-4}$ \\
+Backward determinism, repeat run (dropout on) & $2.5{\times}10^{-9}$ & $\mathbf{0.0}$ \\
+Cross-mode gradients vs.\ anchor (dropout on) & $3.5{\times}10^{-9}$ & $1.8{\times}10^{-9}$ \\
+In-backward vs.\ deferred twin, all params.\ (dropout on) & $1.3{\times}10^{-4}$ & $\mathbf{0.0}$ \\
+Elements $>10^{-5}$ after 1 step (deferred, clip) & 336 & 8 \\
+Elements $>10^{-5}$ after 1 step (in-backward, no clip) & 5{,}980 & 1{,}024 \\
 \midrule
 \emph{Control:} framework vs.\ itself, gradients (clip) & $2.2{\times}10^{-7}$ & $1.5{\times}10^{-8}$ \\
 \emph{Control:} framework vs.\ itself, step (clip) & $3.5{\times}10^{-5}$ & $3.1{\times}10^{-6}$ \\
 \emph{Control:} framework vs.\ itself, step (no clip) & $2.3{\times}10^{-4}$ & $3.1{\times}10^{-5}$ \\
+\emph{Control:} elements $>10^{-5}$, step (clip) & 154 & 0 \\
+\emph{Control:} elements $>10^{-5}$, step (no clip) & 4{,}696 & 27 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Two observations turn these numbers into a claim. First, the apparent gap
 between gradient-level ($10^{-8}$) and step-level ($10^{-5}$) agreement is
-fully explained: Adam divides each gradient by its running magnitude, so for
-parameters whose gradient sits at the float noise floor, a $10^{-8}$
-difference is amplified to a visible fraction of the learning rate. Every
-element with step delta above $10^{-5}$ has $|g|<10^{-7}$; applying the
-update rule to the two gradient sets reproduces the observed deltas with
-residual below $10^{-9}$; and the worst delta, $5{\times}10^{-5}$, is far
-below $2\cdot\text{lr}=6{\times}10^{-4}$, the scale at which an update could
-be meaningfully wrong. Second, the \emph{control}: running the framework
+explained by the optimizer, not by segmentation: Adam divides each gradient
+by its running magnitude, so for parameters whose gradient sits at the
+float noise floor, a $10^{-8}$ difference is amplified to a visible fraction
+of the learning rate. An independent single-step analysis of the worst
+tensor (the attention output projection of one layer, 1.6M elements) shows
+this directly: every element with step delta above $10^{-5}$ has
+$|g|<10^{-7}$, and applying the update rule to the two gradient sets
+reproduces the observed deltas with residual below $10^{-9}$. Second, the
+\emph{control} places the deviations on a scale. Running the framework
 against itself---the full model, batch of 2 versus twice-accumulated batch
-of 1, zero segmentation code---produces \emph{larger} deviations than
-segmentation does. The control's gradients differ by $2.2{\times}10^{-7}$
-(ours: $1.1{\times}10^{-8}$) and its clipped step leaves 154 elements above
-$10^{-5}$ (ours: 16). The $10^{-5}$-class step deltas are the fp32
-execution-order floor of the framework itself, and segmented execution sits
-at or below it. This is the empirical content of
-Theorem~\ref{thm:invariance}. The control also isolates the effect of
-clipping---the no-clip protocol is an order noisier in both worlds---which
-is one more reason the deferred schedule with global clipping remains the
-default recipe.
+of 1, zero segmentation code---reorders one reduction; segmentation
+reorders many (chunked feed-forward sums, streamed log-sum-exp, per-slice
+gradients). Its deviation is accordingly a small multiple of the
+control's: on GPU under the clipped recipe, $4.9{\times}10^{-5}$ against
+$3.5{\times}10^{-5}$ in the worst element and 336 against 154 elements
+above $10^{-5}$; on CPU, where the one-reduction control is nearly exact,
+8 elements against 0. Both sides sit at the fp32 execution-order scale, and
+under the clipped recipe the worst segmented delta is an order of magnitude
+below $2\cdot\text{lr}=6{\times}10^{-4}$, the scale at which an update
+could be meaningfully wrong. This is the empirical content of
+Theorem~\ref{thm:invariance}: segmented execution computes the same
+training map up to reordering roundoff of the same order as the
+framework's own. The control also isolates the effect of clipping: without
+it, both worlds are about seven times noisier ($3.5{\times}10^{-4}$ and
+$2.3{\times}10^{-4}$ on GPU, against $4.9{\times}10^{-5}$ and
+$3.5{\times}10^{-5}$ with clipping), which is one more reason the deferred
+schedule with global clipping remains the default recipe.
 
 \subsection{Inference Identity}\label{sec:inferexact}
 All four inference modes (streaming $\times$ KV cache), on both devices,
 produce greedy decodes \emph{identical token for token} with the full-model
-reference over a battery of fixed prompts, 20 tokens each (prefill deltas
-$4.6{\times}10^{-6}$ GPU, $3.6{\times}10^{-6}$ CPU; no divergence at any
-decode position). Recomputing the prefix without a cache and streaming
-segments from the store change where tensors live, not what is computed.
+reference over five random-token prompts, 20 generated tokens each
+(prefill deltas $4.6{\times}10^{-6}$ GPU, $3.6{\times}10^{-6}$ CPU; no
+divergence at any decode position). Recomputing the prefix without a cache
+and streaming segments from the store change where tensors live, not what
+is computed.
 
 \subsection{Matched-Pair Learning}\label{sec:quality}
 The identity checks bound one step; the remaining question is whether
 trajectories diverge over a full training run. At the accuracy tier, under
-one protocol (10 epochs, batch 64, identical seeds), we train the full model
-and two segmented modes end to end (Table~\ref{tab:quality},
-Fig.~\ref{fig:curves}). Test token
+one protocol (10 epochs, batch 64, AdamW at $3{\times}10^{-4}$ with weight
+decay 0.1, a cosine schedule with 200 warm-up steps, clipping at 1.0, seed
+42 for all three runs), we train the full model and two segmented modes end
+to end (Table~\ref{tab:quality}, Fig.~\ref{fig:curves}). Test token
 accuracy agrees to three decimals, and the difference between full and
 segmented ($4{\times}10^{-4}$) is the same size as the difference between
-the two segmented modes ($3{\times}10^{-4}$)---a pair whose gradients are
-\emph{proven} to agree at $10^{-8}$ in Table~\ref{tab:identity}. The
-residual spread is seed-level noise, not a segmentation effect.
+the two segmented modes ($3{\times}10^{-4}$)---a pair that draws identical
+dropout masks and whose gradients are \emph{measured} to agree at
+$10^{-9}$ in Table~\ref{tab:identity}. The residual spread is what fp32
+roundoff alone grows into over ten epochs, not a segmentation effect.
 
 \begin{table}[t]
 \caption{Matched-pair training at the accuracy tier: identical data, seeds,
-and schedule; 11{,}654 test examples.}
+and schedule; 11{,}654 test examples. The full-model run logged test
+metrics only.}
 \label{tab:quality}
 \centering
 \begin{tabular}{@{}lcc@{}}
@@ -919,17 +1097,19 @@ the full model's final test accuracy as reference.}
 
 \subsection{Prediction Agreement Across Engines}\label{sec:predagree}
 Finally, the strictest end-to-end statement: from one segmented checkpoint,
-nine serving pipelines---the segmented PyTorch engine in all four inference
-modes, the exported unsegmented model, and the PyTorch-free ONNX runtime in
-four placement configurations on both providers---produce \emph{identical
-predictions on all 11{,}654 test examples} (exact-match 0.9548 in every
-cell, agreement $11{,}654/11{,}654$, zero disagreements at the token level).
-The independently trained full model, evaluated under the identical
-protocol, reaches an exact-match of 0.9556---the two training paths land
-within $0.1\%$ of each other at the prediction level as well.
-Under equal-length batching there is no measurable accuracy cost to
-segmentation, export, or engine substitution: the deployment stack is free
-to choose its runtime by memory and latency alone.
+six serving pipelines---the segmented PyTorch engine, the exported
+unsegmented model, and the PyTorch-free ONNX runtime in its preloaded and
+disk-streamed placements on both providers---produce \emph{identical predictions on
+all 11{,}654 test examples} (exact-match 0.9548 in every cell, agreement
+$11{,}654/11{,}654$, zero disagreements at the token level); the remaining
+inference modes of the segmented engine are covered by the token-level
+identity of Sec.~\ref{sec:inferexact}. The independently trained full
+model, evaluated under the identical protocol, reaches an exact-match of
+0.9556---the two training paths land within $0.1\%$ of each other at the
+prediction level as well. Under equal-length batching there is no
+measurable accuracy cost to segmentation, export, or engine substitution:
+the deployment stack is free to choose its runtime by memory and latency
+alone.
 
 % ============================================================================
 \section{Evaluation}\label{sec:eval}
@@ -951,14 +1131,21 @@ training peaks at 25.4~GB; DeepSpeed ZeRO-Offload lowers this to 21.5~GB
 time---consistent with its design point, which offloads optimizer state and
 parameters but leaves the working activations and gradients of the
 \emph{whole layer stack} on the device. The naive segmented anchor---the
-partition with every dial off---lands at 18.2~GB: the partition alone
-already bounds attention and feed-forward transients below both ZeRO
-configurations, but the retained graph and resident weights still dominate.
-The dials do the rest: the fastest streamed mode reaches 1.08~GB,
-$23.5\times$ below full-model training and $19.9\times$ below the measured
-ZeRO-Offload floor, and a finer partition reaches 890~MB
-(Sec.~\ref{sec:gran}). On CPU the same story holds against the full model:
-26.9~GB falls to 1.29~GB ($20.9\times$) at $4.7\times$ the step time.
+partition with every technique off, the six always-on bounds among them---lands at 18.2~GB: the partition alone already bounds attention
+and feed-forward transients below both ZeRO configurations, but the
+retained graph and resident weights still dominate. On CPU the same anchor
+lands at 20.5~GB and 77.4~s, against 26.9~GB and 28.8~s for the full
+model. Switching the six always-on bounds on (Table~\ref{tab:grid}, first
+row, CPU columns) trims it only to 19.7~GB and slows it to 84.0~s: under
+a retained graph, eager CPU autograd keeps the full activation set
+whether or not the bounds are on. Their savings appear once recomputation
+is on, where the recomputation row, the second, drops to 4.5~GB. The dials do the
+rest: the smallest streamed mode reaches 1.08~GB, $23.5\times$ below
+full-model training and $19.9\times$ below the measured ZeRO-Offload floor,
+and a finer partition reaches 890~MB (Sec.~\ref{sec:gran}). On CPU the same
+story holds against the full model: 26.9~GB falls to 1.29~GB
+($20.9\times$) at $5.4\times$ the step time, or to 1.39~GB at $4.7\times$
+with in-backward updates.
 
 \begin{table}[t]
 \caption{Training at 0.84B on one A100-40GB (batch 4, seq.\ 512). Medians
@@ -974,7 +1161,7 @@ Full model (retained graph) & 25.4\,GB & 0.72\,s \\
 ZeRO-Offload stage 2 & 21.5\,GB & 2.1\,s \\
 ZeRO-Offload stage 3 & 23.6\,GB & 2.9\,s \\
 Naive segmented (partition only) & 18.2\,GB & 6.2\,s \\
-Segmented, fastest ($\le$12\,GB class) & 11.5\,GB & 3.9\,s \\
+Segmented, fastest (retained graph, in-backward) & 11.5\,GB & 3.9\,s \\
 Segmented, smallest (standard partition) & 1.08\,GB & 28.3\,s \\
 Segmented, smallest (fine partition) & 0.89\,GB & 30.8\,s \\
 \bottomrule
@@ -983,9 +1170,12 @@ Segmented, smallest (fine partition) & 0.89\,GB & 30.8\,s \\
 
 \subsection{The Mode Grid at 0.84B}\label{sec:grid}
 Table~\ref{tab:grid} is the paper's centerpiece: all 12 training modes on
-both devices, measured under the four-phase protocol (its times are
-protocol-inclusive and comparable \emph{across} rows; deployment step
-times are in Table~\ref{tab:sustainedtrain}); Fig.~\ref{fig:frontier} plots the same cells as a
+both devices, measured under the four-phase protocol (its times include
+that protocol's validation pass, tracer, and per-step trim, and are
+comparable \emph{across} rows; deployment step times are in
+Table~\ref{tab:sustainedtrain}, measured in a separate campaign and not to
+be subtracted from these, Sec.~\ref{sec:longhorizon});
+Fig.~\ref{fig:frontier} plots the same cells as a
 memory--time frontier against the anchors, and Fig.~\ref{fig:traces} shows
 the device-memory timeline of three representative modes. Reading the grid
 as a menu:
@@ -1008,20 +1198,22 @@ shape encodes the update schedule.}
 steps, validation) for three modes at 0.84B. The plateaus and phase
 boundaries make the residency invariant visible: streaming caps the curve
 at the segment scale, and the in-backward schedule removes the optimizer
-phase entirely.}
+phase entirely. The y-axis is reserved memory in MB (MiB) without the
+CUDA context that the tables add.}
 \label{fig:traces}
 \end{figure}
 
 \begin{table*}[t]
-\caption{The 12 training modes at 0.84B; the shaded bottom rows give the
-unsegmented full-model anchor (medians of three isolated runs; batch 4, seq.\ 512). Dial columns
+\caption{The 12 training modes at 0.84B; the shaded bottom rows give the naive segmented anchor (every
+technique off) and the unsegmented full-model anchor with and without dropout (medians
+of three isolated runs; batch 4, seq.\ 512). Dial columns
 are binary: Drop.\ = dropout on; Rec.\ = activation recomputation (off =
 retained graph); Str.\ = weight streaming (off = all segments resident);
 In-b.\ = optimizer-in-backward (off = deferred sweep). \%full columns give
 peak memory as a percentage of the full-model anchor; $\times$full columns
 give step time as a multiple of it. GPU rows use the dropout-matched
 anchor, CPU rows the single (dropout) CPU anchor. Every segmented row computes the same model
-(Sec.~\ref{sec:exact}).}
+(Sec.~\ref{sec:exact}). Ratios are computed from unrounded medians.}
 \label{tab:grid}
 \centering
 \small
@@ -1046,6 +1238,7 @@ Drop. & Rec. & Str. & In-b. & VRAM & \%full & Host & Step & $\times$full & Opt.\
 --- & \checkmark & --- & \checkmark & 4{,}584 & 19.0\% & 17.8 & 3.92 & 5.5$\times$ & 0.11 & 4{,}669 & 17.3\% & 66.1 & 2.3$\times$ & 0.03 \\
 --- & \checkmark & \checkmark & \checkmark & 1{,}126 & 4.7\% & 16.3 & 21.69 & 30.7$\times$ & 0.11 & 1{,}374 & 5.1\% & 101.1 & 3.5$\times$ & 0.03 \\
 \midrule
+\rowcolor{gray!18}\multicolumn{4}{@{}l}{\emph{naive segmented (partition only), dropout}} & 18{,}244 & 71.8\% & 20.6 & 6.23 & 8.7$\times$ & 4.24 & 20{,}534 & 76.2\% & 77.4 & 2.7$\times$ & 25.8 \\
 \rowcolor{gray!18}\multicolumn{4}{@{}l}{\emph{full model (anchor), dropout}} & 25{,}406 & 100\% & --- & 0.72 & 1$\times$ & --- & 26{,}934 & 100\% & 28.8 & 1$\times$ & --- \\
 \rowcolor{gray!18}\multicolumn{4}{@{}l}{\emph{full model (anchor), no dropout}} & 24{,}148 & 100\% & --- & 0.71 & 1$\times$ & --- & --- & --- & --- & --- & --- \\
 \bottomrule
@@ -1054,8 +1247,7 @@ Drop. & Rec. & Str. & In-b. & VRAM & \%full & Host & Step & $\times$full & Opt.\
 
 \textbf{Three memory plateaus.} The graph and weight dials set three clean
 GPU plateaus---${\sim}11.4$~GB (retained graph), ${\sim}4.5$~GB
-(recomputation), ${\sim}1.1$~GB (recomputation + streaming)---each
-$2.2$--$4.1\times$ below the last, and the update schedule barely moves
+(recomputation), ${\sim}1.1$~GB (recomputation + streaming)---each $2.5$--$4.3\times$ below the last, and the update schedule barely moves
 memory. The same plateaus appear on CPU RAM.
 
 \textbf{Optimizer-in-backward removes a phase, not a percentage.} The
@@ -1072,15 +1264,16 @@ only ${\sim}0.2$~GB in every regime (fused kernels keep masks small; the
 full model pays 1.26~GB for the same setting). On CPU with a retained
 graph, dropout \emph{doubles} peak RAM (19.7 vs.\ 10.7~GB): eager CPU
 autograd materializes full-width mask and product tensors in the graph.
-Under recomputation the penalty collapses to ${\sim}0.2$~GB on both
+Under recomputation the penalty collapses to within 0.2~GB on both
 devices---recomputation pays for dropout's memory, then RNG replay
 (Sec.~\ref{sec:torchrt}) pays back its correctness.
 
 \textbf{The store is part of the bargain.} A 1.1~GB streamed GPU run
 carries a 16--20~GB host-side store (parameters, gradients, moments,
 records); the CPU rows carry the same state on disk. Nothing is free; the
-claim is that the \emph{constrained} resource is spent at 4--30$\times$
-less while total system memory is repartitioned, not inflated.
+the claim is that the \emph{constrained} resource is spent at 2--24$\times$
+less on the GPU and up to 21$\times$ less on the CPU while total system
+memory is repartitioned, not inflated.
 
 \subsection{Inference at 0.84B}\label{sec:infereval}
 Table~\ref{tab:infer} reports both runtimes, and Fig.~\ref{fig:inferfrontier}
@@ -1112,10 +1305,10 @@ design (11.6~GB, Sec.~\ref{sec:onnxrt}) is dominated at both ends.
 
 Sustained serving (Table~\ref{tab:sustainedserve},
 Fig.~\ref{fig:sustainedserve}) extends each mode to 500--2{,}000
-consecutive requests: the resident 6.9B server holds exactly 27.8~GB
-(reserved) for 1{,}000 requests, and the PyTorch-free disk-streamed server
-answers 500 requests inside 377--389~MB---12~MB of runtime-arena wobble, no
-trend, no session leak. Under this instrumentation-free protocol the cache
+consecutive requests. The resident 6.9B server holds exactly 26.6~GB
+reserved (27.1~GB with the CUDA context) for 1{,}000 requests. The
+PyTorch-free disk-streamed server answers 500 requests inside
+360--371~MB: 12~MB of runtime-arena wobble, no trend, no session leak. Under this instrumentation-free protocol the cache
 modes' latency is \textbf{0.031~s/token} (0.84B) and \textbf{0.035~s/token}
 (6.9B): the per-operation tracer inside the mode-comparison protocol
 inflates sub-second decoding $5.9\times$ (measured back-to-back on one
@@ -1125,9 +1318,9 @@ comparison across modes under equal instrumentation; deployment latencies
 are those of Table~\ref{tab:sustainedserve}.
 
 \begin{table}[t]
-\caption{Long-horizon serving: sustained footprint (GPU: reserved + CUDA
-context; CPU: resident set), band over the whole session, and
-instrumentation-free latency.}
+\caption{Long-horizon serving: sustained footprint (GPU: reserved +
+calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU: resident set),
+band over the whole session, and instrumentation-free latency.}
 \label{tab:sustainedserve}
 \centering
 \scriptsize
@@ -1136,10 +1329,10 @@ instrumentation-free latency.}
 \toprule
 Serving mode & Requests & Footprint & Band & s/token \\
 \midrule
-0.84B GPU resident + KV cache & 2{,}000 & 4{,}298\,MB & 0\,MB & 0.031 \\
-0.84B GPU streamed + recompute & 500 & 656\,MB & 0\,MB & 5.00 \\
-0.84B CPU ONNX, disk-streamed & 500 & 377--389\,MB & 12\,MB & 9.06 \\
-6.9B GPU resident + KV cache & 1{,}000 & 28{,}336\,MB & 0\,MB & 0.035 \\
+0.84B GPU resident + KV cache & 2{,}000 & 4{,}132\,MB & 0\,MB & 0.031 \\
+0.84B GPU streamed + recompute & 500 & 658\,MB & 0\,MB & 5.00 \\
+0.84B CPU ONNX, disk-streamed & 500 & 360--371\,MB & 12\,MB & 9.06 \\
+6.9B GPU resident + KV cache & 1{,}000 & 27{,}056\,MB & 0\,MB & 0.035 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1147,8 +1340,10 @@ Serving mode & Requests & Footprint & Band & s/token \\
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_exp8_serving.pdf}
-\caption{Long-horizon serving, per experiment: per-request peak memory and
-latency with its running average, over the full session.}
+\caption{Long-horizon serving, per experiment: per-request peak memory (reserved, MB, without the CUDA context that
+Table~\ref{tab:sustainedserve} adds) and per-request time for a 256-token
+prompt generating 32 tokens (resident) or 8 (streamed), with its running
+average, over the full session.}
 \label{fig:sustainedserve}
 \end{figure*}
 
@@ -1188,29 +1383,36 @@ full-model training needs 111.6~GB), and the 40~GB accelerator carries
 every size that aborts larger devices.
 
  On the 40~GB device, full-model training
-fits only up to 1.5B (39.0~GB---already at the edge); at 3B it aborts, and
-an H100 measurement shows why: 67.6~GB. At 5B it aborts on an 80~GB device,
+fits only up to 1.5B (39.0~GB---already at the edge); at 3.1B it aborts, and
+an H100 measurement shows why: 67.6~GB. At 5.1B it aborts on an 80~GB device,
 and at 6.9B \emph{even the 94~GB H100 aborts}. Segmented execution trains
 all of them on the single 40~GB card, three ways. Resident with
 recomputation, 6.9B trains at 28.5~GB and 58.1~s per step---a model whose
 conventional training exceeds the largest single accelerator sold, on a
-mid-range card, with $71\%$ of the device left over at 3B (14.0~GB).
+mid-range card, with two thirds of the device left over at 3.1B (14.0~GB).
 Sustained training confirms every cell is representative rather than a
 snapshot (Table~\ref{tab:sustainedtrain}, Fig.~\ref{fig:sustainedtrain}):
 each headline mode runs 128--2{,}048 consecutive steps over 3--17 hours
 under the training-realistic protocol of Sec.~\ref{sec:longhorizon}. On
 GPU the per-step peak is \emph{identical to the byte} on every step of
-every run---including 1{,}024 steps of the 6.9B resident configuration at
-29.2~GB and 2{,}048 steps of the memory-floor mode---with no allocator
-trimming. On CPU the resident set oscillates between allocator plateaus
-within a bounded band ($\le$691~MB at 0.84B; transient first-touch
-excursions at 6.9B settle within ten steps) with no trend. Step times are
-stationary; their residual variance is co-tenant noise on the shared nodes
-(Sec.~\ref{sec:longhorizon}), reported as the p5--p95 spread.
+every run, with no allocator trimming---including 1{,}024 steps of the
+6.9B resident configuration at 28.4~GB (27.8~GB reserved plus the CUDA
+context) and 2{,}048 steps of the memory-floor mode. On the shared basis
+of Sec.~\ref{sec:discipline}, that long-run peak equals the four-phase
+peak of Tables~\ref{tab:grid} and~\ref{tab:scale} to the mebibyte for
+three of the six GPU configurations and lies within 1\% for two more; the
+sixth, the streamed deferred mode at 0.84B, runs 50~MB above its
+four-phase cell (Sec.~\ref{sec:longhorizon}). On CPU the resident set
+oscillates between
+allocator plateaus within a bounded band ($\le$659~MB at 0.84B; transient
+first-touch excursions at 6.9B settle within ten steps) with no trend. Step
+times are stationary; their residual variance is co-tenant noise on the
+shared nodes (Sec.~\ref{sec:longhorizon}), reported as the p5--p95 spread.
 
 \begin{table}[t]
 \caption{Long-horizon training: sustained peak and band in MB (GPU:
-reserved + CUDA context; CPU: resident set), the training-only long-run
+reserved + calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU:
+resident set), the training-only long-run
 step time, and the directly priced per-step validation pass (+val.).
 $\Delta$mem and $\Delta$t give the spread between the largest and smallest
 per-step value over the whole run, as a percentage of the minimum. GPU
@@ -1226,18 +1428,18 @@ shared nodes (Sec.~\ref{sec:longhorizon}).}
 Mode & Steps & Peak & Band & $\Delta$mem & Step & $\Delta$t & +val. \\
 \midrule
 \multicolumn{8}{@{}l}{\emph{0.84B, GPU}} \\
-\enspace retained, resident, in-backward & 2{,}048 & 11{,}968 & 0 & 0.0\% & 5.23\,s & 15.6\% & +0.3\,s \\
-\enspace recompute, resident, deferred & 2{,}048 & 4{,}663 & 0 & 0.0\% & 9.05\,s & 14.0\% & +0.3\,s \\
-\enspace recompute, streamed, deferred & 2{,}048 & 1{,}142 & 0 & 0.0\% & 27.11\,s & 24.8\% & +6.6\,s \\
-\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}172 & 0 & 0.0\% & 16.28\,s & 4.6\% & +6.6\,s \\
+\enspace retained, resident, in-backward & 2{,}048 & 11{,}454 & 0 & 0.0\% & 5.23\,s & 15.6\% & +0.3\,s \\
+\enspace recompute, resident, deferred & 2{,}048 & 4{,}488 & 0 & 0.0\% & 9.05\,s & 14.0\% & +0.3\,s \\
+\enspace recompute, streamed, deferred & 2{,}048 & 1{,}130 & 0 & 0.0\% & 27.11\,s & 24.8\% & +6.6\,s \\
+\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}158 & 0 & 0.0\% & 16.28\,s & 4.6\% & +6.6\,s \\
 \multicolumn{8}{@{}l}{\emph{6.9B, GPU}} \\
-\enspace recompute, resident, deferred & 1{,}024 & 29{,}687 & 0 & 0.0\% & 41.90\,s & 14.2\% & +1.6\,s \\
-\enspace recompute, streamed, in-backward & 512 & 2{,}799 & 0 & 0.0\% & 102.2\,s & 3.4\% & +37.4\,s \\
+\enspace recompute, resident, deferred & 1{,}024 & 28{,}352 & 0 & 0.0\% & 41.90\,s & 14.2\% & +1.6\,s \\
+\enspace recompute, streamed, in-backward & 512 & 2{,}710 & 0 & 0.0\% & 102.2\,s & 3.4\% & +37.4\,s \\
 \multicolumn{8}{@{}l}{\emph{0.84B, CPU}} \\
-\enspace recompute, streamed, deferred & 512 & 2{,}087 & 349 & 20.1\% & 112.5\,s & 4.7\% & +14.0\,s \\
-\enspace retained, resident, in-backward & 1{,}024 & 21{,}134 & 691 & 3.4\% & 50.95\,s & 14.2\% & +6.2\,s \\
+\enspace recompute, streamed, deferred & 512 & 1{,}990 & 333 & 20.1\% & 112.5\,s & 4.7\% & +14.0\,s \\
+\enspace retained, resident, in-backward & 1{,}024 & 20{,}155 & 659 & 3.4\% & 50.95\,s & 14.2\% & +6.2\,s \\
 \multicolumn{8}{@{}l}{\emph{6.9B, CPU}} \\
-\enspace recompute, streamed, in-backward & 128 & 7{,}932 & 1{,}251 & 18.7\% & 478.0\,s & 3.1\% & +79.9\,s \\
+\enspace recompute, streamed, in-backward & 128 & 7{,}564 & 1{,}193 & 18.7\% & 478.0\,s & 3.1\% & +79.9\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1247,7 +1449,8 @@ Mode & Steps & Peak & Band & $\Delta$mem & Step & $\Delta$t & +val. \\
 \includegraphics[height=0.94\textheight]{figures/fig_exp8_training.pdf}
 \caption{Long-horizon training, per experiment: per-step peak memory
 (left; band annotated) and whole-step wall time with its running average
-(right), from the first to the last step.}
+(right), from the first to the last step. Memory is reserved memory in MB
+without the CUDA context that Table~\ref{tab:sustainedtrain} adds.}
 \label{fig:sustainedtrain}
 \end{figure*}
 Streamed, the same models train in 1.7--2.6~GB (deferred) or at
@@ -1261,9 +1464,12 @@ needs 9.3~GB ($12\times$ less) at $4.0\times$ the time.
 
 \begin{table}[t]
 \caption{Training at scale on one A100-40GB (top) and one CPU node
-(bottom). ``Full'' is unsegmented training; OOM = allocation failure, with
-the H100-94GB result in parentheses. Streamed cells: deferred /
-in-backward step times.}
+(bottom). ``Full'' is unsegmented training at batch 4, sequence 512, fp32,
+retained graph, no offloading; OOM = allocation failure, with the
+H100-94GB result in parentheses. ``Resident seg.'' is recomputation with
+the deferred schedule, except at 1.5B, where the retained-graph
+in-backward mode is shown. Streamed cells: deferred / in-backward step
+times. The device-memory column reads RAM for the CPU rows.}
 \label{tab:scale}
 \centering
 \scriptsize
@@ -1271,7 +1477,7 @@ in-backward step times.}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Model & Full & Resident seg. & \multicolumn{2}{c}{Streamed seg.} \\
- & & & VRAM & Step (s) \\
+ & & & Device mem. & Step (s) \\
 \midrule
 1.5B & 39.0\,GB / 1.3\,s & 17.4\,GB / 10.3\,s & 1.3\,GB & 64.7 / 49.0 \\
 3.1B & OOM (67.6\,GB) & 14.0\,GB / 26.6\,s & 1.7\,GB & 111.6 / 84.9 \\
@@ -1294,12 +1500,14 @@ device memory (33~s/token), and on CPU in 2.4~GB.
 \subsection{Granularity}\label{sec:gran}
 The partition is a dial of its own. At 0.84B, coarsening to
 $2{\times}1{\times}1{\times}2$ or refining to $16{\times}4{\times}4{\times}16$
-changes segment count by $64\times$ end to end, yet: the recomputation
-plateau barely moves (5.2, 4.5, 4.5~GB); the streamed floor tracks the
-widest segment---2.14~GB coarse, 1.08~GB standard, \textbf{890~MB} fine at
-30.8~s---exactly as Eq.~(\ref{eq:memlaw}) predicts; and the fastest
-resident mode degrades gracefully with segment count (5.8, 3.9, 10.5~s),
-locating the sweet spot at moderate granularity. Inference mirrors it:
+changes the number of embedding and head slices by $8\times$ each and the
+segment count from 112 to 356, yet the recomputation plateau barely moves
+(5.2, 4.5, 4.5~GB) and the streamed floor tracks the widest
+segment---2.14~GB coarse, 1.08~GB standard, \textbf{890~MB} fine at
+30.8~s---exactly as Eq.~(\ref{eq:memlaw}) predicts. The fastest resident
+mode is U-shaped in segment count (5.8, 3.9, 10.5~s): the coarse partition
+pays for wide segments, the fine one for dispatch, and the moderate
+partition is the sweet spot. Inference mirrors it:
 coarse partitions decode fastest (0.12~s/token), fine partitions serve
 smallest (598~MB streamed).
 
@@ -1339,8 +1547,10 @@ Transport & host/disk store & interconnect \\
 The structure observed in Sec.~\ref{sec:eval} compresses into two
 first-order laws for the streamed deferred mode on the pinned A100 node.
 With $P$ the parameter count in billions, $N$ the total number of segments
-($N = L(A{+}M{+}1) + E + H$), and $s_v$ the vocabulary-tied slice pair of
-Eq.~(\ref{eq:memlaw}):
+($N = L(A{+}M{+}1) + E + H$, the $+1$ being each layer's attention output
+projection, which executes as its own segment), $s_v$ the vocabulary-tied
+slice pair of Eq.~(\ref{eq:memlaw}), and memory in the mebibytes of
+Sec.~\ref{sec:discipline}:
 \begin{align}
 T &= 2.04 + 33.97\,P + 0.0094\,N \quad[\text{s/step}],\label{eq:timelaw}\\
 M &= 533 + 5.26\,s_v + 0.179\,d_\text{model} \quad[\text{MB}].\nonumber
@@ -1349,13 +1559,13 @@ The coefficients are physical. Time: 34~s per billion parameters is the
 marginal cost of sweeping every parameter through the device three times
 per step (forward, backward, update)---transport plus small-kernel compute
 plus synchronous orchestration, a split Sec.~\ref{sec:disc} quantifies;
-9.4~ms per segment is the fixed transaction cost of one store fetch plus
-kernel launches; the 2~s constant absorbs framework overhead. Memory: the slope on
-$s_v$ bundles the resident slice with its gradient, transients, and
-allocator rounding; the $d_\text{model}$ term carries shared parameters and
-per-layer records. Both laws were fitted \emph{once} on the seven
-configurations of Table~\ref{tab:costmodel} and then frozen. Both laws
-describe the four-phase measurement protocol of Sec.~\ref{sec:discipline};
+9.4~ms per segment and step is the fixed transaction cost of a segment's
+fetches and kernel launches across forward, backward, and update; the 2~s constant absorbs framework overhead. Memory: the constant is the calibrated CUDA context of 508~MB plus
+allocator slack; the slope on $s_v$ bundles the resident slice with its
+gradient, transients, and allocator rounding; the $d_\text{model}$ term
+carries shared parameters and per-layer records. Both laws were fitted \emph{once} on the seven
+configurations of Table~\ref{tab:costmodel} and then frozen. Both laws describe the four-phase measurement protocol of
+Sec.~\ref{sec:longhorizon};
 the long-horizon runs of Table~\ref{tab:sustainedtrain} give the
 corresponding training-only step times, and the directly priced validation
 pass (Fig.~\ref{fig:valcost}) converts between the two.
@@ -1391,7 +1601,7 @@ Configuration & \multicolumn{2}{c}{Memory (MB)} & \multicolumn{2}{c}{Step time (
 to $-12$\% at 1.5B and $+14$\% at 0.84B, where per-step costs that the law
 does not model (validation passes, framework fixed costs) are no longer
 negligible against the parameter term. We report these residuals rather
-than adding terms: a two-coefficient time law that a practitioner can
+than adding terms: a two-slope time law that a practitioner can
 evaluate on a napkin, accurate where the memory pressure actually is, is
 the useful artifact.
 
@@ -1399,20 +1609,21 @@ the useful artifact.
 no batch or sequence term, and a dedicated sweep shows why it can afford
 not to (Table~\ref{tab:sensitivity}): across a $32\times$ token sweep at
 0.84B---batch $\{1,4,8\}$ $\times$ sequence $\{128,256,512\}$, streamed
-deferred mode, three isolated runs per cell---the floor moves only from
-804~MB to 1{,}416~MB. The paper-protocol cell (batch 4, seq.\ 512)
-reproduces the mode grid's 1{,}080~MB exactly from an independent run.
-Activation transients contribute roughly 0.15~MB per token at the top of
-the sweep; below ${\sim}2$k tokens per step the vocabulary-tied term
-dominates and Eq.~(\ref{eq:memlaw}) applies unchanged, while larger token
-budgets add the measured slope. Step \emph{time} is flatter still: within
-the sweep's node, the $32\times$ token range moves the step by less than
-$6\%$ (40.3--42.7~s under the four-phase protocol; the sweep's node ran
-the paper-protocol cell at 41.5~s where the grid's node measured 28.3~s,
-the node-placement spread of Sec.~\ref{sec:longhorizon})---the streamed
-step is weight-traffic-bound, not token-bound, so the per-token cost of the smallest modes falls almost
+deferred mode, three isolated runs per cell---the floor stays between 796~MB and 1{,}416~MB. The paper-protocol cell
+(batch 4, seq.\ 512) reproduces the mode grid's 1{,}080~MB exactly from an
+independent run. Activation transients contribute roughly 0.15~MB per
+token at the top of the sweep; below ${\sim}2$k tokens per step the
+vocabulary-tied term dominates and Eq.~(\ref{eq:memlaw}) applies
+unchanged, while larger token budgets add the measured slope. Step
+\emph{time} is flatter still: within the sweep's node, the $32\times$
+token range moves the step by less than $6\%$ (40.3--42.7~s under the
+four-phase protocol). The streamed step is weight-traffic-bound, not
+token-bound, so the per-token cost of the smallest modes falls almost
 linearly with batch size: batch 8 processes $8\times$ the tokens of batch
-1 for $3\%$ more wall-clock.
+1 for $3\%$ more wall-clock. The same sweep also fixes the size of the
+node-placement effect of Sec.~\ref{sec:longhorizon}: its node ran the
+paper-protocol cell at 42.2~s where the grid's node measured 28.3~s, a
+$1.5\times$ spread under identical configuration.
 
 \begin{table}[t]
 \caption{Peak device memory (MB) of the streamed deferred mode at 0.84B
@@ -1432,14 +1643,15 @@ batch 8 & 962 & 1{,}046 & 1{,}416 \\
 \end{table}
 
 \textbf{Pre-registered validation.} The laws were then tested on a cell
-that entered no fit: 3.09B parameters at the $16{\times}4{\times}4{\times}16$
+that entered no fit: 3.1B parameters at the $16{\times}4{\times}4{\times}16$
 partition---a size and granularity \emph{combination} never measured. The
-prediction (110.3~s, 1{,}330~MB) was committed to the repository before the
-job was submitted. Three isolated runs measured 102.4--103.0~s and
-1{,}268~MB: the law over-predicted time by 7.1\% and memory by 4.9\%, both
-conservative (the model errs toward over-provisioning). We consider this
-the right epistemic standard for cost models: coefficients frozen in
-public, then confronted with an unseen configuration.
+prediction (110.3~s, 1{,}330~MB) was committed to the development repository before the validation job
+was submitted, and the result was committed after the job ended; the
+artifact records the prediction file, the result file with its job
+identifier, and the commit identifiers and timestamps of both. Three isolated runs measured 102.4--103.0~s and 1{,}268~MB: the law over-predicted time by 7\% and memory by 5\%, both conservative
+(the model errs toward over-provisioning). We consider this the right
+epistemic standard for cost models: coefficients frozen before the
+measurement, then confronted with an unseen configuration.
 
 % ============================================================================
 \section{Discussion}\label{sec:disc}
@@ -1457,9 +1669,13 @@ dispatch, small-kernel inefficiency, allocator churn. Two measured facts
 corroborate the account. First, the in-backward schedule removes gradient
 parking and the optimizer sweep's re-fetch---about $30\%$ of the traffic
 \emph{and} one full pass of orchestration---and the step drops by $23\%$
-(28.3${\to}$21.7~s). Second, the per-segment coefficient of
-Eq.~(\ref{eq:timelaw}), 9.4~ms, is orders of magnitude above a
-sub-millisecond DMA of a 32~MB slice. The conclusion cuts both ways: the
+(28.3${\to}$21.7~s). Second, the two terms of Eq.~(\ref{eq:timelaw}) locate the cost: at 0.84B
+the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
+the fixed dispatch cost of visiting each segment three times, while the
+parameter-proportional term contributes 28.5~s and contains the 1.7~s
+transport bound. The rest of that term is byte-proportional synchronous
+work: copies through pageable host memory, including the host-side copy
+the store makes on every fetch, and the small kernels that follow them. The conclusion cuts both ways: the
 measured slowdowns are honest prices for a strict, verifiable residency
 invariant executed synchronously---and most of the price is engineering
 headroom, not algorithm. Prefetching the next segment during the current
@@ -1486,11 +1702,9 @@ column of every table is what segmentation guarantees; the time column is
 what today's PyTorch charges to honor it, and it shrinks with runtime
 engineering, not with new mathematics.
 
-\textbf{Segmentation equalizes hardware tiers.} Full-model training at
-0.84B is $46\times$ slower on our CPU node than on the A100
-(33.0 vs.\ 0.72~s). In the smallest streamed modes the ratio collapses to
-$5$--$6\times$ (155.6 vs.\ 28.3~s deferred; 136.2 vs.\ 21.7~s
-in-backward): once both devices spend most of the step on store traffic
+\textbf{Segmentation equalizes hardware tiers.} Full-model training at 0.84B is $40\times$ slower on our CPU node than on
+the A100 (28.8 vs.\ 0.72~s, the anchors of Table~\ref{tab:grid}). In the smallest streamed modes the ratio collapses to roughly $6\times$
+(155.6 vs.\ 28.3~s deferred; 136.2 vs.\ 21.7~s in-backward): once both devices spend most of the step on store traffic
 and orchestration rather than dense math, the accelerator's FLOP advantage
 is mostly idle. The effect is starkest in the serving runtime, where the
 CPU \emph{beat} the A100 end to end on the full 11{,}654-example
@@ -1538,9 +1752,11 @@ partition whose $M$ fits the budget, then the fastest update schedule the
 recipe tolerates (in-backward where global clipping is dispensable), and
 switch modes between phases---resident for pre-training bursts on rented
 hardware, streamed in-backward for on-device fine-tuning, disk-streamed
-serving after export. Nothing in the lattice is a hyperparameter: no
-choice affects what is learned, only where bytes sit and how long steps
-take. Memory, in other words, is scheduled like CPU time---which is the
+serving after export. Nothing in the lattice is a hyperparameter: no choice affects what is
+learned, only where bytes sit and how long steps take---with the one
+documented exception that the in-backward schedule forgoes global
+gradient clipping (Sec.~\ref{sec:torchrt}), a change to the recipe rather
+than to the memory schedule. Memory, in other words, is scheduled like CPU time---which is the
 thesis of the paper restated as a systems roadmap.
 
 % ============================================================================
@@ -1550,26 +1766,38 @@ thesis of the paper restated as a systems roadmap.
 and quantized optimizer states are orthogonal to the partition and would
 shrink absolute footprints on \emph{both} sides of every comparison,
 shifting the out-of-memory boundaries of Table~\ref{tab:scale} without
-changing the structure of the memory law. Wall-clock results are specific
-to the measured PCIe- and NVMe-class node and, on the shared partition,
-carry co-tenant variance, which we quantify rather than control; the cost
+changing the structure of the memory law. Wall-clock results are specific to the measured node---an A100 reached
+over PCIe from pageable host memory, and a CPU node whose disk store is a
+parallel network filesystem---and, on the shared partition, carry
+co-tenant variance, which we quantify rather than control; the cost
 model's segment and parameter coefficients would refit on other hardware,
-its form should not.
-Inference is batch-one greedy decoding with a single-sequence KV path;
-batched serving under the residency invariant is unexplored. The exactness
-matrix is exhaustive at the mode level but the architecture is one family:
-a GPT decoder. The four cut planes exist in any transformer, and the
-reassembly propositions use nothing decoder-specific, but we have measured
-nothing else. Finally, the time laws stop at 6.9B and the granularity curve
+its form should not. Inference cost is measured for batch-one greedy
+decoding with a single-sequence KV path; the cost of batched serving under
+the residency invariant is unmeasured. The exactness matrix is exhaustive
+at the mode level, with two bounds stated plainly: segmented execution
+deviates from the reference by a small multiple of the framework's own
+reordering noise, not below it (Sec.~\ref{sec:trainexact}), and
+prediction-level agreement on the full test set is shown for one segmented
+inference mode, the others at token level on five prompts
+(Sec.~\ref{sec:predagree}). Training to convergence was compared at the
+accuracy tier only, under a single seed; at the cost tier the identity is
+verified over four optimizer steps. The architecture is one family: a GPT
+decoder. The four cut planes exist in any transformer, and the
+reassembly propositions use nothing decoder-specific, but we have measured nothing else.
+Byte-identical memory over long runs is a GPU statement: on CPU the
+resident set oscillates between allocator plateaus, within a band of up to
+1.19~GB at 6.9B (Table~\ref{tab:sustainedtrain}).
+Finally, the time laws stop at 6.9B and the granularity curve
 has three points; both can be densified, and energy is unmeasured.
 
 \textbf{The schedulable remainder.} Sec.~\ref{sec:disc} attributes roughly
 $90\%$ of the streamed step to synchronous orchestration rather than
-transport. A memory-budget-first runtime---asynchronous prefetch under a
-bounded two-segment residency, compute/transfer overlap, cross-segment
-fusion, budget-aware allocation---is therefore the natural successor
-system, with an order of magnitude of latent speedup on the table before
-any algorithmic change. We have deliberately reported the strict
+transport. A memory-budget-first runtime---pinned host memory and a memory-mapped
+disk store, asynchronous prefetch under a bounded two-segment residency,
+compute/transfer overlap, cross-segment fusion, budget-aware
+allocation---is therefore the natural successor system, with up to an
+order of magnitude of latent speedup on the table before any algorithmic
+change. We have deliberately reported the strict
 one-segment floor; relaxing it is engineering with a predictable payoff.
 
 \textbf{From one device to many.} The interfaces that let us stream
@@ -1603,30 +1831,44 @@ requirement to be met. One idea carries the whole construction: partition
 an unchanged GPT decoder along the four cut planes of tensor parallelism,
 but multiplex the parts through a single device in time, one segment
 executing at a time, down to a verified one-resident-segment floor when
-streamed. Everything else is disciplined
-consequence. The reassembly identities make the partition exact; the
-identity campaign---including a control that measures the framework
-against itself---shows every one of 12 training and 4 inference modes at
-or below the fp32 reordering floor, bit-identical where the hardware
-allows it, and nine serving pipelines in two engines agree on every one of
-11{,}654 test predictions. The measured menu spans training a
-0.84B-parameter model from 25.4~GB at $1\times$ to 890~MB at $43\times$ on
-one GPU, with the fastest mode at $5.4\times$ in under half the full-model
-footprint and $19.9\times$ below the measured ZeRO-Offload floor; a 6.9B
-model whose conventional training aborts on a 94~GB device trains on a
-40~GB card---resident at 28.5~GB, streamed in 2.6~GB, or CPU-only in
-9.3~GB of RAM; and the same partition serves in 401~MB, PyTorch-free, from
-disk. Two frozen laws
-predict time and memory well enough that a held-out
-size-and-granularity combination, pre-registered before measurement, landed
-within 7\% conservative. The wall between models that fit and models that
-do not is not a law of the hardware; it is a scheduling decision, and this
-paper shows it can be scheduled away---exactly, measurably, and on the
-machines people already own. That capability is also the missing
-prerequisite for federated learning over resource-constrained and edge
-devices---participants that could never before run local training now
-can---and building the distributed and federated versions of segmented
-execution on this foundation is our next step.
+streamed. Everything else is disciplined consequence. The reassembly
+identities make the partition exact. The identity campaign---including a
+control that measures the framework against itself---shows every one of 12
+training and 4 inference modes at the fp32 reordering scale of the
+framework itself on both GPU and CPU, bit-identical between update
+schedules where the hardware allows it. Six serving pipelines in two
+engines---the segmented engine, the exported model, and four PyTorch-free
+pipelines, two placements on two providers---agree on every one of
+11{,}654 test predictions.
+
+The measured menu is what a memory-constrained device reads. At 0.84B on
+one GPU it spans 11.5~GB at $5.4\times$ the full-model step time to
+1.08~GB at $39\times$, against a 25.4~GB full-model anchor and
+$19.9\times$ below the measured ZeRO-Offload floor. On a CPU the same
+model trains in 1.29~GB at $5.4\times$ and serves in 401~MB, PyTorch-free,
+from disk. A 6.9B model whose conventional training aborts on a 94~GB
+device trains on a 40~GB card, resident at 28.5~GB or streamed in 2.6~GB,
+and CPU-only in 9.3~GB of RAM. Two frozen laws
+predict time and memory well enough that a held-out size-and-granularity
+combination, pre-registered before measurement, landed within 7\%
+conservative, so a runtime handed a memory budget can select its mode in
+advance. Over 128 to 2{,}048 consecutive steps at both sizes, GPU memory is
+byte-identical on every step and within 1\% of the per-step protocol's peak
+on five of six configurations. CPU memory stays within a band of at most
+1.19~GB, and step times show no drift beyond co-tenant noise on the shared
+nodes.
+
+The wall between models that fit and models that do not is not a law of
+the hardware; it is a scheduling decision, and this paper shows it can be
+scheduled away---exactly, measurably, and on the machines people already
+own. For edge intelligence that is the operative point: training and
+inference complete on the device that owns the data, so no raw records,
+gradients, or activations ever cross a network boundary. That capability
+is also the missing prerequisite for federated learning over
+resource-constrained and edge devices---participants that could never
+before run local training now can---and building the distributed and
+federated versions of segmented execution on this foundation is our next
+step.
 
 \section*{Acknowledgments}
 The measurements were carried out on systems of the GWDG, G\"ottingen.

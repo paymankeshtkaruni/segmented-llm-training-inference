@@ -10,5 +10,5 @@
 # PYTHON=<interpreter> before submitting from the repository root.
 set -euo pipefail
 PY="${PYTHON:-python}"
-cd "$SLURM_SUBMIT_DIR/../../paper_v4_tpds"
+cd "$SLURM_SUBMIT_DIR/../paper_jsa"
 $PY paper_v4_figures.py
