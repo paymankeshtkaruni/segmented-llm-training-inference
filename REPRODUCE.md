@@ -168,7 +168,14 @@ Mapping (paper -> source):
 - Batch/sequence sensitivity: results/exp7_sensitivity/sensitivity_summary.json (slurm/exp7_sensitivity.sbatch)
 - Sustained 6.9B stability: results/exp8_sustained/sustained_summary.json (slurm/exp8_sustained.sbatch)
 - Cost model + pre-registration: results/prereg_prediction.json (committed BEFORE the
-  validation job), results/prereg_validation_result.json, results/cost_model_eval.json
+  validation job), results/prereg_validation_result.json, results/cost_model_eval.json.
+  Provenance of the pre-registration (this public repository received both files in one
+  squashed commit, so the order is recorded here): in the development history the
+  prediction file was committed at 2026-09-01 14:32:33 CEST (commit 6c8e8a7,
+  "PRE-REGISTERED prediction for held-out cell (3.09B, 16x4x4x16, T3): 110s / 1330MB");
+  the validation job (Slurm 15681815, `slurm/mrt_gpu_validate_cell.sbatch`) was submitted
+  at 14:32:37, started 14:33:20 and ended 15:10:04; the result file was committed at
+  15:27:20 (commit ff015f2). The job ID is stored in results/prereg_validation_result.json.
 
 Notes: per-rep metrics JSONs larger than 2 MB carry their raw sampling timelines replaced by a
 stripped marker (the summary builders read only scalar fields); regenerate full traces by
