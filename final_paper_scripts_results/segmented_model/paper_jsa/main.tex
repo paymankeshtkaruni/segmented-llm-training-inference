@@ -936,8 +936,8 @@ Produces & Tabs.~\ref{tab:compare}, \ref{tab:grid}, \ref{tab:infer}, \ref{tab:sc
 \includegraphics[width=\textwidth]{figures/fig_exp9_validation_cost.pdf}
 \caption{The directly priced per-step validation pass (red) on top of the
 training-only long-run step time (blue), per configuration. Adding the red
-component converts a training-realistic step into the four-phase
-measurement protocol's step.}
+component prices the validation pass of the four-phase protocol; its
+tracer and per-step trim account for the remainder (Sec.~\ref{sec:longhorizon}).}
 \label{fig:valcost}
 \end{figure*}
 
@@ -981,7 +981,7 @@ ${\sim}2.5{\times}10^{-9}$.
 
 \begin{table}[t]
 \caption{Training identity at 0.84B. Worst-case $\max|\Delta|$ over all
-modes in scope; ``vs.\ ref.''\ compares against the unsegmented full model
+modes in scope, except the four element-count rows; ``vs.\ ref.''\ compares against the unsegmented full model
 on identical seeds. Element counts are taken over all 840M parameters after
 one step, worst over the modes in scope. The control rows run no segmentation code: the full model against
 itself, batch of 2 versus twice-accumulated batch of 1, in pure PyTorch,
@@ -1140,7 +1140,7 @@ row, CPU columns) trims it only to 19.7~GB and slows it to 84.0~s: under
 a retained graph, eager CPU autograd keeps the full activation set
 whether or not the bounds are on. Their savings appear once recomputation
 is on, where the recomputation row, the second, drops to 4.5~GB. The dials do the
-rest: the smallest streamed mode reaches 1.08~GB, $23.5\times$ below
+rest: the smallest streamed mode of the dropout-on recipe reaches 1.08~GB, $23.5\times$ below
 full-model training and $19.9\times$ below the measured ZeRO-Offload floor,
 and a finer partition reaches 890~MB (Sec.~\ref{sec:gran}). On CPU the same
 story holds against the full model: 26.9~GB falls to 1.29~GB
@@ -1149,7 +1149,8 @@ with in-backward updates.
 
 \begin{table}[t]
 \caption{Training at 0.84B on one A100-40GB (batch 4, seq.\ 512). Medians
-of three isolated runs. ZeRO-Offload baselines measured on the same hardware
+of three isolated runs; segmented rows use the training recipe with
+dropout on. ZeRO-Offload baselines measured on the same hardware
 and model.}
 \label{tab:compare}
 \centering
@@ -1251,8 +1252,10 @@ GPU plateaus---${\sim}11.4$~GB (retained graph), ${\sim}4.5$~GB
 memory. The same plateaus appear on CPU RAM.
 
 \textbf{Optimizer-in-backward removes a phase, not a percentage.} The
-deferred optimizer sweep costs 4.1~s per step on GPU and 28~s on CPU; the
-in-backward schedule collapses it to 0.1~s and 0.03~s respectively---it is
+deferred optimizer sweep costs 4.1~s per step on GPU and 28~s on CPU in
+the resident modes (8.2~s and 36--40~s streamed, where it also re-fetches
+every weight); the in-backward schedule collapses it to 0.1~s and 0.03~s
+respectively---it is
 not faster bookkeeping but the deletion of one full traversal of 840M
 parameters through the store. It makes the fastest mode 3.9~s
 ($5.4\times$ full-model time at less than half its memory) and cuts the
@@ -1260,8 +1263,8 @@ smallest-memory streamed mode from 28.3~s to 21.7~s ($30\times$) at
 1.16~GB.
 
 \textbf{Dropout's memory price is regime-dependent.} On GPU, dropout adds
-at most ${\sim}0.2$~GB in any regime---170~MB with a retained graph, under
-50~MB with recomputation (fused kernels keep masks small; the full model
+at most ${\sim}0.2$~GB in any regime---170~MB with a retained graph, 50~MB
+or less with recomputation (fused kernels keep masks small; the full model
 pays 1.26~GB for the same setting). On CPU with a retained
 graph, dropout \emph{doubles} peak RAM (19.7 vs.\ 10.7~GB): eager CPU
 autograd materializes full-width mask and product tensors in the graph.
@@ -1272,7 +1275,7 @@ devices---recomputation pays for dropout's memory, then RNG replay
 \textbf{The store is part of the bargain.} A 1.1~GB streamed GPU run
 carries a 16--20~GB host-side store (parameters, gradients, moments,
 records); the CPU rows carry the same state on disk. Nothing is free; the
-the claim is that the \emph{constrained} resource is spent at 2--24$\times$
+claim is that the \emph{constrained} resource is spent at 2--24$\times$
 less on the GPU and up to 21$\times$ less on the CPU while total system
 memory is repartitioned, not inflated.
 
@@ -1285,8 +1288,10 @@ plots them as a serving frontier.
 \includegraphics[width=\textwidth]{figures/inference_frontier.pdf}
 \caption{The serving frontier at 0.84B (log--log): memory against decode
 latency for both runtimes and the full-model anchor, on GPU (left, device
-memory) and CPU (right, RAM). All points produce identical predictions
-(Sec.~\ref{sec:predagree}).}
+memory) and CPU (right, RAM). All points produce identical predictions:
+the full-test-set check of Sec.~\ref{sec:predagree} for the resident
+PyTorch mode and the four PyTorch-free pipelines, the token-level identity
+of Sec.~\ref{sec:inferexact} for the other PyTorch modes.}
 \label{fig:inferfrontier}
 \end{figure*} In the training runtime, the
 full-model reference decodes at 0.038~s/token in ${\sim}4$~GB; resident
@@ -1468,9 +1473,12 @@ needs 9.3~GB ($12\times$ less) at $4.0\times$ the time.
 \caption{Training at scale on one A100-40GB (top) and one CPU node
 (bottom). ``Full'' is unsegmented training at batch 4, sequence 512, fp32,
 retained graph, no offloading; OOM = allocation failure, with the
-H100-94GB result in parentheses. ``Resident seg.'' is recomputation with
+largest device tried in parentheses (H100-94GB at 3.1B and 6.9B,
+A100-80GB at 5.1B). ``Resident seg.'' is recomputation with
 the deferred schedule, except at 1.5B, where the retained-graph
-in-backward mode is shown. Streamed cells: deferred / in-backward step
+in-backward mode is shown. Full and resident cells: peak memory / step
+time. Streamed cells: device memory of the deferred mode (for the CPU
+rows, in-backward--deferred range), then deferred / in-backward step
 times. The device-memory column reads RAM for the CPU rows.}
 \label{tab:scale}
 \centering
