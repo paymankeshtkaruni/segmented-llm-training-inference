@@ -1613,7 +1613,7 @@ not to (Table~\ref{tab:sensitivity}): across a $32\times$ token sweep at
 0.84B---batch $\{1,4,8\}$ $\times$ sequence $\{128,256,512\}$, streamed
 deferred mode, three isolated runs per cell---the floor stays between 796~MB and 1{,}416~MB. The paper-protocol cell
 (batch 4, seq.\ 512) reproduces the mode grid's 1{,}080~MB exactly from an
-independent run. Activation transients contribute roughly 0.15~MB per
+independent run. Activation transients contribute roughly 0.16~MB per
 token at the top of the sweep; below ${\sim}2$k tokens per step the
 vocabulary-tied term dominates and Eq.~(\ref{eq:memlaw}) applies
 unchanged, while larger token budgets add the measured slope. Step
