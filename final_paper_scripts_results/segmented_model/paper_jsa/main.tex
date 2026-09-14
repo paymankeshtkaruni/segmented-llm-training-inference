@@ -1359,19 +1359,21 @@ Disk-streamed & 506 & 0.8\,GB & 9.47 & \textbf{401} & 9.20 \\
 \begin{table}[t]
 \caption{Long-horizon serving: sustained footprint (GPU: reserved +
 calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU: resident set),
-band over the whole session, and instrumentation-free latency.}
+band over the whole session, instrumentation-free latency, and Trend, the
+median request time of the last tenth of the session against that of the
+first tenth.}
 \label{tab:sustainedserve}
 \centering
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrr@{}}
+\begin{tabular}{@{}lrrrrr@{}}
 \toprule
-Serving mode & Requests & Footprint & Band & s/token \\
+Serving mode & Requests & Footprint & Band & s/token & Trend \\
 \midrule
-0.84B GPU resident + KV cache & 2{,}000 & 4{,}132\,MB & 0\,MB & 0.031 \\
-0.84B GPU streamed + recompute & 500 & 658\,MB & 0\,MB & 5.00 \\
-0.84B CPU ONNX, disk-streamed & 500 & 360--371\,MB & 12\,MB & 9.06 \\
-6.9B GPU resident + KV cache & 1{,}000 & 27{,}056\,MB & 0\,MB & 0.035 \\
+0.84B GPU resident + KV cache & 2{,}000 & 4{,}132\,MB & 0\,MB & 0.031 & $-$1.3\% \\
+0.84B GPU streamed + recompute & 500 & 658\,MB & 0\,MB & 5.00 & $-$0.1\% \\
+0.84B CPU ONNX, disk-streamed & 500 & 360--371\,MB & 12\,MB & 9.06 & +1.6\% \\
+6.9B GPU resident + KV cache & 1{,}000 & 27{,}056\,MB & 0\,MB & 0.035 & +0.1\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1422,12 +1424,12 @@ first-touch excursions at 6.9B settle within ten steps) with no trend. Step
 times are stationary; their residual variance is co-tenant noise on the
 shared nodes (Sec.~\ref{sec:longhorizon}), reported as the spread between
 the largest and smallest per-step value. A trend statistic confirms the
-absence of drift: the median step time of the last tenth of each run lies
-within 7\% of the first tenth in eight of nine runs, and 14.5\% \emph{below}
-it in the ninth, the streamed deferred 0.84B run, whose late speed-up
+absence of drift (Trend column, Table~\ref{tab:sustainedtrain}): the
+last-tenth median step time lies within 7\% of the first tenth in eight
+of nine runs, and 14.5\% \emph{below} it in the ninth, whose late speed-up
 coincides with co-tenant jobs ending (Sec.~\ref{sec:longhorizon}); no run
-slows over its horizon, and the four serving sessions move by at most
-1.6\% (artifact file sustained\_summary.json).
+slows over its horizon, and the serving sessions move by at most 1.6\%
+(Table~\ref{tab:sustainedserve}).
 
 \begin{table}[t]
 \caption{Long-horizon training (dropout on in every mode): sustained peak
@@ -1436,7 +1438,9 @@ reserved + calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU:
 resident set), the training-only long-run
 step time, and the directly priced per-step validation pass (+val.).
 $\Delta$mem and $\Delta$t give the spread between the largest and smallest
-per-step value over the whole run, as a percentage of the minimum. GPU
+per-step value over the whole run, as a percentage of the minimum; Trend is
+the median step time of the last tenth of the run against that of the
+first tenth. GPU
 memory is byte-identical at every step (zero band, 0.0\%); CPU bands are
 bounded allocator plateaus; time spreads reflect co-tenant load on the
 shared nodes (Sec.~\ref{sec:longhorizon}).}
@@ -1444,23 +1448,23 @@ shared nodes (Sec.~\ref{sec:longhorizon}).}
 \centering
 \scriptsize
 \setlength{\tabcolsep}{2.2pt}
-\begin{tabular}{@{}lrrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-Mode & Steps & Peak & Band & $\Delta$mem & Step & $\Delta$t & +val. \\
+Mode & Steps & Peak & Band & $\Delta$mem & Step & $\Delta$t & Trend & +val. \\
 \midrule
-\multicolumn{8}{@{}l}{\emph{0.84B, GPU}} \\
-\enspace retained, resident, in-backward & 2{,}048 & 11{,}454 & 0 & 0.0\% & 5.23\,s & 15.6\% & +0.3\,s \\
-\enspace recompute, resident, deferred & 2{,}048 & 4{,}488 & 0 & 0.0\% & 9.05\,s & 14.0\% & +0.3\,s \\
-\enspace recompute, streamed, deferred & 2{,}048 & 1{,}130 & 0 & 0.0\% & 27.11\,s & 24.8\% & +6.6\,s \\
-\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}158 & 0 & 0.0\% & 16.28\,s & 4.6\% & +6.6\,s \\
-\multicolumn{8}{@{}l}{\emph{6.9B, GPU}} \\
-\enspace recompute, resident, deferred & 1{,}024 & 28{,}352 & 0 & 0.0\% & 41.90\,s & 14.2\% & +1.6\,s \\
-\enspace recompute, streamed, in-backward & 512 & 2{,}710 & 0 & 0.0\% & 102.2\,s & 3.4\% & +37.4\,s \\
-\multicolumn{8}{@{}l}{\emph{0.84B, CPU}} \\
-\enspace recompute, streamed, deferred & 512 & 1{,}990 & 333 & 20.1\% & 112.5\,s & 4.7\% & +14.0\,s \\
-\enspace retained, resident, in-backward & 1{,}024 & 20{,}155 & 659 & 3.4\% & 50.95\,s & 14.2\% & +6.2\,s \\
-\multicolumn{8}{@{}l}{\emph{6.9B, CPU}} \\
-\enspace recompute, streamed, in-backward & 128 & 7{,}564 & 1{,}193 & 18.7\% & 478.0\,s & 3.1\% & +79.9\,s \\
+\multicolumn{9}{@{}l}{\emph{0.84B, GPU}} \\
+\enspace retained, resident, in-backward & 2{,}048 & 11{,}454 & 0 & 0.0\% & 5.23\,s & 15.6\% & +2.7\% & +0.3\,s \\
+\enspace recompute, resident, deferred & 2{,}048 & 4{,}488 & 0 & 0.0\% & 9.05\,s & 14.0\% & +0.2\% & +0.3\,s \\
+\enspace recompute, streamed, deferred & 2{,}048 & 1{,}130 & 0 & 0.0\% & 27.11\,s & 24.8\% & $-$14.5\% & +6.6\,s \\
+\enspace recompute, streamed, in-backward & 2{,}048 & 1{,}158 & 0 & 0.0\% & 16.28\,s & 4.6\% & $-$1.0\% & +6.6\,s \\
+\multicolumn{9}{@{}l}{\emph{6.9B, GPU}} \\
+\enspace recompute, resident, deferred & 1{,}024 & 28{,}352 & 0 & 0.0\% & 41.90\,s & 14.2\% & +2.2\% & +1.6\,s \\
+\enspace recompute, streamed, in-backward & 512 & 2{,}710 & 0 & 0.0\% & 102.2\,s & 3.4\% & +0.4\% & +37.4\,s \\
+\multicolumn{9}{@{}l}{\emph{0.84B, CPU}} \\
+\enspace recompute, streamed, deferred & 512 & 1{,}990 & 333 & 20.1\% & 112.5\,s & 4.7\% & +2.0\% & +14.0\,s \\
+\enspace retained, resident, in-backward & 1{,}024 & 20{,}155 & 659 & 3.4\% & 50.95\,s & 14.2\% & +7.0\% & +6.2\,s \\
+\multicolumn{9}{@{}l}{\emph{6.9B, CPU}} \\
+\enspace recompute, streamed, in-backward & 128 & 7{,}564 & 1{,}193 & 18.7\% & 478.0\,s & 3.1\% & $-$1.5\% & +79.9\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
