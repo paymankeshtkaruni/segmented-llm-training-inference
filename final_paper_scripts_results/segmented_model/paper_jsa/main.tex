@@ -1320,7 +1320,7 @@ reserved (27.1~GB with the CUDA context) for 1{,}000 requests. The
 PyTorch-free disk-streamed server answers 500 requests inside
 360--371~MB: 12~MB of runtime-arena wobble, no trend, no session leak. Under this instrumentation-free protocol the cache
 modes' latency is \textbf{0.031~s/token} (0.84B) and \textbf{0.035~s/token}
-(6.9B): the per-operation tracer inside the mode-comparison protocol
+(6.9B): the per-operation tracer inside the four-phase protocol
 inflates sub-second decoding $5.9\times$ while leaving the slow streamed
 mode within $1.16\times$ (measured back-to-back on one node,
 Sec.~\ref{sec:longhorizon}). Table~\ref{tab:infer} therefore remains the \emph{relative}
@@ -1894,7 +1894,7 @@ predict time and memory well enough that a held-out size-and-granularity
 combination, pre-registered before measurement, landed 7\% and 5\%
 conservative in time and memory, so a runtime handed a memory budget can select its mode in
 advance. Over 128 to 2{,}048 consecutive steps at both sizes, GPU memory is
-byte-identical on every step and within 1.1\% of the per-step protocol's peak
+byte-identical on every step and within 1.1\% of the four-phase protocol's peak
 on five of six configurations. CPU memory stays within a band of at most
 1.19~GB, and step times show no drift beyond co-tenant noise on the shared
 nodes.
