@@ -1399,8 +1399,8 @@ every size that aborts larger devices.
 fits only up to 1.5B (39.0~GB---already at the edge); at 3.1B it aborts, and
 an H100 measurement shows why: 67.6~GB. At 5.1B it aborts on an 80~GB device,
 and at 6.9B \emph{even the 94~GB H100 aborts}. Segmented execution trains
-all of them on the single 40~GB card: streamed under either schedule at
-every size, and resident at 3.1B and 6.9B. Resident with
+the three sizes that abort on the single 40~GB card: streamed under either
+schedule at each size, and resident at 3.1B and 6.9B. Resident with
 recomputation, 6.9B trains on the 40~GB card at 28.5~GB and 58.1~s per
 step, although its conventional training needs more than 94~GB of device
 memory. At 3.1B the same mode uses 14.0~GB, leaving two thirds of the card
@@ -1495,8 +1495,8 @@ needs 9.3~GB ($12\times$ less) at $4.0\times$ the time.
 (bottom). ``Full'' is unsegmented training at batch 4, sequence 512, fp32,
 retained graph, no offloading; OOM = allocation failure on the 40~GB
 card; the parenthetical gives the full-model footprint measured on an
-H100-94GB (3.1B) or the larger device on which it also failed (A100-80GB
-at 5.1B, H100-94GB at 6.9B). ``Resident seg.'' is recomputation with
+H100-94GB (3.1B) or a lower bound from the larger device on which it
+also failed (A100-80GB at 5.1B, H100-94GB at 6.9B). ``Resident seg.'' is recomputation with
 the deferred schedule, except at 1.5B, where the retained-graph
 in-backward mode is shown. Full and resident cells: peak memory / step
 time. Streamed cells: device memory of the deferred mode (for the CPU
