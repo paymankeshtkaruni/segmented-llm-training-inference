@@ -53,7 +53,7 @@ model as unsegmented execution, at the framework's own fp32 reordering
 scale, and every engine agrees on every prediction, so the menu never
 trades accuracy. In fp32 on one GPU, the 0.84-billion-parameter menu runs from
 11.5~GB at 5.4$\times$ the full-model step time to 1.08~GB at 39$\times$,
-twenty times below the ZeRO-Offload floor measured on the same node; on a
+twenty times below the ZeRO-Offload floor measured on the same hardware; on a
 CPU the same model trains in 1.29~GB at 5.4$\times$, and it serves in
 401~MB with neither GPU nor training framework. A 6.9-billion-parameter
 model whose full-model training aborts even on a 94~GB accelerator trains
@@ -819,7 +819,7 @@ full-model reference (unsegmented, standard retained-graph training) and a
 \emph{naive segmented} anchor---the partition with every technique off,
 the six always-on bounds among them---which separates what the partition
 alone buys from what the bounds and dials add. DeepSpeed
-ZeRO-Offload~\cite{ren2021zerooffload} is measured on the same node and
+ZeRO-Offload~\cite{ren2021zerooffload} is measured on the same hardware and
 model configuration, not quoted from the literature: stage 2 offloads
 optimizer state to pinned CPU memory, stage 3 offloads parameters and
 optimizer state.
@@ -1149,7 +1149,7 @@ with in-backward updates.
 
 \begin{table}[t]
 \caption{Training at 0.84B on one A100-40GB (batch 4, seq.\ 512). Medians
-of three isolated runs. ZeRO-Offload baselines measured on the same node
+of three isolated runs. ZeRO-Offload baselines measured on the same hardware
 and model.}
 \label{tab:compare}
 \centering
@@ -1407,7 +1407,8 @@ oscillates between
 allocator plateaus within a bounded band ($\le$659~MB at 0.84B; transient
 first-touch excursions at 6.9B settle within ten steps) with no trend. Step
 times are stationary; their residual variance is co-tenant noise on the
-shared nodes (Sec.~\ref{sec:longhorizon}), reported as the p5--p95 spread.
+shared nodes (Sec.~\ref{sec:longhorizon}), reported as the spread between
+the largest and smallest per-step value.
 
 \begin{table}[t]
 \caption{Long-horizon training: sustained peak and band in MB (GPU:
