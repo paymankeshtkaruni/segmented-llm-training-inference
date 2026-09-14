@@ -839,10 +839,11 @@ fixed a left-padding pitfall in which padded batch layouts shift absolute
 positions and produce spurious cross-engine disagreements.
 
 \subsection{Threats to Validity}\label{sec:threats}
-The identity campaign is not ceremonial: it caught three real defects that
+The identity campaign is not ceremonial: it caught four real defects that
 every unit test had passed---the stale train-mode flag and the
-RNG-consuming segment builds of Sec.~\ref{sec:torchrt}, and the left-padding
-evaluation pitfall above. All three were fixed before any number in this
+RNG-consuming segment builds of Sec.~\ref{sec:torchrt}, the NumPy epsilon
+promotion of Sec.~\ref{sec:onnxrt}, and the left-padding
+evaluation pitfall above. All four were fixed before any number in this
 paper was produced, and the campaign was re-run from scratch afterwards. Two
 scope limits are stated up front: all measurements are fp32 (mixed precision
 is orthogonal and would shrink absolute footprints on both sides of every
@@ -901,7 +902,7 @@ ending on the same node.
 In memory the two protocols need no bridge: on the shared basis of
 Sec.~\ref{sec:discipline}, the long-run GPU peaks equal the four-phase
 peaks of the same modes to the mebibyte for three of the six GPU
-configurations and lie within 0.5\% and 1.0\% for two more (Table~\ref{tab:sustainedtrain}
+configurations and lie within 0.5\% and 1.1\% for two more (Table~\ref{tab:sustainedtrain}
 against Tables~\ref{tab:grid} and~\ref{tab:scale}; the four-phase cell of
 the 6.9B streamed in-backward mode, 2{,}738~MB, is not printed in
 Table~\ref{tab:scale}); the one exception, the streamed deferred mode at
@@ -967,8 +968,8 @@ of fp32 accumulation; representative gradient slices agree to
 $1.1{\times}10^{-8}$; post-step parameters after one and after four full
 AdamW steps, reassembled and compared element by element across all 840M
 parameters, agree to $5{\times}10^{-5}$ on GPU and $10^{-4}$ on CPU under
-the clipped deferred schedule, and to $4{\times}10^{-4}$ and
-$2{\times}10^{-4}$ under the unclipped in-backward schedule. With dropout
+the clipped deferred schedule, and to $3.5{\times}10^{-4}$ and
+$1.8{\times}10^{-4}$ under the unclipped in-backward schedule. With dropout
 on, where no reference
 with identical masks exists, we verify determinism (repeat runs of the same
 mode) and cross-mode agreement (streamed, recomputed, and resident execution
@@ -1297,7 +1298,7 @@ of Sec.~\ref{sec:inferexact} for the other PyTorch modes.}
 full-model reference decodes at 0.038~s/token in ${\sim}4$~GB; resident
 segmented execution matches its memory (weights dominate both) and pays
 $5.1\times$ in per-segment launch overhead at this small scale---a price
-that inverts at 7B (Sec.~\ref{sec:scale}), and that on CPU is already
+that does not grow with model size (Sec.~\ref{sec:scale}), and that on CPU is already
 inverted at 0.84B: with the KV cache, resident segmented decoding is
 $4.4\times$ \emph{faster} than the no-cache full reference (0.238 vs.\
 1.056~s/token). Streaming with KV cache drops
@@ -1392,7 +1393,8 @@ every size that aborts larger devices.
 fits only up to 1.5B (39.0~GB---already at the edge); at 3.1B it aborts, and
 an H100 measurement shows why: 67.6~GB. At 5.1B it aborts on an 80~GB device,
 and at 6.9B \emph{even the 94~GB H100 aborts}. Segmented execution trains
-all of them on the single 40~GB card, three ways. Resident with
+all of them on the single 40~GB card: streamed under either schedule at
+every size, and resident at 3.1B and 6.9B. Resident with
 recomputation, 6.9B trains at 28.5~GB and 58.1~s per step---a model whose
 conventional training exceeds the largest single accelerator sold, on a
 mid-range card, with two thirds of the device left over at 3.1B (14.0~GB).
@@ -1406,7 +1408,7 @@ every run, with no allocator trimming---including 1{,}024 steps of the
 context) and 2{,}048 steps of the memory-floor mode. On the shared basis
 of Sec.~\ref{sec:discipline}, that long-run peak equals the four-phase
 peak of Tables~\ref{tab:grid} and~\ref{tab:scale} to the mebibyte for
-three of the six GPU configurations and lies within 0.5\% and 1.0\% for two more; the
+three of the six GPU configurations and lies within 0.5\% and 1.1\% for two more; the
 sixth, the streamed deferred mode at 0.84B, runs 50~MB above its
 four-phase cell (Sec.~\ref{sec:longhorizon}). On CPU the resident set
 oscillates between
@@ -1500,11 +1502,13 @@ Model & Full & Resident seg. & \multicolumn{2}{c}{Streamed seg.} \\
 \end{tabular}
 \end{table}
 
-At inference the wall moves the same way, and the latency picture inverts
-in segmentation's favor: resident segmented decoding with KV cache is
-essentially \emph{size-independent} on GPU---0.21, 0.21, 0.19~s/token at
-1.5B, 3.1B, and 6.9B---while the no-cache full-model reference grows from
-0.39 to 1.57~s/token. The smallest streamed mode serves 6.9B in 1.6~GB of
+At inference the wall moves the same way. Resident segmented decoding with
+KV cache is essentially \emph{size-independent} on GPU---0.21, 0.21,
+0.19~s/token at 1.5B, 3.1B, and 6.9B---because per-segment dispatch, not
+parameter count, sets its per-token cost. The full-model reference at
+these sizes was measured as a forward pass over the 4${\times}$512 training
+batch (0.39~s at 1.5B to 1.57~s at 6.9B), not as decode, so no
+like-for-like full-model decode latency above 0.84B is reported. The smallest streamed mode serves 6.9B in 1.6~GB of
 device memory (33~s/token), and on CPU in 2.4~GB.
 
 \subsection{Granularity}\label{sec:gran}
@@ -1623,8 +1627,10 @@ deferred mode, three isolated runs per cell---the floor stays between 796~MB and
 (batch 4, seq.\ 512) reproduces the mode grid's 1{,}080~MB exactly from an
 independent run. Activation transients contribute roughly 0.16~MB per
 token at the top of the sweep; below ${\sim}2$k tokens per step the
-vocabulary-tied term dominates and Eq.~(\ref{eq:memlaw}) applies
-unchanged, while larger token budgets add the measured slope. Step
+vocabulary-tied term dominates and Eq.~(\ref{eq:memlaw}), fitted at
+2{,}048 tokens, remains a conservative bound (it over-provisions the
+batch-1 cells by up to a third), while larger token budgets add the
+measured slope. Step
 \emph{time} is flatter still: within the sweep's node, the $32\times$
 token range moves the step by less than $6\%$ (40.3--42.7~s under the
 four-phase protocol). The streamed step is weight-traffic-bound, not
@@ -1679,8 +1685,9 @@ dispatch, small-kernel inefficiency, allocator churn. Two measured facts
 corroborate the account. First, the in-backward schedule removes gradient
 parking and the optimizer sweep's re-fetch---about $30\%$ of the traffic
 \emph{and} one full pass of orchestration---and the step drops by $23\%$
-(28.3${\to}$21.7~s). Second, the two terms of Eq.~(\ref{eq:timelaw}) locate the cost: at 0.84B
-the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
+(28.3${\to}$21.7~s). Second, the two terms of Eq.~(\ref{eq:timelaw}) locate the cost (in the
+law's 32.3~s prediction, which overshoots the measured 28.3~s by 14\%,
+Sec.~\ref{sec:model}): at 0.84B the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
 the fixed dispatch cost of visiting each segment three times, while the
 parameter-proportional term contributes 28.4~s and contains the 1.7~s
 transport bound. The rest of that term is byte-proportional synchronous
@@ -1863,7 +1870,7 @@ predict time and memory well enough that a held-out size-and-granularity
 combination, pre-registered before measurement, landed 7\% and 5\%
 conservative in time and memory, so a runtime handed a memory budget can select its mode in
 advance. Over 128 to 2{,}048 consecutive steps at both sizes, GPU memory is
-byte-identical on every step and within 1.0\% of the per-step protocol's peak
+byte-identical on every step and within 1.1\% of the per-step protocol's peak
 on five of six configurations. CPU memory stays within a band of at most
 1.19~GB, and step times show no drift beyond co-tenant noise on the shared
 nodes.
