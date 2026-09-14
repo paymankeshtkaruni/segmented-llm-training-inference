@@ -1674,7 +1674,7 @@ parking and the optimizer sweep's re-fetch---about $30\%$ of the traffic
 (28.3${\to}$21.7~s). Second, the two terms of Eq.~(\ref{eq:timelaw}) locate the cost: at 0.84B
 the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
 the fixed dispatch cost of visiting each segment three times, while the
-parameter-proportional term contributes 28.5~s and contains the 1.7~s
+parameter-proportional term contributes 28.4~s and contains the 1.7~s
 transport bound. The rest of that term is byte-proportional synchronous
 work: copies through pageable host memory, including the host-side copy
 the store makes on every fetch, and the small kernels that follow them. The conclusion cuts both ways: the
