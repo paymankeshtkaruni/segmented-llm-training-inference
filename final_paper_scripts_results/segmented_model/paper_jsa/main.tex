@@ -1211,7 +1211,8 @@ technique off) and the unsegmented full-model anchor with and without dropout (m
 of three isolated runs; batch 4, seq.\ 512). Dial columns
 are binary: Drop.\ = dropout on; Rec.\ = activation recomputation (off =
 retained graph); Str.\ = weight streaming (off = all segments resident);
-In-b.\ = optimizer-in-backward (off = deferred sweep). \%full columns give
+In-b.\ = optimizer-in-backward (off = deferred sweep); Opt.\ = wall time
+of the optimizer phase per step. \%full columns give
 peak memory as a percentage of the full-model anchor; $\times$full columns
 give step time as a multiple of it. GPU rows use the dropout-matched
 anchor, CPU rows the single (dropout) CPU anchor. Every segmented row computes the same model
@@ -1325,36 +1326,6 @@ comparison across modes under equal instrumentation; deployment latencies
 are those of Table~\ref{tab:sustainedserve}.
 
 \begin{table}[t]
-\caption{Long-horizon serving: sustained footprint (GPU: reserved +
-calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU: resident set),
-band over the whole session, and instrumentation-free latency.}
-\label{tab:sustainedserve}
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrr@{}}
-\toprule
-Serving mode & Requests & Footprint & Band & s/token \\
-\midrule
-0.84B GPU resident + KV cache & 2{,}000 & 4{,}132\,MB & 0\,MB & 0.031 \\
-0.84B GPU streamed + recompute & 500 & 658\,MB & 0\,MB & 5.00 \\
-0.84B CPU ONNX, disk-streamed & 500 & 360--371\,MB & 12\,MB & 9.06 \\
-6.9B GPU resident + KV cache & 1{,}000 & 27{,}056\,MB & 0\,MB & 0.035 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_exp8_serving.pdf}
-\caption{Long-horizon serving, per experiment: per-request peak memory (reserved, MB, without the CUDA context that
-Table~\ref{tab:sustainedserve} adds) and per-request time for a 256-token
-prompt generating 32 tokens (resident) or 8 (streamed), with its running
-average, over the full session.}
-\label{fig:sustainedserve}
-\end{figure*}
-
-\begin{table}[t]
 \caption{Inference at 0.84B (prompt 256, greedy decode, batch 1; medians
 of three). GPU cells: device peak / host RSS / s per token; CPU cells:
 RAM / s per token. All rows share the per-operation tracing
@@ -1382,6 +1353,37 @@ Disk-streamed & 506 & 0.8\,GB & 9.47 & \textbf{401} & 9.20 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[t]
+\caption{Long-horizon serving: sustained footprint (GPU: reserved +
+calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU: resident set),
+band over the whole session, and instrumentation-free latency.}
+\label{tab:sustainedserve}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Serving mode & Requests & Footprint & Band & s/token \\
+\midrule
+0.84B GPU resident + KV cache & 2{,}000 & 4{,}132\,MB & 0\,MB & 0.031 \\
+0.84B GPU streamed + recompute & 500 & 658\,MB & 0\,MB & 5.00 \\
+0.84B CPU ONNX, disk-streamed & 500 & 360--371\,MB & 12\,MB & 9.06 \\
+6.9B GPU resident + KV cache & 1{,}000 & 27{,}056\,MB & 0\,MB & 0.035 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_exp8_serving.pdf}
+\caption{Long-horizon serving, per experiment: per-request peak memory (MB; GPU: reserved, without the CUDA context
+that Table~\ref{tab:sustainedserve} adds; CPU: resident set) and per-request time for a 256-token
+prompt generating 32 tokens (resident) or 8 (streamed), with its running
+average, over the full session.}
+\label{fig:sustainedserve}
+\end{figure*}
+
 
 \subsection{Scale: Moving the Wall}\label{sec:scale}
 Table~\ref{tab:scale} answers Q1, on both device
@@ -1419,7 +1421,8 @@ shared nodes (Sec.~\ref{sec:longhorizon}), reported as the spread between
 the largest and smallest per-step value.
 
 \begin{table}[t]
-\caption{Long-horizon training: sustained peak and band in MB (GPU:
+\caption{Long-horizon training (dropout on in every mode): sustained peak
+and band in MB (GPU:
 reserved + calibrated CUDA context, Sec.~\ref{sec:discipline}; CPU:
 resident set), the training-only long-run
 step time, and the directly priced per-step validation pass (+val.).
@@ -1458,8 +1461,9 @@ Mode & Steps & Peak & Band & $\Delta$mem & Step & $\Delta$t & +val. \\
 \includegraphics[height=0.94\textheight]{figures/fig_exp8_training.pdf}
 \caption{Long-horizon training, per experiment: per-step peak memory
 (left; band annotated) and whole-step wall time with its running average
-(right), from the first to the last step. Memory is reserved memory in MB
-without the CUDA context that Table~\ref{tab:sustainedtrain} adds.}
+(right), from the first to the last step. Memory is in MB: GPU panels show
+reserved memory without the CUDA context that Table~\ref{tab:sustainedtrain}
+adds; CPU panels show the resident set.}
 \label{fig:sustainedtrain}
 \end{figure*}
 Streamed, the same models train in 1.7--2.6~GB (deferred) or at
@@ -1489,6 +1493,7 @@ times. The device-memory column reads RAM for the CPU rows.}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Model & Full & Resident seg. & \multicolumn{2}{c}{Streamed seg.} \\
+\cmidrule(l){4-5}
  & & & Device mem. & Step (s) \\
 \midrule
 1.5B & 39.0\,GB / 1.3\,s & 17.4\,GB / 10.3\,s & 1.3\,GB & 64.7 / 49.0 \\
@@ -1595,6 +1600,7 @@ A100-40GB, medians of three.}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Configuration & \multicolumn{2}{c}{Memory (MB)} & \multicolumn{2}{c}{Step time (s)} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
  & meas. & pred. & meas. & pred. \\
 \midrule
 0.84B, $8{\times}2{\times}2{\times}8$ & 1{,}080 & 1{,}101 & 28.3 & 32.3 \\
