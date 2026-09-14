@@ -165,7 +165,7 @@ PyTorch-free serving mode.
   four-axis partition of an unchanged GPT decoder executed one segment at
   a time---down to a one-resident-segment floor when streamed---with the
   reassembly identities stated as
-  propositions and exactness across all operating modes established at the
+  propositions and exactness verified at the
   forward, gradient, optimizer-step, and prediction levels
   (Secs.~\ref{sec:design} and \ref{sec:exact}).
 \item \textbf{A mode taxonomy instead of a technique zoo:} an always-on base
@@ -174,9 +174,9 @@ PyTorch-free serving mode.
   reported with its fastest and smallest representative at every model size
   and partition (Sec.~\ref{sec:eval}).
 \item \textbf{Optimizer-in-backward at segment granularity:} fusing the
-  parameter update into the backward pass~\cite{lv2024lomo} eliminates the
-  separate optimizer sweep entirely (4.1~s${\to}$0.11~s per step on GPU,
-  28~s${\to}$0.03~s on CPU), making the fastest resident mode $5.4\times$
+  parameter update into the backward pass~\cite{lv2024lomo} cuts the
+  separate optimizer sweep by 97\% on GPU and 99.9\% on CPU
+  (4.1~s${\to}$0.11~s and 28~s${\to}$0.03~s per step), making the fastest resident mode $5.4\times$
   full-model step time and cutting streamed-mode time by 23\% and its host
   store by 4~GB (Sec.~\ref{sec:eval}).
 \item \textbf{Capability results on both device classes:} 0.84B trains in
@@ -357,7 +357,7 @@ full-parameter training/fine-tuning on the constrained device;
 equivalence'' = published bit/roundoff-level identity with unmodified
 full-model execution; ``framework-free serving'' = inference without the
 training framework; ``lossless'' = no quantization/approximation required
-by the method. ---~=~not reported.}
+by the method. ---~=~not reported or not applicable.}
 \label{tab:landscape}
 \centering
 \scriptsize
@@ -652,8 +652,8 @@ final---after the last read of the segment's weights, an ordering the engine
 enforces explicitly rather than assumes, which is safe because the reverse
 sweep never reads a weight after differentiating its layer. The gradient is
 consumed on the device and never enters the store, and the optimizer sweep
-vanishes from the timeline; Sec.~\ref{sec:eval} shows this removes the
-entire update phase on both devices. Optimizer moments live in the store in
+vanishes from the timeline; Sec.~\ref{sec:eval} shows this cuts the
+update phase to 0.11~s on GPU and 0.03~s on CPU. Optimizer moments live in the store in
 either schedule and travel with their segment.
 
 \paragraph{Deterministic replay.}
@@ -802,7 +802,9 @@ records decimal megabytes; its summaries convert to the same unit, and its
 GPU peaks add the CUDA context as the four-phase runs themselves calibrated
 it---508~MB for training cells and 500~MB for serving cells, medians over
 the committed GPU repetitions of the training grid and scale runs and of
-the inference grid, respectively---so the two protocols share one basis.
+the inference grid, respectively---so the two protocols share one basis
+(the inference grid of Table~\ref{tab:infer} adds the 490~MB its own runs
+recorded, 10~MB below that median).
 Following the store
 binding, GPU tables lead with device memory and time; CPU tables lead with
 RAM and time.
@@ -885,7 +887,7 @@ training-realistic step into a four-phase step \emph{on the same node}.
 The four-phase tables of Sec.~\ref{sec:eval} and the long-run
 Table~\ref{tab:sustainedtrain} were measured in separate campaigns whose
 node placement differs, and on the shared partition step time moves with
-co-tenant load by up to about $1.5\times$ in either direction (the
+co-tenant load and node placement by up to about $1.5\times$ (the
 paper-protocol cell of Sec.~\ref{sec:model} ran at 28.3~s on one placement
 and 42.2~s on another). Step times are therefore comparable \emph{within}
 a table and must not be subtracted across tables; the four-phase tables
@@ -1200,7 +1202,7 @@ shape encodes the update schedule.}
 steps, validation) for three modes at 0.84B. The plateaus and phase
 boundaries make the residency invariant visible: streaming caps the curve
 at the segment scale, and the in-backward schedule removes the optimizer
-phase entirely. The y-axis is reserved memory in MB (MiB) without the
+phase from the timeline. The y-axis is reserved memory in MB (MiB) without the
 CUDA context that the tables add.}
 \label{fig:traces}
 \end{figure}
@@ -1268,7 +1270,7 @@ smallest-memory streamed mode from 28.3~s to 21.7~s ($30\times$) at
 at most ${\sim}0.2$~GB in any regime---170~MB with a retained graph, 50~MB
 or less with recomputation (fused kernels keep masks small; the full model
 pays 1.26~GB for the same setting). On CPU with a retained
-graph, dropout \emph{doubles} peak RAM (19.7 vs.\ 10.7~GB): eager CPU
+graph, dropout \emph{nearly doubles} peak RAM (19.7 vs.\ 10.7~GB): eager CPU
 autograd materializes full-width mask and product tensors in the graph.
 Under recomputation the penalty collapses to within 0.2~GB on both
 devices---recomputation pays for dropout's memory, then RNG replay
@@ -1298,9 +1300,9 @@ of Sec.~\ref{sec:inferexact} for the other PyTorch modes.}
 \end{figure*} In the training runtime, the
 full-model reference decodes at 0.038~s/token in ${\sim}4$~GB; resident
 segmented execution matches its memory (weights dominate both) and pays
-$5.1\times$ in per-segment launch overhead at this small scale---a price
-that does not grow with model size (Sec.~\ref{sec:scale}), and that on CPU is already
-inverted at 0.84B: with the KV cache, resident segmented decoding is
+$5.1\times$ in per-segment launch overhead at this small scale---a
+per-token latency that stays flat as the model grows (Sec.~\ref{sec:scale}),
+and a price that on CPU is already inverted at 0.84B: with the KV cache, resident segmented decoding is
 $4.4\times$ \emph{faster} than the no-cache full reference (0.238 vs.\
 1.056~s/token). Streaming with KV cache drops
 device memory to 804~MB, and dropping the cache too reaches 660~MB at
@@ -1397,9 +1399,10 @@ an H100 measurement shows why: 67.6~GB. At 5.1B it aborts on an 80~GB device,
 and at 6.9B \emph{even the 94~GB H100 aborts}. Segmented execution trains
 all of them on the single 40~GB card: streamed under either schedule at
 every size, and resident at 3.1B and 6.9B. Resident with
-recomputation, 6.9B trains at 28.5~GB and 58.1~s per step---a model whose
-conventional training exceeds the largest single accelerator sold, on a
-mid-range card, with two thirds of the device left over at 3.1B (14.0~GB).
+recomputation, 6.9B trains on the 40~GB card at 28.5~GB and 58.1~s per
+step, although its conventional training needs more than 94~GB of device
+memory. At 3.1B the same mode uses 14.0~GB, leaving two thirds of the card
+free.
 Sustained training confirms every cell is representative rather than a
 snapshot (Table~\ref{tab:sustainedtrain}, Fig.~\ref{fig:sustainedtrain}):
 each headline mode runs 128--2{,}048 consecutive steps over 3--17 hours
@@ -1418,7 +1421,13 @@ allocator plateaus within a bounded band ($\le$659~MB at 0.84B; transient
 first-touch excursions at 6.9B settle within ten steps) with no trend. Step
 times are stationary; their residual variance is co-tenant noise on the
 shared nodes (Sec.~\ref{sec:longhorizon}), reported as the spread between
-the largest and smallest per-step value.
+the largest and smallest per-step value. A trend statistic confirms the
+absence of drift: the median step time of the last tenth of each run lies
+within 7\% of the first tenth in eight of nine runs, and 14.5\% \emph{below}
+it in the ninth, the streamed deferred 0.84B run, whose late speed-up
+coincides with co-tenant jobs ending (Sec.~\ref{sec:longhorizon}); no run
+slows over its horizon, and the four serving sessions move by at most
+1.6\% (artifact: \texttt{sustained\_summary.json}).
 
 \begin{table}[t]
 \caption{Long-horizon training (dropout on in every mode): sustained peak
@@ -1466,7 +1475,7 @@ reserved memory without the CUDA context that Table~\ref{tab:sustainedtrain}
 adds; CPU panels show the resident set.}
 \label{fig:sustainedtrain}
 \end{figure*}
-Streamed, the same models train in 1.7--2.6~GB (deferred) or at
+Streamed, the three sizes that abort train in 1.7--2.6~GB (deferred) or at
 $1.3\times$ less time with in-backward updates; device memory grows only
 through the widest segment---from 0.84B to 6.9B ($8.2\times$ the
 parameters), streamed VRAM grows just $2.4\times$. The host store grows in
@@ -1478,14 +1487,15 @@ needs 9.3~GB ($12\times$ less) at $4.0\times$ the time.
 \begin{table}[t]
 \caption{Training at scale on one A100-40GB (top) and one CPU node
 (bottom). ``Full'' is unsegmented training at batch 4, sequence 512, fp32,
-retained graph, no offloading; OOM = allocation failure, with the
-largest device tried in parentheses (H100-94GB at 3.1B and 6.9B,
-A100-80GB at 5.1B). ``Resident seg.'' is recomputation with
+retained graph, no offloading; OOM = allocation failure on the 40~GB
+card; the parenthetical gives the full-model footprint measured on an
+H100-94GB (3.1B) or the larger device on which it also failed (A100-80GB
+at 5.1B, H100-94GB at 6.9B). ``Resident seg.'' is recomputation with
 the deferred schedule, except at 1.5B, where the retained-graph
 in-backward mode is shown. Full and resident cells: peak memory / step
 time. Streamed cells: device memory of the deferred mode (for the CPU
 rows, in-backward--deferred range), then deferred / in-backward step
-times. The device-memory column reads RAM for the CPU rows.}
+times. Memory reads RAM in the CPU rows.}
 \label{tab:scale}
 \centering
 \scriptsize
@@ -1519,7 +1529,8 @@ device memory (33~s/token), and on CPU in 2.4~GB.
 \subsection{Granularity}\label{sec:gran}
 The partition is a dial of its own. At 0.84B, coarsening to
 $2{\times}1{\times}1{\times}2$ or refining to $16{\times}4{\times}4{\times}16$
-changes the number of embedding and head slices by $8\times$ each and the
+changes the number of embedding and vocabulary slices by $8\times$ each,
+the head groups and feed-forward chunks by $4\times$, and the
 segment count from 112 to 356, yet the recomputation plateau barely moves
 (5.2, 4.5, 4.5~GB) and the streamed floor tracks the widest
 segment---2.14~GB coarse, 1.08~GB standard, \textbf{890~MB} fine at
@@ -1635,7 +1646,7 @@ independent run. Activation transients contribute roughly 0.16~MB per
 token at the top of the sweep; below ${\sim}2$k tokens per step the
 vocabulary-tied term dominates and Eq.~(\ref{eq:memlaw}), fitted at
 2{,}048 tokens, remains a conservative bound (it over-provisions the
-batch-1 cells by up to a third), while larger token budgets add the
+batch-1 cells by up to 38\%), while larger token budgets add the
 measured slope. Step
 \emph{time} is flatter still: within the sweep's node, the $32\times$
 token range moves the step by less than $6\%$ (40.3--42.7~s under the
@@ -1711,8 +1722,8 @@ face value on today's framework, already supports real work: the fastest
 resident modes are everyday-practical (at 0.84B, a 10{,}000-step run is
 ${\sim}14$ hours); the streamed 6.9B modes support one- to two-day
 fine-tunes of a thousand-odd steps in under 3~GB of device memory; and
-batch amortization makes the streamed per-token cost nearly flat (batch~8
-processes $8\times$ the tokens for $3\%$ more wall-clock,
+larger batches make the streamed cost per training token nearly flat
+(batch~8 processes $8\times$ the tokens for $3\%$ more wall-clock,
 Sec.~\ref{sec:model}). The 6.9B-on-CPU cell is a \emph{capability
 boundary}, and we state its arithmetic plainly: at 478~s per step, an
 overnight run is on the order of a hundred steps---suited to bounded
@@ -1808,8 +1819,9 @@ verified over four optimizer steps. The architecture is one family: a GPT
 decoder. The four cut planes exist in any transformer, and the
 reassembly propositions use nothing decoder-specific, but we have measured nothing else.
 Byte-identical memory over long runs is a GPU statement: on CPU the
-resident set oscillates between allocator plateaus, within a band of up to
-1.19~GB at 6.9B (Table~\ref{tab:sustainedtrain}).
+resident set oscillates between allocator plateaus, within bands of up to
+659~MB at 0.84B, and at 6.9B a first-step excursion widens the band to
+1.19~GB (Table~\ref{tab:sustainedtrain}).
 Finally, the time laws stop at 6.9B and the granularity curve
 has three points; both can be densified, and energy is unmeasured.
 

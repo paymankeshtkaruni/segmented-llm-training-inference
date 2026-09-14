@@ -31,7 +31,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 10946.0,
    "peak_mb_last_decile_max": 10946.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 5.12,
+   "time_s_last_decile_median": 5.258,
+   "time_last_vs_first_decile_pct": 2.7
   },
   "g2_084b_resident_recomp": {
    "n_steps_target": 2048,
@@ -61,7 +64,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 3980.0,
    "peak_mb_last_decile_max": 3980.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 9.03,
+   "time_s_last_decile_median": 9.047,
+   "time_last_vs_first_decile_pct": 0.2
   },
   "g3_084b_streamed_def": {
    "n_steps_target": 2048,
@@ -91,7 +97,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 622.0,
    "peak_mb_last_decile_max": 622.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 28.531,
+   "time_s_last_decile_median": 24.382,
+   "time_last_vs_first_decile_pct": -14.5
   },
   "g4_084b_streamed_imm": {
    "n_steps_target": 2048,
@@ -121,7 +130,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 650.0,
    "peak_mb_last_decile_max": 650.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 16.376,
+   "time_s_last_decile_median": 16.219,
+   "time_last_vs_first_decile_pct": -1.0
   },
   "g5_69b_resident_recomp": {
    "n_steps_target": 1024,
@@ -151,7 +163,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 27844.0,
    "peak_mb_last_decile_max": 27844.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 40.945,
+   "time_s_last_decile_median": 41.856,
+   "time_last_vs_first_decile_pct": 2.2
   },
   "g6_69b_streamed_imm": {
    "n_steps_target": 512,
@@ -181,7 +196,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 2202.0,
    "peak_mb_last_decile_max": 2202.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 101.859,
+   "time_s_last_decile_median": 102.24,
+   "time_last_vs_first_decile_pct": 0.4
   },
   "g7_084b_cpu_streamed_def": {
    "n_steps_target": 512,
@@ -211,7 +229,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 1989.9,
    "peak_mb_last_decile_max": 1851.6,
-   "peak_mb_last_minus_first_decile": -138.4
+   "peak_mb_last_minus_first_decile": -138.4,
+   "time_s_first_decile_median": 110.754,
+   "time_s_last_decile_median": 112.99,
+   "time_last_vs_first_decile_pct": 2.0
   },
   "g8_084b_cpu_resident_imm": {
    "n_steps_target": 1024,
@@ -241,7 +262,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 20143.9,
    "peak_mb_last_decile_max": 20155.0,
-   "peak_mb_last_minus_first_decile": 11.2
+   "peak_mb_last_minus_first_decile": 11.2,
+   "time_s_first_decile_median": 49.275,
+   "time_s_last_decile_median": 52.724,
+   "time_last_vs_first_decile_pct": 7.0
   },
   "g9_69b_cpu_streamed_imm": {
    "n_steps_target": 128,
@@ -271,7 +295,10 @@
    "protocol": "warm-up step excluded; no per-step validation; no per-step empty_cache/gc (see module docstring)",
    "peak_mb_first_decile_max": 7564.2,
    "peak_mb_last_decile_max": 6673.8,
-   "peak_mb_last_minus_first_decile": -890.4
+   "peak_mb_last_minus_first_decile": -890.4,
+   "time_s_first_decile_median": 481.638,
+   "time_s_last_decile_median": 474.331,
+   "time_last_vs_first_decile_pct": -1.5
   },
   "ia_084b_cache": {
    "n_requests_target": 2000,
@@ -300,7 +327,10 @@
    "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
    "peak_mb_first_decile_max": 3632.0,
    "peak_mb_last_decile_max": 3632.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 0.998,
+   "time_s_last_decile_median": 0.985,
+   "time_last_vs_first_decile_pct": -1.3
   },
   "ib_084b_streamed": {
    "n_requests_target": 500,
@@ -329,7 +359,10 @@
    "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
    "peak_mb_first_decile_max": 158.0,
    "peak_mb_last_decile_max": 158.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 40.119,
+   "time_s_last_decile_median": 40.081,
+   "time_last_vs_first_decile_pct": -0.1
   },
   "ic_084b_onnx_disk": {
    "n_requests_target": 500,
@@ -358,7 +391,10 @@
    "memory_note": "per-request peak RSS (50 ms sampler)",
    "peak_mb_first_decile_max": 371.4,
    "peak_mb_last_decile_max": 366.5,
-   "peak_mb_last_minus_first_decile": -4.9
+   "peak_mb_last_minus_first_decile": -4.9,
+   "time_s_first_decile_median": 72.295,
+   "time_s_last_decile_median": 73.482,
+   "time_last_vs_first_decile_pct": 1.6
   },
   "id_69b_cache": {
    "n_requests_target": 1000,
@@ -387,7 +423,10 @@
    "memory_note": "per-request peak reserved VRAM (reset each request); add CUDA context for no-miss totals",
    "peak_mb_first_decile_max": 26556.0,
    "peak_mb_last_decile_max": 26556.0,
-   "peak_mb_last_minus_first_decile": 0.0
+   "peak_mb_last_minus_first_decile": 0.0,
+   "time_s_first_decile_median": 1.116,
+   "time_s_last_decile_median": 1.117,
+   "time_last_vs_first_decile_pct": 0.1
   }
  }
 }

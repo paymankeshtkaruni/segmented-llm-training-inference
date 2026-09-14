@@ -20,6 +20,7 @@ long-horizon tables share the unit of every other table.
 from __future__ import annotations
 
 import json
+import statistics
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -58,6 +59,16 @@ def main():
             row["peak_mb_first_decile_max"] = round(first_decile, 1)
             row["peak_mb_last_decile_max"] = round(last_decile, 1)
             row["peak_mb_last_minus_first_decile"] = round(last_decile - first_decile, 1)
+        # stationarity of time: median step (or request) time of the last decile
+        # against the first decile, as a percentage of the first
+        times = [r["s"] for r in series if r.get("s") is not None]
+        if len(times) >= 20:
+            n = max(1, len(times) // 10)
+            first_med = statistics.median(times[:n])
+            last_med = statistics.median(times[-n:])
+            row["time_s_first_decile_median"] = round(first_med, 3)
+            row["time_s_last_decile_median"] = round(last_med, 3)
+            row["time_last_vs_first_decile_pct"] = round((last_med / first_med - 1) * 100, 1)
         jobs[f.parent.name] = row
     out = {"run": "exp8_long_horizon_summary",
            "note": "per-job long-horizon stability; pilot_30step/ holds the "
@@ -71,7 +82,8 @@ def main():
     for name, row in jobs.items():
         done = row.get("n_steps_done") or row.get("n_requests_done")
         print(f"{name:24s} done={done} avg_step={row.get('avg_step_s') or row.get('avg_request_s')} "
-              f"peak_band={row.get('peak_mb_band')} drift_decile={row.get('peak_mb_last_minus_first_decile')}")
+              f"peak_band={row.get('peak_mb_band')} drift_decile={row.get('peak_mb_last_minus_first_decile')} "
+              f"time_last_vs_first_decile={row.get('time_last_vs_first_decile_pct')}%")
     print("->", dst)
 
 
