@@ -893,7 +893,7 @@ gives deployment step times on its own placement. Memory carries no such
 caveat: peaks are placement-independent, and the two protocols are
 reconciled directly below. Table~\ref{tab:protocols} states which
 measurements carry which components. (iii) \emph{Sampler and environment}: the 50~ms
-resident-set sampler used on CPU changes step time by less than $0.3\%$
+resident-set sampler used on CPU changes step time by about $0.3\%$
 (paired same-node control), and residual step-time variance traces to
 co-tenant load on the shared nodes---verified for the largest excursion,
 where a step-time drop aligns to the minute with another user's jobs
@@ -1260,8 +1260,9 @@ smallest-memory streamed mode from 28.3~s to 21.7~s ($30\times$) at
 1.16~GB.
 
 \textbf{Dropout's memory price is regime-dependent.} On GPU, dropout adds
-only ${\sim}0.2$~GB in every regime (fused kernels keep masks small; the
-full model pays 1.26~GB for the same setting). On CPU with a retained
+at most ${\sim}0.2$~GB in any regime---170~MB with a retained graph, under
+50~MB with recomputation (fused kernels keep masks small; the full model
+pays 1.26~GB for the same setting). On CPU with a retained
 graph, dropout \emph{doubles} peak RAM (19.7 vs.\ 10.7~GB): eager CPU
 autograd materializes full-width mask and product tensors in the graph.
 Under recomputation the penalty collapses to within 0.2~GB on both
@@ -1311,9 +1312,9 @@ PyTorch-free disk-streamed server answers 500 requests inside
 360--371~MB: 12~MB of runtime-arena wobble, no trend, no session leak. Under this instrumentation-free protocol the cache
 modes' latency is \textbf{0.031~s/token} (0.84B) and \textbf{0.035~s/token}
 (6.9B): the per-operation tracer inside the mode-comparison protocol
-inflates sub-second decoding $5.9\times$ (measured back-to-back on one
-node, Sec.~\ref{sec:longhorizon}) while slow modes agree within
-2--16\%. Table~\ref{tab:infer} therefore remains the \emph{relative}
+inflates sub-second decoding $5.9\times$ while leaving the slow streamed
+mode within $1.16\times$ (measured back-to-back on one node,
+Sec.~\ref{sec:longhorizon}). Table~\ref{tab:infer} therefore remains the \emph{relative}
 comparison across modes under equal instrumentation; deployment latencies
 are those of Table~\ref{tab:sustainedserve}.
 
