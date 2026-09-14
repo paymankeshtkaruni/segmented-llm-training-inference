@@ -1443,11 +1443,13 @@ the median step time of the last tenth of the run against that of the
 first tenth. GPU
 memory is byte-identical at every step (zero band, 0.0\%); CPU bands are
 bounded allocator plateaus; time spreads reflect co-tenant load on the
-shared nodes (Sec.~\ref{sec:longhorizon}).}
+shared nodes (Sec.~\ref{sec:longhorizon}). recomp.\ = recomputation;
+in-b.\ = in-backward.}
 \label{tab:sustainedtrain}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{1.6pt}
+\setlength{\tabcolsep}{2.2pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
 Mode & Steps & Peak & Band & $\Delta$mem & Step (s) & $\Delta$t & Trend & +val.\ (s) \\
@@ -1466,7 +1468,7 @@ Mode & Steps & Peak & Band & $\Delta$mem & Step (s) & $\Delta$t & Trend & +val.\
 \multicolumn{9}{@{}l}{\emph{6.9B, CPU}} \\
 \enspace recomp., streamed, in-b. & 128 & 7{,}564 & 1{,}193 & 18.7\% & 478.0 & 3.1\% & $-$1.5\% & +79.9 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{figure*}[p]
