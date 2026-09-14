@@ -901,7 +901,7 @@ ending on the same node.
 In memory the two protocols need no bridge: on the shared basis of
 Sec.~\ref{sec:discipline}, the long-run GPU peaks equal the four-phase
 peaks of the same modes to the mebibyte for three of the six GPU
-configurations and lie within 1\% for two more (Table~\ref{tab:sustainedtrain}
+configurations and lie within 0.5\% and 1.0\% for two more (Table~\ref{tab:sustainedtrain}
 against Tables~\ref{tab:grid} and~\ref{tab:scale}; the four-phase cell of
 the 6.9B streamed in-backward mode, 2{,}738~MB, is not printed in
 Table~\ref{tab:scale}); the one exception, the streamed deferred mode at
@@ -1401,7 +1401,7 @@ every run, with no allocator trimming---including 1{,}024 steps of the
 context) and 2{,}048 steps of the memory-floor mode. On the shared basis
 of Sec.~\ref{sec:discipline}, that long-run peak equals the four-phase
 peak of Tables~\ref{tab:grid} and~\ref{tab:scale} to the mebibyte for
-three of the six GPU configurations and lies within 1\% for two more; the
+three of the six GPU configurations and lies within 0.5\% and 1.0\% for two more; the
 sixth, the streamed deferred mode at 0.84B, runs 50~MB above its
 four-phase cell (Sec.~\ref{sec:longhorizon}). On CPU the resident set
 oscillates between
@@ -1852,10 +1852,10 @@ from disk. A 6.9B model whose conventional training aborts on a 94~GB
 device trains on a 40~GB card, resident at 28.5~GB or streamed in 2.6~GB,
 and CPU-only in 9.3~GB of RAM. Two frozen laws
 predict time and memory well enough that a held-out size-and-granularity
-combination, pre-registered before measurement, landed within 7\%
-conservative, so a runtime handed a memory budget can select its mode in
+combination, pre-registered before measurement, landed 7\% and 5\%
+conservative in time and memory, so a runtime handed a memory budget can select its mode in
 advance. Over 128 to 2{,}048 consecutive steps at both sizes, GPU memory is
-byte-identical on every step and within 1\% of the per-step protocol's peak
+byte-identical on every step and within 1.0\% of the per-step protocol's peak
 on five of six configurations. CPU memory stays within a band of at most
 1.19~GB, and step times show no drift beyond co-tenant noise on the shared
 nodes.
