@@ -188,16 +188,19 @@ def raw_h2d(device: str) -> dict:
 
 def fs_info(path: Path) -> dict:
     """Filesystem the disk store sits on (the CPU cells' parking target)."""
+    # site-neutral on purpose: no absolute paths or mount points (the published
+    # artifact must not carry cluster-specific locations), only the fs type and
+    # the block sizes that matter for the per-fetch cost
     st = os.statvfs(path)
-    info = {"path": str(path), "f_bsize": st.f_bsize, "f_frsize": st.f_frsize,
-            "free_bytes": st.f_bavail * st.f_frsize, "fstype": None, "mount_point": None}
+    info = {"path_relative_to_script": os.path.relpath(path, HERE), "f_bsize": st.f_bsize,
+            "f_frsize": st.f_frsize, "fstype": None}
     try:                                    # longest mount-point prefix wins
         best = ""
         with open("/proc/mounts") as fh:
             for line in fh:
                 parts = line.split()
                 if len(parts) >= 3 and str(path).startswith(parts[1]) and len(parts[1]) > len(best):
-                    best, info["fstype"], info["mount_point"] = parts[1], parts[2], parts[1]
+                    best, info["fstype"] = parts[1], parts[2]
     except OSError:
         pass
     return info

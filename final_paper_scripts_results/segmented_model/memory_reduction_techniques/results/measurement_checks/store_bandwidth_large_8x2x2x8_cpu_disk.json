@@ -1,0 +1,79 @@
+{
+  "script": "store_bandwidth.py",
+  "preset": "large_8x2x2x8",
+  "device": "cpu",
+  "store": "disk",
+  "tech_code": "11111111100",
+  "passes": 3,
+  "hostname": "ggpu128",
+  "torch": "2.7.0+cu128",
+  "n_segments": 196,
+  "reference_param_bytes": 3350814720,
+  "device_name": "cpu",
+  "fetch_passes": [
+    {
+      "bytes": 3349882880,
+      "seconds": 6.736191478325054,
+      "gbs": 0.4972962675985191,
+      "mibs": 474.25867805339726,
+      "largest_segment_bytes": 32492160
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 6.892882279586047,
+      "gbs": 0.4859915988875959,
+      "mibs": 463.4777058483085,
+      "largest_segment_bytes": 32492160
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 6.624416672624648,
+      "gbs": 0.5056872243322745,
+      "mibs": 482.26091798045593,
+      "largest_segment_bytes": 32492160
+    }
+  ],
+  "fetch_median": {
+    "gbs": 0.4972962675985191,
+    "mibs": 474.25867805339726,
+    "seconds": 6.736191478325054,
+    "bytes": 3349882880,
+    "pass_index": 0
+  },
+  "park_passes": [
+    {
+      "bytes": 3349882880,
+      "seconds": 5.398641420993954,
+      "gbs": 0.6205047934788095,
+      "mibs": 591.759484747705
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 5.332896100822836,
+      "gbs": 0.628154536797207,
+      "mibs": 599.054848477561
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 5.3432134366594255,
+      "gbs": 0.6269416185055757,
+      "mibs": 597.898119454933
+    }
+  ],
+  "park_median": {
+    "gbs": 0.6269416185055757,
+    "mibs": 597.898119454933,
+    "seconds": 5.3432134366594255,
+    "bytes": 3349882880,
+    "pass_index": 2
+  },
+  "segment_bytes_total": 3349882880,
+  "largest_segment_bytes": 32492160,
+  "store_fs": {
+    "path_relative_to_script": "results/measurement_checks/_store_bw_large_8x2x2x8",
+    "f_bsize": 4096,
+    "f_frsize": 4096,
+    "fstype": "lustre"
+  },
+  "note": "loader fetch = store.get(key) host clone (cpu_ram) or torch.load(map_location=cpu) (disk) + load_state_dict + module.to(device); park = release_segment(save=True), i.e. state_dict() off the device plus the store's own host copy. Host memory is PAGEABLE throughout (no pinning anywhere in the engine), which is why the fetch rate sits below the raw pinned H2D figure. GB = 1e9 bytes. Backs the transport-vs-orchestration attribution of Sec. IX."
+}

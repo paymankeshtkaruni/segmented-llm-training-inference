@@ -1,0 +1,96 @@
+{
+  "script": "store_bandwidth.py",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "store": "cpu_ram",
+  "tech_code": "11111111100",
+  "passes": 3,
+  "hostname": "ggpu128",
+  "torch": "2.7.0+cu128",
+  "n_segments": 196,
+  "reference_param_bytes": 3350814720,
+  "device_name": "NVIDIA A100-SXM4-40GB",
+  "fetch_passes": [
+    {
+      "bytes": 3349882880,
+      "seconds": 3.8300712504424155,
+      "gbs": 0.8746267787088952,
+      "mibs": 834.1090952958061,
+      "largest_segment_bytes": 32492160
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 3.8760452615097165,
+      "gbs": 0.8642527767323396,
+      "mibs": 824.2156760524174,
+      "largest_segment_bytes": 32492160
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 3.8384691532701254,
+      "gbs": 0.8727132474533807,
+      "mibs": 832.2842096837815,
+      "largest_segment_bytes": 32492160
+    }
+  ],
+  "fetch_median": {
+    "gbs": 0.8727132474533807,
+    "mibs": 832.2842096837815,
+    "seconds": 3.8384691532701254,
+    "bytes": 3349882880,
+    "pass_index": 2
+  },
+  "park_passes": [
+    {
+      "bytes": 3349882880,
+      "seconds": 0.24303090944886208,
+      "gbs": 13.783772967795578,
+      "mibs": 13145.230262561396
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 0.2307037462014705,
+      "gbs": 14.520279514987122,
+      "mibs": 13847.617640483018
+    },
+    {
+      "bytes": 3349882880,
+      "seconds": 0.23273236490786076,
+      "gbs": 14.3937130588873,
+      "mibs": 13726.91446198206
+    }
+  ],
+  "park_median": {
+    "gbs": 14.3937130588873,
+    "mibs": 13726.91446198206,
+    "seconds": 0.23273236490786076,
+    "bytes": 3349882880,
+    "pass_index": 2
+  },
+  "segment_bytes_total": 3349882880,
+  "largest_segment_bytes": 32492160,
+  "fetch_split": {
+    "bytes": 3349882880,
+    "host_copy": {
+      "bytes": 3349882880,
+      "seconds": 0.1956579030957073,
+      "gbs": 17.121122259811727,
+      "mibs": 16327.97456723378
+    },
+    "host_to_device": {
+      "bytes": 3349882880,
+      "seconds": 0.19861421873793006,
+      "gbs": 16.86627926885811,
+      "mibs": 16084.937352045165
+    },
+    "sum_seconds": 0.39427212183363736
+  },
+  "raw_h2d": {
+    "bytes": 268435456,
+    "reps": 5,
+    "raw_pageable_h2d_gbs": 22.51228916102305,
+    "raw_pinned_h2d_gbs": 26.642194801877462
+  },
+  "max_memory_reserved_bytes": 337641472,
+  "note": "loader fetch = store.get(key) host clone (cpu_ram) or torch.load(map_location=cpu) (disk) + load_state_dict + module.to(device); park = release_segment(save=True), i.e. state_dict() off the device plus the store's own host copy. Host memory is PAGEABLE throughout (no pinning anywhere in the engine), which is why the fetch rate sits below the raw pinned H2D figure. GB = 1e9 bytes. Backs the transport-vs-orchestration attribution of Sec. IX."
+}

@@ -1702,24 +1702,40 @@ measurement, then confronted with an unseen configuration.
 \section{Discussion}\label{sec:disc}
 % ============================================================================
 \textbf{Where the time actually goes.} A bytes-moved account bounds what
-streaming \emph{must} cost. At 0.84B the streamed deferred step transports
-roughly 34~GB through the store interface: the 3.35~GB of fp32 weights
-fetched twice (forward, backward), gradients parked and re-fetched, and the
-optimizer sweep pulling and writing back weights and both Adam moments,
-plus ${\sim}0.8$~GB of layer-input records. At a practical
-${\sim}20$~GB/s over PCIe this is under 2~s---yet the measured step is
-28.3~s. Transport is under $10\%$ of the step; the remaining $90\%$ is
-synchronous orchestration: unoverlapped copies, per-segment Python
-dispatch, small-kernel inefficiency, allocator churn. Two measured facts
-corroborate the account. First, the in-backward schedule removes gradient
+streaming \emph{must} cost, and a measurement of the store path prices it
+(in this paragraph GB means $10^9$ bytes, the unit of bandwidth). At 0.84B
+the streamed deferred step moves roughly 34~GB through the store
+interface: the 3.35~GB of fp32 weights fetched twice (forward, backward),
+gradients parked and re-fetched, the optimizer sweep pulling and writing
+back weights and both Adam moments, plus ${\sim}0.8$~GB of layer-input
+records. We timed that path exactly as the engine uses it, on the grid's
+node class (medians of three passes; artifact job \emph{store bandwidth}):
+fetching every segment once through the loader takes 3.8~s for the
+3.35~GB of weights, of which the store's host-side clone takes 0.20~s
+(17.1~GB/s) and the host-to-device copy 0.20~s (16.9~GB/s); parking every
+segment back into the store takes 0.23~s (14.4~GB/s). Raw 256~MiB copies
+on the same node run at 22.5~GB/s from pageable and 26.6~GB/s from pinned
+host memory, inside the host-link range NVIDIA quotes for the
+A100~\cite{nvidia_a100}. At the measured rates the 34~GB cost about 2.2~s
+on the link plus 1.2~s in the store's host clones, under $12\%$ of the
+28.3~s step. The remaining $88\%$ is synchronous orchestration, and the
+measurement names its largest item: on every fetch the loader constructs
+a fresh segment module, which runs the framework's parameter
+initialization over the slice on the CPU before the stored weights
+overwrite it, so a full fetch pass costs 3.8~s where its copies cost
+0.4~s. Three such passes per step (forward, backward, optimizer sweep)
+account for about 11~s, and Table~\ref{tab:grid} shows the same 4.1~s gap
+between the streamed and resident deferred optimizer sweeps (8.24 vs.\
+4.13~s) that one fetch-and-park pass predicts ($3.8 + 0.2$~s). Two
+further measured facts corroborate the account. First, the in-backward schedule removes gradient
 parking and the optimizer sweep's re-fetch---about $30\%$ of the traffic
 \emph{and} one full pass of orchestration---and the step drops by $23\%$
 (28.3${\to}$21.7~s). Second, the two terms of Eq.~(\ref{eq:timelaw}) locate the cost (in the
 law's 32.3~s prediction, which overshoots the measured 28.3~s by 14\%,
 Sec.~\ref{sec:model}): at 0.84B the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
 the fixed dispatch cost of visiting each segment three times, while the
-parameter-proportional term contributes 28.4~s and contains the 1.7~s
-transport bound. The rest of that term is byte-proportional synchronous
+parameter-proportional term contributes 28.4~s and contains the ${\sim}3$~s
+of measured transport. The rest of that term is byte-proportional synchronous
 work: copies through pageable host memory, including the host-side copy
 the store makes on every fetch, and the small kernels that follow them. The conclusion cuts both ways: the
 measured slowdowns are honest prices for a strict, verifiable residency
@@ -1741,9 +1757,9 @@ boundary}, and we state its arithmetic plainly: at 478~s per step, an
 overnight run is on the order of a hundred steps---suited to bounded
 adaptation on private data, not to long training campaigns. Crucially,
 these wall-clock prices are a property of the framework, not of the
-method: the decomposition above attributes ${\sim}90\%$ of the streamed
+method: the decomposition above attributes ${\sim}88\%$ of the streamed
 step to synchronous orchestration by an engine built for the
-memory-abundant regime, with transport itself bounded near 2~s. The memory
+memory-abundant regime, with transport itself measured at about 3~s. The memory
 column of every table is what segmentation guarantees; the time column is
 what today's PyTorch charges to honor it, and it shrinks with runtime
 engineering, not with new mathematics.
@@ -1841,13 +1857,16 @@ Finally, the time laws stop at 6.9B and the granularity curve
 has three points; both can be densified, and energy is unmeasured.
 
 \textbf{The schedulable remainder.} Sec.~\ref{sec:disc} attributes roughly
-$90\%$ of the streamed step to synchronous orchestration rather than
-transport. A memory-budget-first runtime---pinned host memory and a memory-mapped
+$88\%$ of the streamed step to synchronous orchestration rather than
+measured transport. A memory-budget-first runtime---segment modules built
+once and refilled from the store instead of reconstructed on every fetch,
+pinned host memory and a memory-mapped
 disk store, asynchronous prefetch under a bounded two-segment residency,
 compute/transfer overlap, cross-segment fusion, budget-aware
 allocation---is therefore the natural successor system, with up to an
 order of magnitude of latent speedup on the table before any algorithmic
-change. We have deliberately reported the strict
+change (the measured transport plus the full-model compute of one step
+sum to about 3~s against the 28.3~s streamed step). We have deliberately reported the strict
 one-segment floor; relaxing it is engineering with a predictable payoff.
 
 \textbf{From one device to many.} The interfaces that let us stream
