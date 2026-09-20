@@ -78,5 +78,7 @@ tracks one segment, not the model).
 - `scale_cost.py` — scale-experiment driver (one run per invocation: `--run seg_train|seg_infer|full_train|full_infer`)
 - `scale_summary.py` / `scale_figures.py` — scale aggregation, cost-model fit, figures
 - `plot_ladders.py` — staircase figures
+- `verify_scale_forward.py` — forward-state identity at 0.84B/3.1B/6.9B, reference and segmented
+  engine never on the device together (`slurm/verify_scale_gpu.sbatch`)
 - `segmentation_management/` (copy) — engines with the toggle flags wired in (+ 3B/7B presets)
 - `slurm/` — the sbatch scripts; `results/` — outputs (git-ignored except aggregated JSONs)

@@ -9,7 +9,9 @@
                weights-as-inputs runtime uses (norms, W_o, biases). manifest.json
                maps segment name -> onnx file.
 
-Weights are the seeded random init (cost measurements only).
+Weights are the seeded random init (cost measurements only) unless --checkpoint
+is given, in which case the TRAINED weights of a harness checkpoint are
+reassembled into the full model first (accuracy runs).
 """
 from __future__ import annotations
 import argparse, gc, json, sys
@@ -27,6 +29,7 @@ from forward_engine import populate_from_reference              # noqa: E402
 from loader import build_segment                                # noqa: E402
 from stores import make_store, SegmentKey                       # noqa: E402
 from optimizer import all_segment_keys                          # noqa: E402
+from export import reassemble_model                             # noqa: E402
 
 KINDS_ACT = {"embedding": "input_ids", "attention": "x_norm",
              "mlp": "x_norm", "output_head": "hidden_norm"}
@@ -40,6 +43,24 @@ class _LogitsOnly(torch.nn.Module):
     def forward(self, input_ids):
         logits, _ = self.ref(input_ids, pad_token_id=None)
         return logits
+
+
+def ref_from_checkpoint(path: Path, preset: str, m, s):
+    """Full reference model carrying the TRAINED weights of a harness checkpoint.
+
+    The checkpoint stores per-segment state dicts; reassembly is the inverse of
+    the slicing done at populate time, so the dense model is bit-identical to the
+    segmented one — that is what makes the exported session comparable to the
+    segmented ONNX rows.
+    """
+    ck = torch.load(path, map_location="cpu", weights_only=False)
+    if ck.get("preset") != preset:
+        raise SystemExit(f"checkpoint preset {ck.get('preset')!r} != --preset {preset!r}")
+    store = make_store("cpu_ram")
+    for kstr, sd in ck["params"].items():
+        layer, kind, seg = kstr.split("|")
+        store.put(SegmentKey(int(layer), kind, int(seg)), sd)
+    return reassemble_model(store, ck["shared"], m, s).eval()
 
 
 def export_full(m, ref, out_dir: Path, opset: int):
@@ -127,11 +148,19 @@ def main():
     ap.add_argument("--what", required=True, choices=["full", "baked"])
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--opset", type=int, default=18)
+    ap.add_argument("--checkpoint", type=Path, default=None,
+                    help="harness checkpoint (.pt with 'params'/'shared') to export "
+                         "TRAINED weights; default None = seeded random init (cost runs)")
     a = ap.parse_args()
     p = get_preset(a.preset)
     m, s = p["model"], p["seg"]
-    torch.manual_seed(0)
-    ref = ReferenceGPTDecoder(m).eval()
+    if a.checkpoint is not None:
+        ref = ref_from_checkpoint(a.checkpoint, a.preset, m, s)
+        print(f"[c-export-baked] TRAINED weights from {a.checkpoint}")
+    else:
+        torch.manual_seed(0)
+        ref = ReferenceGPTDecoder(m).eval()
+        print("[c-export-baked] seeded random init (manual_seed(0)) — cost runs")
     if a.what == "full":
         export_full(m, ref, a.out_dir, a.opset)
     else:

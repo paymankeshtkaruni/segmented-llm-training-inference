@@ -36,11 +36,16 @@ def main():
     ap.add_argument("--checkpoint", type=Path, required=True)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--out-dir", type=Path, default=HERE / "results" / "quality_fresh_pair")
+    ap.add_argument("--out", default="ia1_agreement_report.json",
+                    help="report file name inside --out-dir (one per ONNX config)")
     a = ap.parse_args()
 
     tp = json.load(open(a.torch_preds))
     op = json.load(open(a.onnx_preds))
     n = len(tp["preds"])
+    if len(op["preds"]) != n:
+        # a truncated (--limit) ONNX dump would silently inflate agreement
+        raise SystemExit(f"preds length mismatch: torch {n} vs onnx {len(op['preds'])}")
     agree_text = sum(int(x == y) for x, y in zip(tp["preds"], op["preds"]))
     agree_ids = sum(int(x == y) for x, y in zip(tp["pred_ids"], op["pred_ids"]))
     print(f"[agreement] text: {agree_text}/{n} ({agree_text/n:.6f})  "
@@ -88,8 +93,9 @@ def main():
           f"max |margin| = {max(margins) if margins else 0:.3e}, "
           f"median = {sorted(margins)[len(margins)//2] if margins else 0:.3e}", flush=True)
 
-    out = a.out_dir / "ia1_agreement_report.json"
+    out = a.out_dir / a.out
     json.dump({"run": "ia1_onnx_torch_agreement", "n_test": n,
+               "torch_preds": str(a.torch_preds), "onnx_preds": str(a.onnx_preds),
                "agreement_text": agree_text / n, "agreement_token_ids": agree_ids / n,
                "n_disagreements_text": n - agree_text,
                "n_disagreements_token_ids": n - agree_ids,

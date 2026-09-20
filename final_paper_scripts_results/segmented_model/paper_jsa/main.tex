@@ -198,8 +198,8 @@ PyTorch-free serving mode.
   deviation of segmented from full-model execution is a small multiple of
   the deviation of plain PyTorch from itself under a routine batch split,
   and an order of magnitude below the learning-rate scale under the clipped
-  recipe. Six serving pipelines across both engines, four of them
-  PyTorch-free (two placements on two providers), agree on every one of
+  recipe. Eight serving pipelines across both engines, six of them
+  PyTorch-free (three placements on two providers), agree on every one of
   11{,}654 test predictions (Sec.~\ref{sec:exact}).
 \item \textbf{An analytic cost model over size and partition,} fitted once
   on the measured grid (memory law within 8.7\% worst-case across five sizes
@@ -1100,13 +1100,19 @@ the full model's final test accuracy as reference.}
 
 \subsection{Prediction Agreement Across Engines}\label{sec:predagree}
 Finally, the strictest end-to-end statement: from one segmented checkpoint,
-six serving pipelines---the segmented PyTorch engine, the exported
-unsegmented model, and the PyTorch-free ONNX runtime in its preloaded and
-disk-streamed placements on both providers---produce \emph{identical predictions on
-all 11{,}654 test examples} (exact-match 0.9548 in every cell, agreement
+eight serving pipelines---the segmented PyTorch engine, the exported
+unsegmented PyTorch model, and the PyTorch-free ONNX runtime in its
+full-session, preloaded, and disk-streamed placements on both
+providers---produce \emph{identical predictions on all 11{,}654 test
+examples} (exact-match 0.9548 in every cell, agreement
 $11{,}654/11{,}654$, zero disagreements at the token level); the remaining
 inference modes of the segmented engine are covered by the token-level
-identity of Sec.~\ref{sec:inferexact}. The independently trained full
+identity of Sec.~\ref{sec:inferexact}. The same evaluation also times the
+engines end to end: the full-session export finishes the 11{,}654 examples
+in 9.9~s on the GPU provider and 42.5~s on CPU, whereas the segmented
+ONNX placements, which upload their weights on every call, take
+2{,}697~s (preloaded) and 2{,}938~s (disk-streamed) on the GPU provider
+against 353~s and 663~s on CPU. The independently trained full
 model, evaluated under the identical protocol, reaches an exact-match of
 0.9556---the two training paths land within $0.1\%$ of each other at the
 prediction level as well. Under equal-length batching there is no
@@ -1294,7 +1300,7 @@ plots them as a serving frontier.
 latency for both runtimes and the full-model anchor, on GPU (left, device
 memory) and CPU (right, RAM). All points produce identical predictions:
 the full-test-set check of Sec.~\ref{sec:predagree} for the resident
-PyTorch mode and the four PyTorch-free pipelines, the token-level identity
+PyTorch mode and the six PyTorch-free pipelines, the token-level identity
 of Sec.~\ref{sec:inferexact} for the other PyTorch modes.}
 \label{fig:inferfrontier}
 \end{figure*} In the training runtime, the
@@ -1748,8 +1754,11 @@ the A100 (28.8 vs.\ 0.72~s, the anchors of Table~\ref{tab:grid}). In the smalles
 and orchestration rather than dense math, the accelerator's FLOP advantage
 is mostly idle. The effect is starkest in the serving runtime, where the
 CPU \emph{beat} the A100 end to end on the full 11{,}654-example
-evaluation at the accuracy tier (per-call weight upload dominates a small
-model on the GPU provider). For the private-data settings of
+evaluation at the accuracy tier: 353~s against 2{,}697~s for the
+preloaded placement and 663~s against 2{,}938~s for the disk-streamed one
+(Sec.~\ref{sec:predagree}), because per-call weight upload dominates a
+small model on the GPU provider; the full-session export, which uploads
+once, runs 9.9~s on the GPU against 42.5~s on CPU. For the private-data settings of
 Sec.~\ref{sec:intro}, this is the operative point: the hardware one
 already owns is a viable training and serving substrate, and the penalty
 for not owning an accelerator shrinks exactly in the regime this paper
@@ -1877,9 +1886,9 @@ identities make the partition exact. The identity campaign---including a
 control that measures the framework against itself---shows every one of 12
 training and 4 inference modes at the fp32 reordering scale of the
 framework itself on both GPU and CPU, bit-identical between update
-schedules where the hardware allows it. Six serving pipelines in two
-engines---the segmented engine, the exported model, and four PyTorch-free
-pipelines, two placements on two providers---agree on every one of
+schedules where the hardware allows it. Eight serving pipelines in two
+engines---the segmented engine, the exported model, and six PyTorch-free
+pipelines, three placements on two providers---agree on every one of
 11{,}654 test predictions.
 
 The measured menu is what a memory-constrained device reads. At 0.84B on

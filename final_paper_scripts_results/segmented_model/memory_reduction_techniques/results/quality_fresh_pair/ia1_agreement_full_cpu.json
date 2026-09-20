@@ -1,0 +1,11 @@
+{
+  "run": "ia1_onnx_torch_agreement",
+  "n_test": 11654,
+  "torch_preds": "${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/quality_fresh_pair/preds_torch.json",
+  "onnx_preds": "${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/quality_fresh_pair/preds_onnx_cpu_full.json",
+  "agreement_text": 1.0,
+  "agreement_token_ids": 1.0,
+  "n_disagreements_text": 0,
+  "n_disagreements_token_ids": 0,
+  "margin_rows": []
+}
