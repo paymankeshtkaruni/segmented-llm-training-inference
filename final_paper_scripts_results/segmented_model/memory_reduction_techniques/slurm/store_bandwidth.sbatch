@@ -7,6 +7,8 @@
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:A100:1
 #SBATCH --constraint=40gb_vram
+# (site note: pin to one homogeneous node pool at your site;
+#  the original runs excluded non-matching nodes here)
 #SBATCH --time=01:00:00
 #SBATCH --output=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/store_bandwidth_%j.out
 #SBATCH --error=final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/logs/store_bandwidth_%j.err
