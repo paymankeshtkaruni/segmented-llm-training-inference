@@ -1,0 +1,12 @@
+  epoch 1/10 done (29s)
+  epoch 2/10 done (56s)
+  epoch 3/10 done (84s)
+  epoch 4/10 done (111s)
+  epoch 5/10 done (139s)
+  epoch 6/10 done (166s)
+  epoch 7/10 done (194s)
+  epoch 8/10 done (221s)
+  epoch 9/10 done (249s)
+  epoch 10/10 done (276s)
+[ckpt] saved -> ${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/quality_fresh_pair/full_model_10ep.pt
+[FULL seed=42] test token-acc=0.9954  B1 exact-match (full test n=11654)=0.9536  (296s)
