@@ -425,6 +425,29 @@
     "oom": true
    }
   ],
+  "gpu40_xl5b_T2": [
+   {
+    "vram_mb": 22662.0,
+    "rss_mb": 80552.4,
+    "step_s": 46.08939065473775,
+    "per_token_s": null,
+    "oom": false
+   },
+   {
+    "vram_mb": 22670.0,
+    "rss_mb": 80531.7,
+    "step_s": 45.901064719306305,
+    "per_token_s": null,
+    "oom": false
+   },
+   {
+    "vram_mb": 22662.0,
+    "rss_mb": 80525.0,
+    "step_s": 46.17495044933943,
+    "per_token_s": null,
+    "oom": false
+   }
+  ],
   "gpu40_xl5b_T3": [
    {
     "vram_mb": 2200.0,

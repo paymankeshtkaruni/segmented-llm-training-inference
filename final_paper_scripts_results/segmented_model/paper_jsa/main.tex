@@ -1405,8 +1405,8 @@ every size that aborts larger devices.
 fits only up to 1.5B (39.0~GB---already at the edge); at 3.1B it aborts, and
 an H100 measurement shows why: 67.6~GB. At 5.1B it aborts on an 80~GB device,
 and at 6.9B \emph{even the 94~GB H100 aborts}. Segmented execution trains
-the three sizes that abort on the single 40~GB card: streamed under either
-schedule at each size, and resident at 3.1B and 6.9B. Resident with
+the three sizes that abort on the single 40~GB card, streamed under either
+schedule and resident with recomputation at each size. Resident with
 recomputation, 6.9B trains on the 40~GB card at 28.5~GB and 58.1~s per
 step, although its conventional training needs more than 94~GB of device
 memory. At 3.1B the same mode uses 14.0~GB, leaving two thirds of the card
@@ -1520,7 +1520,7 @@ Model & Full & Resident seg. & \multicolumn{2}{c}{Streamed seg.} \\
 \midrule
 1.5B & 39.0\,GB / 1.3\,s & 17.4\,GB / 10.3\,s & 1.3\,GB & 64.7 / 49.0 \\
 3.1B & OOM (67.6\,GB) & 14.0\,GB / 26.6\,s & 1.7\,GB & 111.6 / 84.9 \\
-5.1B & OOM ($>$80\,GB) & --- & 2.2\,GB & 184.5 / 137.0 \\
+5.1B & OOM ($>$80\,GB) & 22.7\,GB / 46.1\,s & 2.2\,GB & 184.5 / 137.0 \\
 6.9B & OOM ($>$94\,GB) & 28.5\,GB / 58.1\,s & 2.6\,GB & 229.4 / 172.8 \\
 \midrule
 3.1B (CPU) & 59.3\,GB / 68\,s & --- & 2.9--3.5\,GB & 351 / 300 \\
