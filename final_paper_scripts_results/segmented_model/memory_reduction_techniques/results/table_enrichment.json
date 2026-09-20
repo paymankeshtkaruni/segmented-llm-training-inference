@@ -117,7 +117,7 @@
  "cuda_context_mib": {
   "training": {
    "ctx_mib": 508.0,
-   "n_reps": 66,
+   "n_reps": 69,
    "min": 500.0,
    "max": 508.0
   },
