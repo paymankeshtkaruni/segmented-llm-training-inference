@@ -735,8 +735,9 @@ is the prompt and the model generates its label, with 32{,}569 training,
 deliberately small---it is the setting in which the full-model reference can
 be trained to convergence repeatedly under identical seeds, so that
 segmented-vs-full comparisons are matched-pair rather than anecdotal. The
-identity checks of Sec.~\ref{sec:exact} are per-operation and independent of
-tensor sizes, so exactness established here carries to the larger tiers.
+identity checks of Sec.~\ref{sec:exact} are per-operation; their
+forward-state half is repeated at 3.1B and 6.9B, where the deviation grows
+only from $1.2{\times}10^{-5}$ to $2.1{\times}10^{-5}$ with depth and width.
 
 \textbf{Cost tier (${\approx}$0.84B).} Memory and time are measured on a
 GPT-2-vocabulary decoder ($V{=}50{,}257$, context 512, 36 layers,
@@ -955,10 +956,13 @@ fresh clone.
 \section{Exactness}\label{sec:exact}
 % ============================================================================
 Before any cost is reported, we establish that every mode computes the model
-it claims to compute. All checks in this section run at the cost tier
-(0.84B, $8{\times}2{\times}2{\times}8$, batch 2, sequence 512) with the
-paper-true store bindings and AdamW at learning rate $3{\times}10^{-4}$,
-each mode under its own protocol: deferred modes with global gradient-norm
+it claims to compute. The identity checks of Secs.~\ref{sec:trainexact}
+and~\ref{sec:inferexact} run at the cost tier (0.84B,
+$8{\times}2{\times}2{\times}8$, batch 2, sequence 512), with the forward-state
+checks repeated at 3.1B and 6.9B; the learning and prediction checks of
+Secs.~\ref{sec:quality} and~\ref{sec:predagree} run at the accuracy tier.
+All use the paper-true store bindings and AdamW at learning rate
+$3{\times}10^{-4}$, each mode under its own protocol: deferred modes with global gradient-norm
 clipping at 1.0, optimizer-in-backward modes without
 (Sec.~\ref{sec:torchrt}). All deltas are worst-case ($\max|\Delta|$
 over all elements, and over all modes in the row's scope), not averages.
@@ -966,7 +970,10 @@ over all elements, and over all modes in the row's scope), not averages.
 \subsection{Training Identity}\label{sec:trainexact}
 Table~\ref{tab:identity} summarizes the campaign. Forward hidden states
 agree with the unsegmented reference to $1.2{\times}10^{-5}$ after 36 layers
-of fp32 accumulation; representative gradient slices agree to
+of fp32 accumulation at 0.84B, and to $1.9{\times}10^{-5}$ at 3.1B and
+$2.1{\times}10^{-5}$ at 6.9B for the resident, recomputation, and streamed
+forward paths (measured on the 40~GB card by computing the reference forward
+first, freeing it, and building each segmented mode from the same store); representative gradient slices agree to
 $1.1{\times}10^{-8}$; post-step parameters after one and after four full
 AdamW steps, reassembled and compared element by element across all 840M
 parameters, agree to $5{\times}10^{-5}$ on GPU and $10^{-4}$ on CPU under
@@ -998,6 +1005,8 @@ under the same two protocols.}
 Check (scope) & GPU & CPU \\
 \midrule
 Forward hidden state vs.\ ref.\ (12 modes, eval forward) & $1.2{\times}10^{-5}$ & $3.8{\times}10^{-6}$ \\
+Forward hidden state vs.\ ref.\ at 3.1B (resident, recompute, streamed) & $1.9{\times}10^{-5}$ & --- \\
+Forward hidden state vs.\ ref.\ at 6.9B (resident, recompute, streamed) & $2.1{\times}10^{-5}$ & --- \\
 Gradient slices vs.\ ref.\ (no-dropout, deferred) & $1.1{\times}10^{-8}$ & $3.5{\times}10^{-9}$ \\
 Params.\ after 1 step vs.\ ref.\ (deferred, clip) & $4.9{\times}10^{-5}$ & $1.4{\times}10^{-5}$ \\
 Params.\ after 4 steps vs.\ ref.\ (deferred, clip) & $4.9{\times}10^{-5}$ & $1.1{\times}10^{-4}$ \\
@@ -1052,7 +1061,9 @@ All four inference modes (streaming $\times$ KV cache), on both devices,
 produce greedy decodes \emph{identical token for token} with the full-model
 reference over five random-token prompts, 20 generated tokens each
 (prefill deltas $4.6{\times}10^{-6}$ GPU, $3.6{\times}10^{-6}$ CPU; no
-divergence at any decode position). Recomputing the prefix without a cache
+divergence at any decode position). The same four modes decode identically
+at 3.1B and 6.9B on the GPU (prefill deltas $9.2{\times}10^{-6}$ and
+$1.2{\times}10^{-5}$). Recomputing the prefix without a cache
 and streaming segments from the store change where tensors live, not what
 is computed.
 
@@ -1844,7 +1855,9 @@ deviates from the reference by a small multiple of the framework's own
 reordering noise, not below it (Sec.~\ref{sec:trainexact}), and
 prediction-level agreement on the full test set is shown for one segmented
 inference mode, the others at token level on five prompts
-(Sec.~\ref{sec:predagree}). Training to convergence was compared at the
+(Sec.~\ref{sec:predagree}). Above 0.84B the identity is verified at the
+forward-state and greedy-token level only; gradient and optimizer-step
+identity are established at 0.84B. Training to convergence was compared at the
 accuracy tier only, under a single seed; at the cost tier the identity is
 verified over four optimizer steps. The architecture is one family: a GPT
 decoder. The four cut planes exist in any transformer, and the

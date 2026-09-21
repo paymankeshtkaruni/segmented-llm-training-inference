@@ -1,0 +1,72 @@
+{
+  "run": "scale_forward_identity",
+  "preset": "large_8x2x2x8",
+  "device": "cuda",
+  "store": "cpu_ram",
+  "batch": 2,
+  "seq": 512,
+  "n_prompts": 5,
+  "prompt_len": 64,
+  "new_tokens": 20,
+  "params_billion": 0.8377,
+  "note": "reference forward computed first and freed; segmented modes built afterwards from the same store, so reference and engine never share the device",
+  "ref_peak_reserved_mb": 3634.0,
+  "reserved_after_ref_freed_mb": 42.0,
+  "train_forward": [
+    {
+      "mode": "resident",
+      "tech_code": "11100111000",
+      "dropout": 0.0,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "peak_reserved_mb": 3388.0
+    },
+    {
+      "mode": "recompute",
+      "tech_code": "11110111000",
+      "dropout": 0.0,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "peak_reserved_mb": 3388.0
+    },
+    {
+      "mode": "streaming",
+      "tech_code": "11111111100",
+      "dropout": 0.0,
+      "forward_hidden_max_delta": 1.2189149856567383e-05,
+      "peak_reserved_mb": 182.0
+    }
+  ],
+  "inference": [
+    {
+      "mode": "I1_resident_cache",
+      "tech_code": "11100111000",
+      "prefill_hidden_max_delta": 4.6193599700927734e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "peak_reserved_mb": 3534.0
+    },
+    {
+      "mode": "I2_resident_nocache",
+      "tech_code": "11100111001",
+      "prefill_hidden_max_delta": 4.6193599700927734e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "peak_reserved_mb": 3502.0
+    },
+    {
+      "mode": "I3_streaming_cache",
+      "tech_code": "11101111100",
+      "prefill_hidden_max_delta": 4.6193599700927734e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "peak_reserved_mb": 184.0
+    },
+    {
+      "mode": "I4_streaming_nocache",
+      "tech_code": "11101111101",
+      "prefill_hidden_max_delta": 4.6193599700927734e-06,
+      "greedy_tokens_identical": true,
+      "first_divergence": null,
+      "peak_reserved_mb": 152.0
+    }
+  ]
+}
