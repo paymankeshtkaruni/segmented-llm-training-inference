@@ -438,6 +438,52 @@
     "per_token_s": null,
     "oom": false
    }
+  ],
+  "gran_8x2x2x8_I1": [
+   {
+    "vram_mb": 4098.0,
+    "rss_mb": 4223.0,
+    "step_s": null,
+    "per_token_s": 0.206,
+    "oom": false
+   },
+   {
+    "vram_mb": 4098.0,
+    "rss_mb": 4223.9,
+    "step_s": null,
+    "per_token_s": 0.208,
+    "oom": false
+   },
+   {
+    "vram_mb": 4098.0,
+    "rss_mb": 4225.9,
+    "step_s": null,
+    "per_token_s": 0.209,
+    "oom": false
+   }
+  ],
+  "gran_8x2x2x8_I4": [
+   {
+    "vram_mb": 658.0,
+    "rss_mb": 4238.5,
+    "step_s": null,
+    "per_token_s": 5.515,
+    "oom": false
+   },
+   {
+    "vram_mb": 658.0,
+    "rss_mb": 4236.2,
+    "step_s": null,
+    "per_token_s": 5.43,
+    "oom": false
+   },
+   {
+    "vram_mb": 658.0,
+    "rss_mb": 4233.9,
+    "step_s": null,
+    "per_token_s": 5.5,
+    "oom": false
+   }
   ]
  }
 }

@@ -164,7 +164,25 @@ Mapping (paper -> source):
   naive-anchor row of Table VI, both devices)
 - 12-mode grid: results/exp3_grid/grid_summary.json (slurm/exp3_grid_*.sbatch)
 - Inference modes + ONNX + full-decode anchors: results/exp4_infer/infer_summary.json
-- Scale: results/exp5_scale/scale_summary.json; fastest modes: results/exp6_fast/exp6_summary.json
+- Scale: results/exp5_scale/scale_summary.json (slurm/exp5_*.sbatch, including
+  exp5_xl5b_resident_gpu.sbatch for the 5.1B resident cell); fastest modes and the
+  granularity cells: results/exp6_fast/exp6_summary.json
+  (slurm/exp6_fast_scale_{gpu,cpu}.sbatch, slurm/exp6_gran_fast_gpu.sbatch,
+  slurm/gran_std_decode_gpu.sbatch)
+- Granularity table (three partitions at 0.84B): training rows from
+  results/exp1_compare/seg_{2x1x1x2,16x4x4x16}_{T2,T3}_rep*/ and results/exp3_grid
+  (standard partition); decode rows from results/exp6_fast gran_* cells. All decode
+  cells use prompt 256 / 8 generated tokens: gran_std_decode_gpu.sbatch adds the
+  standard partition at that protocol so the three partitions are comparable, instead
+  of borrowing the 32-token cells of the inference table.
+- Inference-at-scale table: resident + KV cells from results/exp6_fast (I1),
+  streamed no-cache cells from results/exp5_scale (I4), both at prompt 256 /
+  8 generated tokens
+- Scale-training figure (paper_jsa/figures/scale_train.pdf): paper_v4_figures.py
+  fig_scale, reading exp3_grid (0.84B), exp5_scale (full model, 3.1B/5.1B/6.9B
+  resident, all streamed) and exp6_fast (the 1.5B resident cell, which is the
+  retained-graph in-backward mode). Memory is plotted in the paper's GB
+  (1,000 MB), the unit every table uses
 - Batch/sequence sensitivity: results/exp7_sensitivity/sensitivity_summary.json (slurm/exp7_sensitivity.sbatch)
 - Sustained 6.9B stability: results/exp8_sustained/sustained_summary.json (slurm/exp8_sustained.sbatch)
 - Cost model + pre-registration: results/prereg_prediction.json (committed BEFORE the

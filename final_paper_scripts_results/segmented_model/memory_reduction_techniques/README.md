@@ -82,3 +82,29 @@ tracks one segment, not the model).
   engine never on the device together (`slurm/verify_scale_gpu.sbatch`)
 - `segmentation_management/` (copy) — engines with the toggle flags wired in (+ 3B/7B presets)
 - `slurm/` — the sbatch scripts; `results/` — outputs (git-ignored except aggregated JSONs)
+
+## The paper's campaigns (exp1–exp9) and the artifact gate
+
+The ladder above is the historical ablation. Every number in the JSA paper comes from
+the `exp*` campaigns instead, plus the identity, self-check and bandwidth jobs; each is
+listed with its cells, its summary file and the table or figure it feeds in
+[`REPRODUCE.md`](../../../REPRODUCE.md) ("The paper's measurement campaigns"). Two
+entry points matter day to day:
+
+```bash
+sbatch slurm/rebuild_summaries.sbatch   # re-fold results/ into the summary JSONs + figures
+sbatch slurm/verify_artifact.sbatch     # fresh clone, tests, regenerate, diff -> VERDICT
+```
+
+Scripts added for the paper's later measurements:
+
+- `verify_scale_forward.py` — forward-state and greedy-token identity at 0.84B/3.1B/6.9B
+  (`slurm/verify_scale_gpu.sbatch`)
+- `store_bandwidth.py` — achieved fetch/park bandwidth of the segment store, both
+  bindings (`slurm/store_bandwidth.sbatch`)
+- `eval_onnx_accuracy.py --mode full` — full-session ONNX over the whole test set
+  (`slurm/onnx_full_accuracy.sbatch`)
+- `slurm/gran_std_decode_gpu.sbatch` — the standard partition's decode cells under the
+  granularity protocol (prompt 256, 8 generated tokens), so the granularity table
+  compares all three partitions at one protocol
+- `slurm/exp5_xl5b_resident_gpu.sbatch` — the 5.1B resident training cell

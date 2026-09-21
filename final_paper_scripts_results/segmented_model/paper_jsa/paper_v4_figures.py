@@ -32,6 +32,10 @@ COL = {"retained": "#c44e52", "recomp": "#4c72b0", "stream": "#55a868",
        "onnx": "#dd8452"}
 
 
+# the paper writes MB for mebibytes and GB for 1,000 of them (Sec. V-C)
+GB = 1000.0
+
+
 def med(xs):
     return statistics.median(xs)
 
@@ -83,8 +87,8 @@ def fig_frontier():
     for i, m in enumerate(order):
         g, c = grid[m]["gpu"], grid[m]["cpu"]
         col, mk = style(i)
-        a.scatter(g["step_s"], g["vram_mb"] / 1024, c=col, marker=mk, s=22, zorder=3)
-        b.scatter(c["step_s"], c["rss_mb"] / 1024, c=col, marker=mk, s=22, zorder=3)
+        a.scatter(g["step_s"], g["vram_mb"] / GB, c=col, marker=mk, s=22, zorder=3)
+        b.scatter(c["step_s"], c["rss_mb"] / GB, c=col, marker=mk, s=22, zorder=3)
     # anchors
     a.scatter(0.72, 25.406, c=COL["full"], marker="*", s=90, zorder=4)
     a.annotate("full model", (0.72, 25.4), textcoords="offset points",
@@ -132,7 +136,7 @@ def fig_traces():
     for ax, (fn, ttl) in zip(axes, names):
         d = json.load(gzip.open(R / "traces" / fn))
         tl = d["vram_timeline"]
-        t = [x[0] for x in tl]; res = [x[2] / 1024 for x in tl]
+        t = [x[0] for x in tl]; res = [x[2] / GB for x in tl]
         ax.plot(t, res, lw=0.7, color=COL["recomp"])
         ax.fill_between(t, res, color=COL["recomp"], alpha=.25, lw=0)
         phases = [(m[0], m[1]) for m in d["moves"] if m[2] == "<phase>"]
@@ -154,21 +158,24 @@ def fig_traces():
 # ---------------------------------------------------------------- F4: scale
 def fig_scale():
     cells = json.load(open(R / "exp5_scale" / "scale_summary.json"))["cells"]
+    fast = json.load(open(R / "exp6_fast" / "exp6_summary.json"))["cells"]
     grid = json.load(open(R / "exp3_grid" / "grid_summary.json"))["modes"]
 
-    def cell(name, key="vram_mb"):
-        reps = cells.get(name, [])
+    def cell(name, key="vram_mb", src=None):
+        reps = (cells if src is None else src).get(name, [])
         vals = [r[key] for r in reps if r.get(key) is not None]
-        return med(vals) / 1024 if vals else None
+        return med(vals) / GB if vals else None
 
     sizes = ["0.84B", "1.5B", "3.1B", "5.1B", "6.9B"]
     full = [25.406, cell("gpu40_xl15b_full_train"), None, None, None]
     full_note = [None, None, "67.6 (H100)", ">80", ">94 (H100)"]
-    resident = [grid["T2"]["gpu"]["vram_mb"] / 1024, None,
-                cell("gpu40_xl3b_T2"), None, cell("gpu40_xxl7b_T2")]
-    t3 = [grid["T3"]["gpu"]["vram_mb"] / 1024, cell("gpu40_xl15b_T3"),
+    # 1.5B has no recomputation-resident cell; the resident mode shown there is the
+    # retained-graph in-backward one, exactly as in the scale table (hatched bar).
+    resident = [grid["T2"]["gpu"]["vram_mb"] / GB, cell("gpu40_xl15b_T7", src=fast),
+                cell("gpu40_xl3b_T2"), cell("gpu40_xl5b_T2"), cell("gpu40_xxl7b_T2")]
+    t3 = [grid["T3"]["gpu"]["vram_mb"] / GB, cell("gpu40_xl15b_T3"),
           cell("gpu40_xl3b_T3"), cell("gpu40_xl5b_T3"), cell("gpu40_xxl7b_T3")]
-    t9 = [grid["T9"]["gpu"]["vram_mb"] / 1024, cell("gpu40_xl15b_T9"),
+    t9 = [grid["T9"]["gpu"]["vram_mb"] / GB, cell("gpu40_xl15b_T9"),
           cell("gpu40_xl3b_T9"), cell("gpu40_xl5b_T9"), cell("gpu40_xxl7b_T9")]
 
     import numpy as np
@@ -179,9 +186,15 @@ def fig_scale():
             (-0.5 * w, resident, "resident segmented", COL["recomp"]),
             (0.5 * w, t3, "streamed, deferred", COL["stream"]),
             (1.5 * w, t9, "streamed, in-backward", "#88c999")]:
-        xs = [xi + off for xi, v in zip(x, vals) if v is not None]
-        ys = [v for v in vals if v is not None]
-        ax.bar(xs, ys, w, label=lab, color=col)
+        first = True
+        for xi, sz, v in zip(x, sizes, vals):
+            if v is None:
+                continue
+            hatched = (lab == "resident segmented" and sz == "1.5B")
+            ax.bar([xi + off], [v], w, label=(lab if first else None), color=col,
+                   hatch=("///" if hatched else None),
+                   edgecolor=("white" if hatched else "none"), linewidth=0.0)
+            first = False
     for xi, note in zip(x, full_note):
         if note:
             ax.bar([xi - 1.5 * w], [40], w, color="none", edgecolor=COL["full"],
@@ -212,26 +225,26 @@ def fig_inference():
              "O1_full": (-18, -13), "O3_preload": (6, 5), "O4_stream": (-34, 7)}
     for m, lab in tor.items():
         g, c = d["torch"][m]["gpu"], d["torch"][m]["cpu"]
-        a.scatter(g["per_token_s"], g["vram_mb"] / 1024, c=COL["recomp"], s=22)
-        a.annotate(lab, (g["per_token_s"], g["vram_mb"] / 1024),
+        a.scatter(g["per_token_s"], g["vram_mb"] / GB, c=COL["recomp"], s=22)
+        a.annotate(lab, (g["per_token_s"], g["vram_mb"] / GB),
                    textcoords="offset points", xytext=off_g[m], fontsize=6)
-        b.scatter(c["per_token_s"], c["rss_mb"] / 1024, c=COL["recomp"], s=22)
-        b.annotate(lab, (c["per_token_s"], c["rss_mb"] / 1024),
+        b.scatter(c["per_token_s"], c["rss_mb"] / GB, c=COL["recomp"], s=22)
+        b.annotate(lab, (c["per_token_s"], c["rss_mb"] / GB),
                    textcoords="offset points", xytext=off_c[m], fontsize=6)
     for m, lab in onx.items():
         g, c = d["onnx"][m]["gpu"], d["onnx"][m]["cpu"]
-        a.scatter(g["per_token_s"], g["vram_mb"] / 1024, c=COL["onnx"],
+        a.scatter(g["per_token_s"], g["vram_mb"] / GB, c=COL["onnx"],
                   marker="^", s=24)
-        a.annotate(lab, (g["per_token_s"], g["vram_mb"] / 1024),
+        a.annotate(lab, (g["per_token_s"], g["vram_mb"] / GB),
                    textcoords="offset points", xytext=off_g[m], fontsize=6)
-        b.scatter(c["per_token_s"], c["rss_mb"] / 1024, c=COL["onnx"],
+        b.scatter(c["per_token_s"], c["rss_mb"] / GB, c=COL["onnx"],
                   marker="^", s=24)
-        b.annotate(lab, (c["per_token_s"], c["rss_mb"] / 1024),
+        b.annotate(lab, (c["per_token_s"], c["rss_mb"] / GB),
                    textcoords="offset points", xytext=off_c[m], fontsize=6)
     a.set_xlim(0.009, 30)
     fa = d["full_anchor"]
-    fg = ((fa["gpu"]["vram_reserved_mb"] + 490) / 1024, fa["gpu"]["per_token_s"])
-    fc = (fa["cpu"]["rss_mb"] / 1024, fa["cpu"]["per_token_s"])
+    fg = ((fa["gpu"]["vram_reserved_mb"] + 490) / GB, fa["gpu"]["per_token_s"])
+    fc = (fa["cpu"]["rss_mb"] / GB, fa["cpu"]["per_token_s"])
     a.scatter(fg[1], fg[0], c=COL["full"], marker="*", s=80)
     a.annotate("full model", (fg[1], fg[0]), textcoords="offset points",
                xytext=(4, -13), fontsize=6)
