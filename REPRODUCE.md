@@ -18,6 +18,10 @@ no number in this manuscript comes from them.
 No GPU and no training is needed: the summary builders and the plotting scripts
 read only committed JSONs.
 
+Run them with the project interpreter — `poetry run python …`, or
+`$(poetry env info -e)`; a bare `python` on PATH is whatever the shell finds.
+Total runtime ≈10 s on a CPU-only laptop.
+
 ```bash
 export PROJECT_ROOT=$PWD
 cd final_paper_scripts_results/segmented_model/memory_reduction_techniques
@@ -50,6 +54,16 @@ The paper's nine figures and the script that draws each:
 `exp8_plots.py` writes its three PDFs to `results/exp8_sustained/plots/`; the
 copies in `paper_jsa/figures/` are those files under the same names.
 `paper_v4_figures.py` writes directly into `paper_jsa/figures/`.
+
+**The chain above does not perform that copy.** After re-running `exp8_plots.py`,
+the three regenerated PDFs sit only under `results/exp8_sustained/plots/`, and
+`main.tex` still compiles against the older committed copies. To refresh them:
+
+```bash
+cp final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/exp8_sustained/plots/fig_exp8_{serving,training}.pdf \
+   final_paper_scripts_results/segmented_model/memory_reduction_techniques/results/exp8_sustained/plots/fig_exp9_validation_cost.pdf \
+   final_paper_scripts_results/segmented_model/paper_jsa/figures/
+```
 
 ## Paper object → source data
 
@@ -346,9 +360,13 @@ same way rather than reused from the 32-token cells of the inference table.
 Node classes are reported as *classes*, never machine names. Where the producing
 script records `device_total_mb`, the class is verifiable from the committed JSON
 itself (40442 MB = A100-40 GB, 81154 MB = A100-80 GB, 95330 MB = H100-94 GB).
-No machine names and no Slurm job IDs appear anywhere in this repository except
-the one job ID recorded in `results/prereg_validation_result.json`, which is part
-of the pre-registration record. The partition names (`grete:shared`,
+Machine names and Slurm job IDs are kept out of the repository, with two recorded
+exceptions: the job ID in `results/prereg_validation_result.json`, which is part of
+the pre-registration record, and the `"hostname": "ggpu128"` field that
+`store_bandwidth.py` writes into
+`results/measurement_checks/store_bandwidth_large_8x2x2x8_{cuda_cpu_ram,cpu_disk}.json`
+(the node identity of the bandwidth measurement, kept so the two bindings are
+visibly from one node). The partition names (`grete:shared`,
 `grete-h100:shared`), `module load` lines, `OMP_NUM_THREADS`, `MALLOC_*` settings
 and `--gres` / `--constraint` directives are retained deliberately: they are the
 measurement provenance, not identity.
@@ -362,6 +380,11 @@ sbatch slurm/figures.sbatch              # figures only (paper_jsa/paper_v4_figu
 sbatch slurm/exp8_aggregate.sbatch       # sustained_report.py + exp8_plots.py
 sbatch slurm/verify_artifact.sbatch      # fresh clone -> tests -> regenerate -> diff
 ```
+
+`verify_artifact.sbatch` needs two variables beyond the `PROJECT_ROOT`/`PYTHON`
+convention: **`PROJECT_PARENT`** (it clones `${PROJECT_PARENT}/segmented-llm-training-inference`)
+and **`TMPDIR`** (the clone and the smoke checkpoint land under it). Set both, or
+edit lines 12 and 16.
 
 `verify_artifact.sbatch` is the gate: it clones the publication repository, runs the
 test suite, regenerates every summary (`build_exp_summaries.py`, `eval_cost_laws.py`,

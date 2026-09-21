@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-try:
-    from constants import DATA_DIR, PROCESSED_DATA_DIR, TOKENIZER_DIR
-except ImportError:
-    PROJECT_ROOT = Path(__file__).resolve().parents[2]
-    DATA_DIR = PROJECT_ROOT / "data"
-    PROCESSED_DATA_DIR = DATA_DIR / "processed_data"
-    TOKENIZER_DIR = PROJECT_ROOT / "gpt2_tokenizer"
+# Resolve the data root the same way data_prep.py does: this file lives at
+# src/<package>/data/, so the repository root is three levels up and the
+# dataset is the tracked log_lines/ tree beside it. (An earlier version read
+# an optional `constants` module and fell back to parents[2], i.e. src/data/,
+# which exists in no checkout of this repository.)
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+DATA_DIR = PROJECT_ROOT / "log_lines"
+PROCESSED_DATA_DIR = DATA_DIR / "processed_data"
+TOKENIZER_DIR = PROJECT_ROOT / "gpt2_tokenizer"
 
 try:
     from .dataloader_builder import split_csv_folder_by_issue_and_level

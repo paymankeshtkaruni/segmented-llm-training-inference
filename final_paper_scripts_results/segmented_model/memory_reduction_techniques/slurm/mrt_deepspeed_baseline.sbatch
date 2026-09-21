@@ -18,7 +18,9 @@ export PYTHONUNBUFFERED=1
 # separate venv: torch 2.7.0+cu128 (same as the paper's runs) + deepspeed; the
 # project's frozen poetry env is untouched. torch.optim.AdamW client optimizer ->
 # no JIT-compiled DeepSpeed ops needed.
-PYTHON=${PROJECT_PARENT}/dsenv/bin/python
+# Keep the separate DeepSpeed virtualenv as the default, but let the caller
+# override it with PYTHON=<interpreter>, as the header note above promises.
+PYTHON="${PYTHON:-${PROJECT_PARENT}/dsenv/bin/python}"
 MRT=final_paper_scripts_results/segmented_model/memory_reduction_techniques
 echo "Node: $(hostname)  Start: $(date)"
 # DeepSpeed ZeRO-Offload baselines on the SAME 0.84B model + protocol (fp32, bs4, seq512)

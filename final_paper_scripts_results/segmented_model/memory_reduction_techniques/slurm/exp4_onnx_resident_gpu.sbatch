@@ -19,10 +19,12 @@ cd "${PROJECT_ROOT:?set PROJECT_ROOT to the repo root}/final_paper_scripts_resul
 module load gcc/13.2.0 cuda/12.8.2
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=16
 export MALLOC_MMAP_THRESHOLD_=131072 MALLOC_TRIM_THRESHOLD_=131072 MALLOC_ARENA_MAX=2
-# ORT CUDA provider needs cuDNN/cuBLAS visible; the torch-free process must
-# get them from the venv wheels (torch would otherwise provide them on import)
-export LD_LIBRARY_PATH="${PROJECT_PARENT}/venvs/sequential-segmented-llm-training-inferenc-v92jTZ3c-py3.10/lib/python3.10/site-packages/nvidia/cudnn/lib:${PROJECT_PARENT}/venvs/sequential-segmented-llm-training-inferenc-v92jTZ3c-py3.10/lib/python3.10/site-packages/nvidia/cublas/lib:${PROJECT_PARENT}/venvs/sequential-segmented-llm-training-inferenc-v92jTZ3c-py3.10/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:${PROJECT_PARENT}/venvs/sequential-segmented-llm-training-inferenc-v92jTZ3c-py3.10/lib/python3.10/site-packages/nvidia/cufft/lib:${PROJECT_PARENT}/venvs/sequential-segmented-llm-training-inferenc-v92jTZ3c-py3.10/lib/python3.10/site-packages/nvidia/curand/lib:${PROJECT_PARENT}/venvs/sequential-segmented-llm-training-inferenc-v92jTZ3c-py3.10/lib/python3.10/site-packages/nvidia/nvjitlink/lib:${LD_LIBRARY_PATH:-}"
+# The ORT CUDA provider needs cuDNN/cuBLAS visible, and this process imports no
+# torch (which would otherwise pull them in) - derive the venv wheel lib dirs from
+# the interpreter itself so the job is not tied to one site's venv path.
 PY="${PYTHON:-python}"
+ORT_LIBS="$("$PY" -c 'import os, nvidia; b = os.path.dirname(nvidia.__file__); print(":".join(os.path.join(b, p, "lib") for p in ("cudnn", "cublas", "cuda_runtime", "cufft", "curand", "nvjitlink")))')"
+export LD_LIBRARY_PATH="$ORT_LIBS:${LD_LIBRARY_PATH:-}"
 ONNX_BASE="${PROJECT_ROOT}/final_paper_scripts_results/segmented_model/onnx"
 echo "Node: $(hostname)  Start: $(date)"
 # one-time exports (skipped if already present)

@@ -23,6 +23,16 @@ tqdm = ">=4.66"
 transformers = "^5.12.0"
 psutil = "^7.2.2"
 matplotlib = ">=3.7"
+# pandas is needed only to REGENERATE the dataset splits
+# (src/.../data/create_generative_splits.py -> dataloader_builder.py, data/usage.py).
+# Every experiment reads the committed splits under log_lines/generative_splits/,
+# so the measurement environment never imported pandas and it is absent from
+# environment_versions.txt; it is declared here so the documented regeneration
+# step runs in the documented environment. CAPPED BELOW 3.0 deliberately: on
+# pandas 2.x the regeneration reproduces all three committed split files
+# byte-for-byte, while pandas 3.x returns the same 32,569 training rows in a
+# different order. See the README, section 2.
+pandas = ">=2.0,<3.0"
 torch = {version = "2.7.0+cu128", source = "pytorch-cu128"}
 onnx = "^1.22.0"
 # onnxruntime-gpu provides BOTH CPU and CUDA execution providers (do NOT also

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 
@@ -176,6 +177,28 @@ def _minimum_group_count_for_three_splits(
     return int(train_ratio > 0) + int(validation_ratio > 0) + int(test_ratio > 0)
 
 
+def _stable_sample_positions(n_rows: int, size: int, seed: int) -> np.ndarray:
+    """Positions of a seeded sample of `size` rows out of `n_rows`, drawn
+    directly from numpy.
+
+    WHY not `DataFrame.sample(..., random_state=seed)`: the split files are a
+    published artifact, and `sample`'s seed-to-row-positions mapping is a pandas
+    implementation detail, whereas numpy guarantees the `RandomState` stream.
+    Drawing the positions here and indexing with `.iloc` takes that one step out
+    of pandas' hands. It is behaviour-preserving: `RandomState.permutation` and
+    `choice(replace=False)` are exactly what `sample` calls, and the splits come
+    out byte-identical on both pandas 2.3.3 and 3.0.6.
+
+    This does NOT by itself make the splits reproducible across pandas majors —
+    pandas 3 orders the balanced training rows differently for reasons upstream
+    of the sampling — which is why `pyproject.toml` caps pandas below 3.0.
+    """
+    rng = np.random.RandomState(seed)
+    if size >= n_rows:
+        return rng.permutation(n_rows)
+    return rng.choice(n_rows, size=size, replace=False)
+
+
 def _split_group_indices(
     group: pd.DataFrame,
     train_ratio: float,
@@ -187,7 +210,8 @@ def _split_group_indices(
     Split one Issue × level group. This function assumes the group is large
     enough to put at least one sample into every non-zero split.
     """
-    shuffled_indices = list(group.sample(frac=1.0, random_state=seed).index)
+    positions = _stable_sample_positions(len(group), len(group), seed)
+    shuffled_indices = list(group.index[positions])
     n = len(shuffled_indices)
 
     required = _minimum_group_count_for_three_splits(
@@ -292,10 +316,12 @@ def _balance_training_set_by_level(
             if n_take <= 0:
                 continue
             part = level_df[level_df[issue_level_column] == key]
-            balanced_parts.append(part.sample(n=int(n_take), random_state=seed))
+            positions = _stable_sample_positions(len(part), int(n_take), seed)
+            balanced_parts.append(part.iloc[positions])
 
     balanced = pd.concat(balanced_parts, ignore_index=False)
-    balanced = balanced.sample(frac=1.0, random_state=seed).reset_index(drop=True)
+    positions = _stable_sample_positions(len(balanced), len(balanced), seed)
+    balanced = balanced.iloc[positions].reset_index(drop=True)
     balanced["train_balanced"] = True
     return balanced
 
