@@ -94,9 +94,12 @@ def plot(kind, series_key, xlabel, fname, title):
                     xycoords="axes fraction", ha="right", fontsize=6)
         if row == 0:
             at.legend(fontsize=5.5, loc="lower right")
-        pretty = NAMES.get(name, name)
-        am.set_title(f"{pretty} — memory", fontsize=6.5, loc="left")
-        at.set_title(f"{pretty} — time", fontsize=6.5, loc="left")
+        # the longest name ("(memory floor)") overran its panel and printed on
+        # top of the right title, so titles use the compact separator and a
+        # slightly smaller face than the axis labels
+        pretty = NAMES.get(name, name).replace("  |  ", " | ")
+        am.set_title(f"{pretty} — memory", fontsize=5.8, loc="left")
+        at.set_title(f"{pretty} — time", fontsize=5.8, loc="left")
         for ax in (am, at):
             ax.grid(alpha=.3)
             if row == n - 1:

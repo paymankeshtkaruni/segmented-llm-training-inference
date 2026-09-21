@@ -92,7 +92,7 @@ def fig_frontier():
     # anchors
     a.scatter(0.72, 25.406, c=COL["full"], marker="*", s=90, zorder=4)
     a.annotate("full model", (0.72, 25.4), textcoords="offset points",
-               xytext=(4, 3), fontsize=6.5)
+               xytext=(4, -10), fontsize=6.5)
     a.scatter(6.2, 18.244, c=COL["naive"], marker="D", s=25, zorder=3)
     a.annotate("naive segmented", (6.2, 18.2), textcoords="offset points",
                xytext=(4, 3), fontsize=6.5)
@@ -102,7 +102,7 @@ def fig_frontier():
                xytext=(4, 4), fontsize=6.5)
     b.scatter(33.0, 26.928, c=COL["full"], marker="*", s=90, zorder=4)
     b.annotate("full model", (33.0, 26.9), textcoords="offset points",
-               xytext=(4, 3), fontsize=6.5)
+               xytext=(4, -10), fontsize=6.5)
     b.scatter(77.4, 20.545, c=COL["naive"], marker="D", s=25, zorder=3)
     b.annotate("naive segmented", (77.4, 20.5), textcoords="offset points",
                xytext=(4, 3), fontsize=6.5)

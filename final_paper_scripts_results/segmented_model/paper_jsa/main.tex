@@ -128,8 +128,8 @@ all segment weights on the device. The
 partition is a pure execution concern on an unchanged architecture, and we
 verify that segmented training reproduces full-model training to
 floating-point tolerance, and that its end-to-end accuracy differs from
-the full model's by no more than two segmented modes differ from each
-other. \emph{The
+the full model's by an amount of the same size as two segmented modes
+differ from each other. \emph{The
 learning is invariant; only the memory schedule changes.}
 
 Our mechanism is orthogonal to the edge community's default lever, reduced
@@ -255,7 +255,7 @@ tensors between device and host~\cite{rhu2016vdnn,le2018tflms,huang2020swapadvis
 ZeRO-Offload and ZeRO-Infinity stream optimizer state and parameters to CPU
 and NVMe~\cite{ren2021zerooffload,rajbhandari2021zeroinfinity}; MemAscend
 optimizes host-memory fragmentation and pinned buffers for SSD-offloaded
-LLM fine-tuning on exactly the limited-resource hardware we
+large language model (LLM) fine-tuning on exactly the limited-resource hardware we
 target~\cite{liaw2026memascend}, and recent planners co-optimize GPU and
 CPU memory for fine-tuning under tight
 budgets~\cite{ding2026heteropipeline,zhang2026memorysafe}; peak memory
@@ -508,7 +508,7 @@ on takes the naive segmented anchor at 0.84B from 18.2~GB and 6.2~s to
 activation set regardless (Sec.~\ref{sec:anchors}, Table~\ref{tab:grid}).
 The six
 are: fused scaled-dot-product attention (no
-materialized score matrix)~\cite{dao2022flashattention,rabe2021selfattention};
+materialized score matrix)~\cite{rabe2021selfattention,dao2022flashattention};
 chunked feed-forward evaluation with running-sum accumulation
 (Proposition~\ref{prop:sum}); chunked cross-entropy with streaming
 log-sum-exp (Proposition~\ref{prop:lse})~\cite{wijmans2025cce}; checkpoint
@@ -765,8 +765,8 @@ only from $1.2{\times}10^{-5}$ to $2.1{\times}10^{-5}$ with model width.
 
 \textbf{Cost tier (${\approx}$0.84B).} Memory and time are measured on a decoder
 with the GPT-2 vocabulary~\cite{radford2019gpt2} ($V{=}50{,}257$, context 512, 36 layers,
-$d_\text{model}{=}1280$, 20 heads, $d_\text{ff}{=}5120$): the largest GPT-2 configuration at which the \emph{full-model} reference
-fits the 40~GB device with headroom (the 1.5B reference fits only at the
+$d_\text{model}{=}1280$, 20 heads, $d_\text{ff}{=}5120$): the largest configuration of this family at which the \emph{full-model} reference
+fits the 40~GB device with headroom (our 1.5B configuration fits only at the
 edge, 39.0~GB, Table~\ref{tab:scale}), so every mode and every baseline can
 be compared against a full-model anchor measured on the same hardware. The default partition is $8{\times}2{\times}2{\times}8$
 (embedding~$\times$~attention~$\times$~feed-forward (MLP)~$\times$~vocabulary); the
@@ -838,8 +838,8 @@ RAM and time.
 backward, update, and the per-step validation pass of
 Sec.~\ref{sec:longhorizon}---averaged after warmup: every training cell runs
 one warm-up step and then three timed steps, two at 6.9B, where one step costs
-minutes. The streamed deferred cell at 0.84B is 23.1~s of training phases
-(3.9 forward, 10.9 backward, 8.2 update) plus a 5.1~s validation pass. Inference cells time greedy decoding per generated token after a
+minutes. The streamed deferred cell at 0.84B is 23.05~s of training phases
+(3.93 forward, 10.88 backward, 8.24 update) plus a 5.1~s validation pass. Inference cells time greedy decoding per generated token after a
 warm-up generation. The synthetic token batches of the cost and scale tiers
 come from a fixed pseudorandom generator, seeded per step and identical across
 modes and repetitions, so no data effect can separate two cells (the accuracy
@@ -1118,11 +1118,11 @@ segmented ($4{\times}10^{-4}$) is the same size as the difference between
 the two segmented modes ($3{\times}10^{-4}$)---a pair that draws identical
 dropout masks and whose gradients are \emph{measured} to agree at
 $10^{-9}$ in Table~\ref{tab:identity}. The full-versus-segmented gap is
-thus no larger than the gap between two segmented modes whose per-step
+thus the same size as the gap between two segmented modes whose per-step
 gradients agree at $10^{-9}$. A roundoff-only spread, the same
-configuration repeated, was not measured, so this bounds the segmentation
-effect by the mode-to-mode spread rather than by a measured roundoff
-floor.
+configuration repeated, was not measured, so this places the segmentation
+effect at the scale of the mode-to-mode spread rather than at a measured
+roundoff floor.
 
 \begin{table}[t]
 \caption{Matched-pair training at the accuracy tier: identical data, seeds,
@@ -1285,8 +1285,8 @@ of three isolated runs; batch 4, seq.\ 512). Dial columns
 are binary: Drop.\ = dropout on; Rec.\ = activation recomputation (off =
 retained graph); Str.\ = weight streaming (off = all segments resident);
 In-b.\ = optimizer-in-backward (off = deferred sweep); Opt.\ = wall time
-of the optimizer phase per step; Host = peak resident set of the training
-process on the host, in GB. \%full columns give
+of the optimizer phase per step; VRAM = device memory; Host = peak resident
+set of the training process on the host, in GB. \%full columns give
 peak memory as a percentage of the full-model anchor; $\times$full columns
 give step time as a multiple of it. GPU rows use the dropout-matched
 anchor, CPU rows the single (dropout) CPU anchor. Every segmented row computes the same model
@@ -1427,7 +1427,7 @@ Streamed, recompute & 660 & 4.3\,GB & 5.43 & 822 & 7.90 \\
 \multicolumn{6}{@{}l}{\emph{Serving runtime (ONNX, PyTorch-free)}} \\
 Full-session & 4{,}534 & 0.7\,GB & 0.018 & 3{,}100 & 0.603 \\
 Preloaded & 506 & 3.8\,GB & 4.75 & 3{,}346 & 6.43 \\
-Disk-streamed & 506 & 0.8\,GB & 9.47 & \textbf{401} & 9.20 \\
+Disk-streamed & 506 & 0.8\,GB & 9.47 & 401 & 9.20 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1456,7 +1456,9 @@ Serving mode & Requests & Footprint & Band & s/token & Trend \\
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_exp8_serving.pdf}
+% 0.96: the tight bounding box narrowed when the panel titles stopped
+% overhanging the axes; this keeps the rendered height it had before.
+\includegraphics[width=0.96\textwidth]{figures/fig_exp8_serving.pdf}
 \caption{Long-horizon serving, per experiment: per-request peak memory (MB; GPU: reserved, without the CUDA context
 that Table~\ref{tab:sustainedserve} adds; CPU: resident set) and per-request time for a 256-token
 prompt generating 32 tokens (resident) or 8 (streamed), with its running
