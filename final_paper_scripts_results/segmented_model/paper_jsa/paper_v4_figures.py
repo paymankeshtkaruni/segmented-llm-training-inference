@@ -141,13 +141,25 @@ def fig_traces():
         ax.fill_between(t, res, color=COL["recomp"], alpha=.25, lw=0)
         phases = [(m[0], m[1]) for m in d["moves"] if m[2] == "<phase>"]
         seen = set()
-        heights = [0.10, 0.40, 0.65, 0.15]
+        # Phase boundaries can fall within a label width of each other (0.27 s
+        # in T2, 0.11 s in T9), which overprinted the rotated labels.  Draw the
+        # rule at the true boundary and slide the label right until it clears
+        # every label already placed; sep is a constant in points because it
+        # scales with the panel's own time range.
+        sep = 0.032 * (max(t) - min(t))
+        placed = []
         for pt, ph in phases:
             if ph in ("build", "warmup") or ph in seen:
                 continue
             ax.axvline(pt, color="k", lw=0.4, ls=":")
-            ax.text(pt, max(res) * heights[len(seen) % 4], " " + ph,
-                    rotation=90, fontsize=5, va="bottom", color="0.25")
+            xl = pt
+            while any(abs(xl - q) < sep for q in placed):
+                xl += sep
+            placed.append(xl)
+            ax.annotate(ph, xy=(xl, 0.03), xycoords=("data", "axes fraction"),
+                        xytext=(3, 0), textcoords="offset points",
+                        rotation=90, fontsize=5, va="bottom", ha="center",
+                        color="0.25")
             seen.add(ph)
         ax.set_ylabel("GB"); ax.set_title(ttl, fontsize=7)
         ax.grid(alpha=.3)
@@ -213,44 +225,71 @@ def fig_scale():
 # ------------------------------------------------------------ F5: inference
 def fig_inference():
     d = json.load(open(R / "exp4_infer" / "infer_summary.json"))
-    fig, (a, b) = plt.subplots(1, 2, figsize=(7.0, 2.3))
+    fig, (a, b) = plt.subplots(1, 2, figsize=(8.0, 2.3))
     tor = {"I1": "resident + cache", "I2": "resident, recompute",
            "I3": "streamed + cache", "I4": "streamed, recompute"}
     onx = {"O1_full": "full-session", "O3_preload": "preloaded",
            "O4_stream": "disk-streamed"}
-    # per-point label offsets (points), tuned to avoid collisions
-    off_g = {"I1": (6, 6), "I2": (6, -11), "I3": (-2, 8), "I4": (2, -12),
-             "O1_full": (-6, 9), "O3_preload": (-14, -13), "O4_stream": (6, -4)}
-    off_c = {"I1": (-38, -5), "I2": (6, -11), "I3": (-10, 8), "I4": (2, -12),
-             "O1_full": (-18, -13), "O3_preload": (6, 5), "O4_stream": (-34, 7)}
+    # Per-point label placement (offset in points, plus alignment).  The GPU
+    # panel packs four points into ~8 pt of height at the top and four more
+    # into ~15 pt at the bottom right, so its labels are aligned away from the
+    # frame and, where a label cannot sit beside its marker, tied to it with a
+    # leader line.  The CPU panel is sparse enough for plain offsets.
+    off_g = {"I1": (0, 7, "center", "bottom"),
+             "I2": (0, -7, "center", "top"),
+             "I3": (-24, 5, "right", "bottom"),
+             "I4": (-24, 22, "right", "bottom"),
+             "O1_full": (0, 7, "center", "bottom"),
+             "O3_preload": (-6, 2, "right", "bottom"),
+             "O4_stream": (6, -6, "right", "top")}
+    lead_g = {"I4"}                      # label too far from its marker to read
+    # the three CPU points nearest the right frame carry their labels leftwards
+    off_c = {"I1": (-2, 5, "left", "baseline"),
+             "I2": (6, -11, "left", "baseline"),
+             "I3": (-6, 8, "right", "baseline"),
+             "I4": (-4, -12, "right", "baseline"),
+             "O1_full": (-18, -13, "left", "baseline"),
+             "O3_preload": (-6, 5, "right", "baseline"),
+             "O4_stream": (-34, 7, "left", "baseline")}
+
+    def label(ax, off, m, lab, xy):
+        dx, dy, ha, va = off[m]
+        kw = {}
+        if ax is a and m in lead_g:
+            kw["arrowprops"] = dict(arrowstyle="-", lw=0.4, color="0.55",
+                                    shrinkA=1, shrinkB=3)
+        ax.annotate(lab, xy, textcoords="offset points", xytext=(dx, dy),
+                    ha=ha, va=va, fontsize=6, **kw)
+
+    def label_g(m, lab, xy):
+        label(a, off_g, m, lab, xy)
+
     for m, lab in tor.items():
         g, c = d["torch"][m]["gpu"], d["torch"][m]["cpu"]
         a.scatter(g["per_token_s"], g["vram_mb"] / GB, c=COL["recomp"], s=22)
-        a.annotate(lab, (g["per_token_s"], g["vram_mb"] / GB),
-                   textcoords="offset points", xytext=off_g[m], fontsize=6)
+        label_g(m, lab, (g["per_token_s"], g["vram_mb"] / GB))
         b.scatter(c["per_token_s"], c["rss_mb"] / GB, c=COL["recomp"], s=22)
-        b.annotate(lab, (c["per_token_s"], c["rss_mb"] / GB),
-                   textcoords="offset points", xytext=off_c[m], fontsize=6)
+        label(b, off_c, m, lab, (c["per_token_s"], c["rss_mb"] / GB))
     for m, lab in onx.items():
         g, c = d["onnx"][m]["gpu"], d["onnx"][m]["cpu"]
         a.scatter(g["per_token_s"], g["vram_mb"] / GB, c=COL["onnx"],
                   marker="^", s=24)
-        a.annotate(lab, (g["per_token_s"], g["vram_mb"] / GB),
-                   textcoords="offset points", xytext=off_g[m], fontsize=6)
+        label_g(m, lab, (g["per_token_s"], g["vram_mb"] / GB))
         b.scatter(c["per_token_s"], c["rss_mb"] / GB, c=COL["onnx"],
                   marker="^", s=24)
-        b.annotate(lab, (c["per_token_s"], c["rss_mb"] / GB),
-                   textcoords="offset points", xytext=off_c[m], fontsize=6)
-    a.set_xlim(0.009, 30)
+        label(b, off_c, m, lab, (c["per_token_s"], c["rss_mb"] / GB))
+    a.set_xlim(0.007, 32)
+    a.set_ylim(0.26, 24)                 # headroom for the two label bands
+    b.set_ylim(0.33, 7.5)                # keeps the CPU anchor label off the title
     fa = d["full_anchor"]
     fg = ((fa["gpu"]["vram_reserved_mb"] + 490) / GB, fa["gpu"]["per_token_s"])
     fc = (fa["cpu"]["rss_mb"] / GB, fa["cpu"]["per_token_s"])
     a.scatter(fg[1], fg[0], c=COL["full"], marker="*", s=80)
     a.annotate("full model", (fg[1], fg[0]), textcoords="offset points",
-               xytext=(4, -13), fontsize=6)
+               xytext=(-2, -8), ha="right", va="top", fontsize=6)
     b.scatter(fc[1], fc[0], c=COL["full"], marker="*", s=80)
     b.annotate("full model", (fc[1], fc[0]), textcoords="offset points",
-               xytext=(6, 8), fontsize=6)
+               xytext=(6, 8), ha="left", fontsize=6)
     import matplotlib.lines as ml
     handles = [ml.Line2D([], [], color=COL["recomp"], marker="o", ls="",
                          label="training runtime (PyTorch)"),
@@ -261,7 +300,7 @@ def fig_inference():
         ax.set_xscale("log"); ax.set_yscale("log")
         ax.set_xlabel("seconds per generated token"); ax.set_ylabel(yl)
         ax.set_title(ttl); ax.grid(alpha=.3, which="both")
-    a.legend(handles=handles, loc="lower left")
+    a.legend(handles=handles, loc="upper left")
     save(fig, "inference_frontier.pdf")
 
 

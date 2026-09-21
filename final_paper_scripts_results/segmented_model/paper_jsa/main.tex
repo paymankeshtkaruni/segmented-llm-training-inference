@@ -48,7 +48,8 @@ streamed mode two frozen laws predict memory and time at model sizes and
 partitions never run. Every mode is verified on GPU and CPU against unsegmented
 execution---every mode at the forward level, every dropout-free mode through its
 optimizer step, and the deferred ones through their gradients as well---at the
-framework's own fp32 reordering scale, and every engine agrees on every prediction, so the menu never
+framework's own fp32 reordering scale, and the serving pipelines agree on every
+prediction we compared, so the menu never
 trades accuracy. In fp32 on one GPU, the 0.84-billion-parameter menu runs from
 11.5~GB at 5.4$\times$ the full-model step time to 1.08~GB at 39$\times$,
 twenty times below the ZeRO-Offload floor measured on the same hardware; on a
@@ -833,10 +834,12 @@ Following the store
 binding, GPU tables lead with device memory and time; CPU tables lead with
 RAM and time.
 
-\textbf{Timing.} Training cells time full optimizer steps
-(forward{+}backward{+}update), averaged after warmup: every training cell runs
+\textbf{Timing.} Training cells time the four-phase step---forward,
+backward, update, and the per-step validation pass of
+Sec.~\ref{sec:longhorizon}---averaged after warmup: every training cell runs
 one warm-up step and then three timed steps, two at 6.9B, where one step costs
-minutes. Inference cells time greedy decoding per generated token after a
+minutes. The streamed deferred cell at 0.84B is 23.1~s of training phases
+(3.9 forward, 10.9 backward, 8.2 update) plus a 5.1~s validation pass. Inference cells time greedy decoding per generated token after a
 warm-up generation. The synthetic token batches of the cost and scale tiers
 come from a fixed pseudorandom generator, seeded per step and identical across
 modes and repetitions, so no data effect can separate two cells (the accuracy
@@ -883,8 +886,8 @@ host traffic crosses PCIe from pageable host memory, and a CPU node whose
 disk store is a parallel network filesystem rather than a local SSD. The
 cost model of Sec.~\ref{sec:model} separates bandwidth-bound from
 compute-bound terms, and the store medium bounds only the transport share
-of a streamed step, which Sec.~\ref{sec:disc} measures at under an eighth of
-the streamed GPU step; the CPU rows are not decomposed the same way. The cost-model validation is pre-registered: the predicted time and memory
+of a streamed step, which Sec.~\ref{sec:disc} measures at about a seventh of
+the streamed GPU step's training phases; the CPU rows are not decomposed the same way. The cost-model validation is pre-registered: the predicted time and memory
 of the held-out cell (3.1B at $16{\times}4{\times}4{\times}16$) were
 committed to the development repository before the job ran, and the
 artifact records both timestamps (Sec.~\ref{sec:model}).
@@ -948,7 +951,9 @@ resident set differs from the four-phase cell by allocator plateaus alone:
 produces. Of the four-phase components, the inference cells of
 Tables~\ref{tab:infer}, \ref{tab:inferscale} and~\ref{tab:gran} share only
 the per-operation tracer; the validation pass and the per-step allocator trim
-are training-only.}
+are training-only. Tables~\ref{tab:identity} and~\ref{tab:quality} come from
+neither: they are produced by the exactness and matched-pair campaign of
+Sec.~\ref{sec:exact}, with its own bindings, seeds, and step counts.}
 \label{tab:protocols}
 \centering
 \scriptsize
@@ -1010,7 +1015,7 @@ forward paths (measured on the 40~GB card by computing the reference forward
 first, freeing it, and building each segmented mode from the same store); representative gradient slices agree to
 $1.1{\times}10^{-8}$; post-step parameters after one and after four full
 AdamW steps, reassembled and compared element by element across all 840M
-parameters, agree to $5{\times}10^{-5}$ on GPU and $1.1{\times}10^{-4}$ on CPU under
+parameters, agree to $4.9{\times}10^{-5}$ on GPU and $1.1{\times}10^{-4}$ on CPU under
 the clipped deferred schedule, and to $3.5{\times}10^{-4}$ and
 $1.8{\times}10^{-4}$ under the unclipped in-backward schedule. With dropout
 on, where no reference
@@ -1193,7 +1198,10 @@ training peaks at 25.4~GB; DeepSpeed ZeRO-Offload lowers this to 21.5~GB
 (stage 2) and 23.6~GB (stage 3) at $2.9$--$4.1\times$ the step
 time (ratios from unrounded medians, as throughout)---consistent with its design point, which offloads optimizer state and
 parameters but leaves the working activations and gradients of the
-\emph{whole layer stack} on the device. The naive segmented anchor---the
+\emph{whole layer stack} on the device. Stage 3 offloads parameters too, yet
+peaks 2.1~GB \emph{above} stage 2: it re-gathers them per layer into
+reassembly buffers on top of that same stack, so the smaller of the two is the
+floor we compare against. The naive segmented anchor---the
 partition with every technique off, the six always-on bounds among them---lands at 18.2~GB: the partition alone already bounds attention
 and feed-forward transients below both ZeRO configurations, but the
 retained graph and resident weights still dominate. On CPU the same anchor
@@ -1376,7 +1384,7 @@ device memory to 804~MB, and dropping the cache too reaches 660~MB at
 5.4~s/token. The PyTorch-free runtime spans the same trade with less
 overhead at both ends: the full-session export is the fastest cell in the
 paper (0.018~s/token on GPU), and the disk-streamed weights-as-inputs mode
-serves in \textbf{401~MB total} on CPU---no GPU, no PyTorch, no
+serves in 401~MB total on CPU---no GPU, no PyTorch, no
 host-resident weight copy---at 9.2~s/token. The excluded baked-per-segment
 design (11.6~GB, Sec.~\ref{sec:onnxrt}) is dominated at both ends.
 
@@ -1386,7 +1394,7 @@ consecutive requests. The resident 6.9B server holds exactly 26.6~GB
 reserved (27.1~GB with the CUDA context) for 1{,}000 requests. The
 PyTorch-free disk-streamed server answers 500 requests inside a 12~MB band
 (359.6--371.4~MB) of runtime-arena wobble, with no trend and no session leak. Under this instrumentation-free protocol the cache
-modes' latency is \textbf{0.031~s/token} (0.84B) and \textbf{0.035~s/token}
+modes' latency is 0.031~s/token (0.84B) and 0.035~s/token
 (6.9B): the per-operation tracer inside the four-phase protocol
 inflates sub-second decoding $5.9\times$ (0.187 against 0.032~s/token) while
 leaving the slow streamed mode within $1.16\times$ (5.50 against 4.73~s/token);
@@ -1673,7 +1681,7 @@ changes the number of embedding and vocabulary slices by $8\times$ each,
 the head groups and feed-forward chunks by $4\times$, and the
 segment count from 112 to 356, yet the recomputation plateau barely moves
 (5.2, 4.5, 4.5~GB) and the streamed floor tracks the widest
-segment---2.14~GB coarse, 1.08~GB standard, \textbf{890~MB} fine at
+segment---2.14~GB coarse, 1.08~GB standard, 890~MB fine at
 30.8~s---exactly as Eq.~(\ref{eq:memlaw}) predicts (Table~\ref{tab:gran}).
 The fastest resident
 mode is U-shaped in segment count (5.8, 3.9, 10.5~s): the coarse partition
@@ -1682,7 +1690,7 @@ partition is the sweet spot. Inference splits the two effects cleanly.
 Decode latency is pure dispatch and rises monotonically with segment count
 (0.12, 0.21, 0.37~s/token) at a device footprint the weights fix near 4~GB in
 all three cases; the streamed serving floor falls monotonically with it
-(878, 658, \textbf{598}~MB), for $1.3\times$ the latency between the ends.
+(878, 658, 598~MB), for $1.3\times$ the latency between the ends.
 Coarse partitions therefore decode fastest, fine partitions serve smallest,
 and the memory dial and the dispatch dial point in opposite directions.
 
@@ -1807,7 +1815,7 @@ Configuration & \multicolumn{2}{c}{Memory (MB)} & \multicolumn{2}{c}{Step time (
 
 \textbf{Accuracy, stated plainly.} In sample, the memory law is within
 8.7\% everywhere; the time law is within 3.7\% at 3B and above, degrading
-to $-12$\% at 1.5B and $+14$\% at 0.84B, where per-step costs that the law
+to $-12$\% at 1.5B and $+14.5$\% at 0.84B, where per-step costs that the law
 does not model (validation passes, framework fixed costs) are no longer
 negligible against the parameter term. We report these residuals rather
 than adding terms: a two-slope time law that a practitioner can
@@ -1874,7 +1882,8 @@ measurement, then confronted with an unseen configuration.
 streaming \emph{must} cost, and a measurement of the store path prices it
 (in this paragraph GB means $10^9$ bytes, the unit of bandwidth). At 0.84B
 the streamed deferred step moves roughly 34~GB through the store
-interface: the 3.35~GB of fp32 weights fetched twice (forward, backward),
+interface in its three training phases: the 3.35~GB of fp32 weights fetched
+twice (forward, backward),
 gradients parked and re-fetched, the optimizer sweep pulling and writing
 back weights and both Adam moments, plus ${\sim}0.8$~GB of layer-input
 records. We timed that path exactly as the engine uses it, on the grid's
@@ -1886,13 +1895,18 @@ segment back into the store takes 0.23~s (14.4~GB/s). Raw 256~MiB copies
 on the same node run at 22.5~GB/s from pageable and 26.6~GB/s from pinned
 host memory, inside the host-link range NVIDIA quotes for the
 A100~\cite{nvidia_a100}. At the measured rates the 34~GB crossing the link
-costs about 2.0~s (34~GB at ${\sim}17$~GB/s), and the ${\approx}20.9$~GB of
-it that the store also clones on the host on the way in---the weights fetched
-twice ($2{\times}3.35$~GB), the gradients re-fetched (3.35~GB), the optimizer
-sweep's pull of weights and both moments (10.05~GB), and the ${\sim}0.8$~GB of
-records---about 1.2~s at the measured 17.1~GB/s clone rate. Together that is
-${\approx}3.2$~s, about $11\%$ of the
-28.3~s step. The remaining $89\%$ is synchronous orchestration, and the
+costs about 2.2~s, each direction at its own rate: the ${\approx}20.9$~GB
+moving \emph{into} the device---weights fetched twice ($2{\times}3.35$~GB),
+gradients re-fetched (3.35~GB), the optimizer sweep's pull of weights and both
+moments (10.05~GB), and the ${\sim}0.8$~GB of records---at the measured
+16.9~GB/s host-to-device rate (1.24~s), and the ${\approx}13.4$~GB leaving it
+(gradients parked; optimizer write-back) at the 14.4~GB/s park rate (0.93~s);
+the store also clones the inbound share on the host, about 1.2~s at
+17.1~GB/s. Together that is ${\approx}3.4$~s, about $15\%$ of the 23.1~s the
+three training phases take. (The protocol's validation forward is a fourth
+full weight fetch under streaming, ${+}3.35$~GB for ${\approx}0.2$~s of link
+time and as much host cloning; it and its 5.1~s are excluded from both sides
+of this account.) The remaining $85\%$ is synchronous orchestration, and the
 measurement names its largest item: on every fetch the loader constructs
 a fresh segment module, which runs the framework's parameter
 initialization over the slice on the CPU before the stored weights
@@ -1900,17 +1914,19 @@ overwrite it, so a full fetch pass costs 3.8~s where its copies cost
 0.4~s. Three such passes per step (forward, backward, optimizer sweep)
 account for about 11~s, and Table~\ref{tab:grid} shows the same 4.1~s gap
 between the streamed and resident deferred optimizer sweeps (8.24 vs.\
-4.13~s) that one fetch-and-park pass predicts ($3.8 + 0.2$~s). Two
+4.13~s) that one fetch-and-park pass predicts ($3.84 + 0.23$~s, within 0.1~s
+of the measured 4.11~s gap). Two
 further measured facts corroborate the account. First, the in-backward schedule removes gradient
 parking and the optimizer sweep's re-fetch---about $30\%$ of the traffic
 \emph{and} one full pass of orchestration---and the step drops by $23\%$
 (28.3${\to}$21.7~s). Second, the two terms of Eq.~(\ref{eq:timelaw}) locate the cost (in the
 law's 32.3~s prediction, which overshoots the measured 28.3~s by 14\%,
 Sec.~\ref{sec:model}): at 0.84B the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
-the fixed dispatch cost of visiting each segment three times---the term that
+the fixed dispatch cost of visiting each segment on every pass of the
+step---the term that
 launch-batching mechanisms such as CUDA graphs~\cite{cudagraphs} attack---while the
 parameter-proportional term contributes 28.4~s and contains the
-${\sim}3.2$~s of measured transport. The rest of that term is byte-proportional synchronous
+${\sim}3.4$~s of measured transport. The rest of that term is byte-proportional synchronous
 work: copies through pageable host memory, including the host-side copy
 the store makes on every fetch, and the small kernels that follow them. The conclusion cuts both ways: the
 measured slowdowns are honest prices for a strict, verifiable residency
@@ -1932,15 +1948,15 @@ boundary}, and we state its arithmetic plainly: at 478~s per step, an
 overnight run is on the order of a hundred steps---suited to bounded
 adaptation on private data, not to long training campaigns. Crucially,
 these wall-clock prices are a property of the framework, not of the
-method: the decomposition above attributes ${\sim}89\%$ of the streamed
-step to synchronous orchestration by an engine built for the
-memory-abundant regime, with transport itself measured at about 3.2~s. The memory
+method: the decomposition above attributes ${\sim}85\%$ of the streamed
+step's training phases to synchronous orchestration by an engine built for the
+memory-abundant regime, with transport itself measured at about 3.4~s. The memory
 column of every table is what segmentation guarantees; the time column is
 what today's PyTorch charges to honor it, and it shrinks with runtime
 engineering, not with new mathematics.
 
 \textbf{Segmentation narrows the gap between hardware tiers.} Full-model training at 0.84B is $40\times$ slower on our CPU node than on
-the A100 (28.8 vs.\ 0.72~s, the anchors of Table~\ref{tab:grid}). In the smallest streamed modes the ratio collapses to roughly $6\times$
+the A100 (28.8 vs.\ 0.72~s, the anchors of Table~\ref{tab:grid}). In the smallest streamed modes the ratio collapses to $5.5$--$6.3\times$
 (155.6 vs.\ 28.3~s deferred; 136.2 vs.\ 21.7~s in-backward): once both devices spend most of the step on store traffic
 and orchestration rather than dense math, the accelerator's FLOP advantage
 is mostly idle. The effect is starkest in the serving runtime, where the
@@ -2036,17 +2052,20 @@ Finally, both laws stop at 6.9B and the granularity curve
 has three points; both can be densified, and energy is unmeasured.
 
 \textbf{The schedulable remainder.} Sec.~\ref{sec:disc} attributes roughly
-$89\%$ of the streamed step to synchronous orchestration rather than
-measured transport. A memory-budget-first runtime---segment modules built
+$85\%$ of the streamed step's training phases to synchronous orchestration
+rather than measured transport. A memory-budget-first runtime---segment modules built
 once and refilled from the store instead of reconstructed on every fetch,
 pinned host memory and a memory-mapped
 disk store, asynchronous prefetch under a bounded two-segment residency,
 compute/transfer overlap, cross-segment fusion, budget-aware
 allocation---is therefore the natural successor system. The measured
-transport plus the full-model compute of one step sum to about 3.9~s against
-the 28.3~s streamed step, so the headroom before any algorithmic change is
-up to roughly sevenfold; this is an upper bound from the measured floor, not
-a demonstrated speedup, since no prefetching prototype was built. We have deliberately reported the strict
+transport plus the full-model compute of one step sum to about 4.1~s against
+the 23.1~s of training phases in the streamed step, so the headroom before any
+algorithmic change is up to roughly sixfold; this is an upper bound from the
+measured floor, not a demonstrated speedup, since no prefetching prototype was
+built---and a generous one: its 0.72~s compute anchor is the retained-graph
+full-model step, while every streamed mode recomputes, so a streamed compute
+floor is higher. We have deliberately reported the strict
 one-segment floor; relaxing it is engineering with a predictable payoff.
 
 \textbf{From one device to many.} The interfaces that let us stream
