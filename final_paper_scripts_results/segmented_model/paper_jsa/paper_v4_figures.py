@@ -168,7 +168,7 @@ def fig_scale():
 
     sizes = ["0.84B", "1.5B", "3.1B", "5.1B", "6.9B"]
     full = [25.406, cell("gpu40_xl15b_full_train"), None, None, None]
-    full_note = [None, None, "67.6 (H100)", ">80", ">94 (H100)"]
+    full_note = [None, None, "67.6\n(H100)", ">80\n(A100-80GB)", ">94\n(H100)"]
     # 1.5B has no recomputation-resident cell; the resident mode shown there is the
     # retained-graph in-backward one, exactly as in the scale table (hatched bar).
     resident = [grid["T2"]["gpu"]["vram_mb"] / GB, cell("gpu40_xl15b_T7", src=fast),
@@ -293,7 +293,7 @@ def fig_schematic():
         ("E — embedding", "split $d_{model}$, concat", "#4c72b0"),
         ("A — attention", "head groups; $W_o$ its own segment", "#55a868"),
         ("M — MLP", "$d_{ff}$ chunks, running-sum", "#dd8452"),
-        ("H — output head", "vocab slices, streamed CE", "#c44e52"),
+        ("H — output head", "vocab slices, streamed cross-entropy", "#c44e52"),
     ]
     y = 76
     for name, sub, col in axes_boxes:

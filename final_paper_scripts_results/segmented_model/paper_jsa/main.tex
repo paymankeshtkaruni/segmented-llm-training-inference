@@ -46,9 +46,9 @@ non-resident state parked in host memory or on disk. The result is a
 memory for time: a fixed memory budget selects a measured row, and for the
 streamed mode two frozen laws predict memory and time at model sizes and
 partitions never run. Every mode is verified on GPU and CPU against unsegmented
-execution---every mode at the forward level, and every dropout-free mode
-through gradients and optimizer steps---at the framework's own fp32 reordering
-scale, and every engine agrees on every prediction, so the menu never
+execution---every mode at the forward level, every dropout-free mode through its
+optimizer step, and the deferred ones through their gradients as well---at the
+framework's own fp32 reordering scale, and every engine agrees on every prediction, so the menu never
 trades accuracy. In fp32 on one GPU, the 0.84-billion-parameter menu runs from
 11.5~GB at 5.4$\times$ the full-model step time to 1.08~GB at 39$\times$,
 twenty times below the ZeRO-Offload floor measured on the same hardware; on a
@@ -136,8 +136,9 @@ precision: quantization and low-precision training shrink every memory
 term by a constant factor~\cite{nadalini2023reduced,micikevicius2018mixed},
 whereas segmentation bounds which terms must coexist at all. The two
 should compose \emph{productively}: quantized segments are smaller, so a
-fixed memory budget affords a coarser partition, and coarser partitions are
-the faster end of the granularity dial (Sec.~\ref{sec:gran}). Quantization
+fixed memory budget affords a coarser partition, and in the streamed modes
+coarser partitions are the faster end of the granularity dial
+(Sec.~\ref{sec:gran}). Quantization
 inside segmented execution is therefore expected to buy back time as well
 as memory. We have not measured that combination; all results here
 are deliberately full-precision fp32 so that exactness can be verified end
@@ -165,8 +166,8 @@ PyTorch-free serving mode.
   a time---down to a one-resident-segment floor when streamed---with the
   reassembly identities stated as
   propositions and exactness verified at the forward level for every mode, at
-  the gradient and optimizer-step levels for the dropout-free ones, and at the
-  prediction level across engines
+  the optimizer-step level for the dropout-free ones and at the gradient level
+  for the deferred among them, and at the prediction level across engines
   (Secs.~\ref{sec:design} and \ref{sec:exact}).
 \item \textbf{A mode taxonomy instead of a technique zoo:} an always-on base
   of six memory bounds plus dials yields 12 training modes and 4 inference
@@ -199,8 +200,9 @@ PyTorch-free serving mode.
   the deviation of plain PyTorch from itself under a routine batch split,
   and an order of magnitude below the learning-rate scale under the clipped
   recipe. Eight serving pipelines across both engines, six of them
-  PyTorch-free (three placements on two providers), agree on every one of
-  11{,}654 test predictions (Sec.~\ref{sec:exact}).
+  PyTorch-free (three placements on two providers), return the same exact-match
+  on 11{,}654 test predictions, five of them compared example by example with
+  zero token-level disagreements (Sec.~\ref{sec:exact}).
 \item \textbf{An analytic cost model over size and partition,} fitted once
   on the measured grid (memory law within 8.7\% worst-case across five sizes
   and three partitions) and validated by a pre-registered prediction on a
@@ -594,10 +596,10 @@ Under the invariant, peak device memory is the maximum over execution phases
 of a sum of bounded terms: the CUDA context, resident shared parameters, one
 segment, its transient activations, and (per mode) the retained graph or the
 recomputation records. Writing $s_{v}$ for the vocabulary-tied slice
-pair---the embedding slice plus the output-head slice,
-$s_v = 4V d_\text{model}(1/E + 1/H)$ bytes, expressed in units of $10^6$
-bytes (the unit in which $c_1$ was fitted), the widest streamed blocks in
-every measured configuration---the streamed-training peak is captured by
+pair---the embedding slice plus the output-head slice, which are the widest
+streamed blocks in every measured configuration---and setting
+$s_v = 4V d_\text{model}(1/E + 1/H)$ bytes in units of $10^6$ bytes (the unit
+in which $c_1$ was fitted), the streamed-training peak is captured by
 \begin{equation}\label{eq:memlaw}
 M_\text{peak} \;=\; c_0 + c_1\, s_{v} + c_2\, d_\text{model}\quad[\text{MB}],
 \end{equation}
@@ -749,7 +751,8 @@ own and not a public benchmark: log lines exported from the compute nodes of
 the same cluster, each labelled with an issue class and a severity level and
 rendered as the label string \emph{Issue: $\langle$class$\rangle$, level:
 $\langle$level$\rangle$} (154 class--level pairs over nine node exports). The
-raw exports, the cleaning and splitting script, and the three split files are
+raw exports, the cleaning and splitting script
+(\emph{create\_generative\_splits.py}), and the three split files are
 committed in the artifact repository of Sec.~\ref{sec:longhorizon}, so the
 tier reproduces end to end. The tier is
 deliberately small---it is the setting in which the full-model reference can
@@ -757,7 +760,7 @@ be trained to convergence repeatedly under identical seeds, so that
 segmented-vs-full comparisons are matched-pair rather than anecdotal. The
 identity checks of Sec.~\ref{sec:exact} are per-operation; their
 forward-state half is repeated at 3.1B and 6.9B, where the deviation grows
-only from $1.2{\times}10^{-5}$ to $2.1{\times}10^{-5}$ with depth and width.
+only from $1.2{\times}10^{-5}$ to $2.1{\times}10^{-5}$ with model width.
 
 \textbf{Cost tier (${\approx}$0.84B).} Memory and time are measured on a decoder
 with the GPT-2 vocabulary~\cite{radford2019gpt2} ($V{=}50{,}257$, context 512, 36 layers,
@@ -957,7 +960,7 @@ are training-only.}
 Per-step validation pass & \checkmark & --- \\
 Per-operation memory tracer & \checkmark & --- \\
 Per-step allocator trim & \checkmark & --- \\
-Steps / requests per run & 2--5 & 128--2{,}048 / 500--2{,}000 \\
+Steps / requests per run & \begin{tabular}[t]{@{}c@{}}1 warm-up + 3 timed\\(2 at 6.9B; 5 in the\\validation-cost re-runs)\end{tabular} & 128--2{,}048 / 500--2{,}000 \\
 Produces & \begin{tabular}[t]{@{}c@{}}Tabs.~\ref{tab:compare}, \ref{tab:grid}, \ref{tab:infer}, \ref{tab:scale},\\ \ref{tab:inferscale}, \ref{tab:gran}, \ref{tab:costmodel}, \ref{tab:sensitivity}\end{tabular} & Tabs.~\ref{tab:sustainedserve}, \ref{tab:sustainedtrain} \\
 \bottomrule
 \end{tabular}
@@ -969,7 +972,10 @@ Produces & \begin{tabular}[t]{@{}c@{}}Tabs.~\ref{tab:compare}, \ref{tab:grid}, \
 \caption{The directly priced per-step validation pass (red) on top of the
 training-only long-run step time (blue), per configuration. Adding the red
 component prices the validation pass of the four-phase protocol; its
-tracer and per-step trim account for the remainder (Sec.~\ref{sec:longhorizon}).}
+tracer and per-step trim account for the remainder (Sec.~\ref{sec:longhorizon}).
+Each annotation gives the validation pass in seconds and as a percentage of the
+two components combined, that is of the training-only step time plus the
+validation pass.}
 \label{fig:valcost}
 \end{figure*}
 
@@ -1004,7 +1010,7 @@ forward paths (measured on the 40~GB card by computing the reference forward
 first, freeing it, and building each segmented mode from the same store); representative gradient slices agree to
 $1.1{\times}10^{-8}$; post-step parameters after one and after four full
 AdamW steps, reassembled and compared element by element across all 840M
-parameters, agree to $5{\times}10^{-5}$ on GPU and $10^{-4}$ on CPU under
+parameters, agree to $5{\times}10^{-5}$ on GPU and $1.1{\times}10^{-4}$ on CPU under
 the clipped deferred schedule, and to $3.5{\times}10^{-4}$ and
 $1.8{\times}10^{-4}$ under the unclipped in-backward schedule. With dropout
 on, where no reference
@@ -1146,9 +1152,14 @@ Finally, the strictest end-to-end statement: from one segmented checkpoint,
 eight serving pipelines---the segmented PyTorch engine, the exported
 unsegmented PyTorch model, and the PyTorch-free ONNX runtime in its
 full-session, preloaded, and disk-streamed placements on both
-providers---produce \emph{identical predictions on all 11{,}654 test
-examples} (exact-match 0.9548 in every cell, agreement
-$11{,}654/11{,}654$, zero disagreements at the token level); the remaining
+providers---reach the \emph{same exact-match, 0.9548, on all 11{,}654 test
+examples}. Five of them are compared example by example, the artifact holding
+their per-example prediction dumps---the two PyTorch pipelines, the ONNX
+full-session placement on both providers, and the preloaded placement on
+CPU---with agreement $11{,}654/11{,}654$ and zero disagreements at the token
+level; for the other three ONNX placements (preloaded on the GPU provider,
+disk-streamed on either) the recorded evidence is the aggregate exact-match,
+identical to sixteen digits. The remaining
 inference modes of the segmented engine are covered by the token-level
 identity of Sec.~\ref{sec:inferexact}. The same evaluation also times the
 engines end to end: the full-session export finishes the 11{,}654 examples
@@ -1266,7 +1277,8 @@ of three isolated runs; batch 4, seq.\ 512). Dial columns
 are binary: Drop.\ = dropout on; Rec.\ = activation recomputation (off =
 retained graph); Str.\ = weight streaming (off = all segments resident);
 In-b.\ = optimizer-in-backward (off = deferred sweep); Opt.\ = wall time
-of the optimizer phase per step. \%full columns give
+of the optimizer phase per step; Host = peak resident set of the training
+process on the host, in GB. \%full columns give
 peak memory as a percentage of the full-model anchor; $\times$full columns
 give step time as a multiple of it. GPU rows use the dropout-matched
 anchor, CPU rows the single (dropout) CPU anchor. Every segmented row computes the same model
@@ -1332,7 +1344,7 @@ devices---recomputation pays for dropout's memory, then RNG replay
 \textbf{The store is part of the bargain.} A 1.1~GB streamed GPU run
 carries a 16--20~GB host-side store (parameters, gradients, moments,
 records); the CPU rows carry the same state on disk. Nothing is free; the
-claim is that the \emph{constrained} resource is spent at 2--24$\times$
+claim is that the \emph{constrained} resource is spent at 2--23.5$\times$
 less on the GPU and up to 21$\times$ less on the CPU while total system
 memory is repartitioned, not inflated.
 
@@ -1347,7 +1359,8 @@ plots them as a serving frontier.
 latency for both runtimes and the full-model anchor, on GPU (left, device
 memory) and CPU (right, RAM). All points produce identical predictions:
 the full-test-set check of Sec.~\ref{sec:predagree} for the resident
-PyTorch mode and the six PyTorch-free pipelines, the token-level identity
+PyTorch mode and the six PyTorch-free pipelines (example by example for three
+of the six, by identical exact-match for the rest), the token-level identity
 of Sec.~\ref{sec:inferexact} for the other PyTorch modes.}
 \label{fig:inferfrontier}
 \end{figure*}
@@ -1383,8 +1396,8 @@ comparison across modes under equal instrumentation; deployment latencies
 are those of Table~\ref{tab:sustainedserve}.
 
 \begin{table}[t]
-\caption{Inference at 0.84B (prompt 256, greedy decode, batch 1; medians
-of three). GPU cells: device peak / host RSS / s per token; CPU cells:
+\caption{Inference at 0.84B (prompt 256 tokens, 32 generated tokens, greedy
+decode, batch 1; medians of three). GPU cells: device peak / host RSS / s per token; CPU cells:
 RAM / s per token. All rows share the per-operation tracing
 instrumentation; deployment latencies for the fast modes are in
 Table~\ref{tab:sustainedserve}.}
@@ -1433,7 +1446,7 @@ Serving mode & Requests & Footprint & Band & s/token & Trend \\
 \end{tabular}
 \end{table}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_exp8_serving.pdf}
 \caption{Long-horizon serving, per experiment: per-request peak memory (MB; GPU: reserved, without the CUDA context
@@ -1450,6 +1463,31 @@ classes: a CPU-only node trains the 6.9B model in 9.3~GB of RAM (where
 full-model training needs 111.6~GB), and the 40~GB accelerator carries
 every size that aborts larger devices.
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/scale_train.pdf}
+\caption{Training peak device memory against model size on the one 40~GB
+card: four bars per size, all measured on that card except the full-model
+outlines. \emph{Full model} is the unsegmented anchor, 25.4~GB at 0.84B
+(Table~\ref{tab:grid}) and 39.0~GB at 1.5B (Table~\ref{tab:scale}); at 3.1B,
+5.1B, and 6.9B it aborts on the card, and the open hatched outlines mark those
+sizes, annotated with the footprint measured on a larger device (3.1B) or with
+the lower bound that device gives (5.1B on the A100-80GB, 6.9B on the H100).
+\emph{Resident segmented} is recomputation with the deferred schedule---4.5~GB
+at 0.84B (Table~\ref{tab:grid}), and 14.0, 22.7, and 28.5~GB at 3.1B, 5.1B,
+and 6.9B (Table~\ref{tab:scale})---except at 1.5B (hatched), where, as in
+Table~\ref{tab:scale}, the measured resident cell is the retained-graph
+in-backward mode (17.4~GB). \emph{Streamed, deferred} is 1.08~GB at 0.84B
+(Table~\ref{tab:grid}) and the streamed device-memory column of
+Table~\ref{tab:scale} at the four larger sizes. \emph{Streamed, in-backward}
+is 1.16~GB at 0.84B (Table~\ref{tab:grid}); above 0.84B it is not printed in
+Table~\ref{tab:scale}, whose streamed memory column is the deferred mode
+alone, and comes from the same scale result files as that table's in-backward
+step times (1.37, 1.79, 2.30, and 2.74~GB). Memory is in the GB of
+Sec.~\ref{sec:discipline} (1{,}000~MB).}
+\label{fig:scaletrain}
+\end{figure}
+
 On the 40~GB device, full-model training
 fits only up to 1.5B (39.0~GB---already at the edge); at 3.1B it aborts, and
 an H100 measurement shows why: 67.6~GB. At 5.1B it aborts on an 80~GB device,
@@ -1461,8 +1499,9 @@ recomputation, 6.9B trains on the 40~GB card at 28.5~GB and 58.1~s per
 step, although its conventional training needs more than 94~GB of device
 memory. At 3.1B the same mode uses 14.0~GB, leaving two thirds of the card
 free.
-Sustained training confirms every cell is representative rather than a
-snapshot (Table~\ref{tab:sustainedtrain}, Fig.~\ref{fig:sustainedtrain}):
+Sustained training confirms that the nine headline configurations are
+representative rather than snapshots
+(Table~\ref{tab:sustainedtrain}, Fig.~\ref{fig:sustainedtrain}):
 each headline mode runs 128--2{,}048 consecutive steps over 3--17 hours
 under the training-realistic protocol of Sec.~\ref{sec:longhorizon}. On
 GPU the per-step peak is \emph{identical to the byte} on every step of
@@ -1488,22 +1527,6 @@ coincides with co-tenant jobs ending (Sec.~\ref{sec:longhorizon}); no run
 slows by more than the 7\% of its slowest case, which is inside that run's
 own 14\% co-tenant spread, and the serving sessions move by at most 1.6\%
 (Table~\ref{tab:sustainedserve}).
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/scale_train.pdf}
-\caption{Training peak device memory against model size on the one 40~GB
-card, plotting the GPU cells of Table~\ref{tab:scale}. Full-model training
-fits only up to 1.5B; the open hatched outlines mark the three sizes at which
-it aborts, annotated with the footprint measured on a larger device (3.1B) or
-with the lower bound that device gives (5.1B, 6.9B). Every segmented bar is a
-measured cell on the 40~GB card. The resident bars are recomputation with the
-deferred schedule, except at 1.5B (hatched), where---as in
-Table~\ref{tab:scale}---the measured resident cell is the retained-graph
-in-backward mode. Memory is in the GB of Sec.~\ref{sec:discipline}
-(1{,}000~MB).}
-\label{fig:scaletrain}
-\end{figure}
 
 \begin{table}[t]
 \caption{Long-horizon training (dropout on in every mode): sustained peak
@@ -1732,7 +1755,8 @@ first-order laws for the streamed deferred mode on the pinned A100 node.
 With $P$ the parameter count in billions, $N$ the total number of segments
 ($N = L(A{+}M{+}1) + E + H$ with $L$ layers, the $+1$ being each layer's attention output
 projection, which executes as its own segment), $s_v$ the vocabulary-tied
-slice pair of Eq.~(\ref{eq:memlaw}), and memory in the mebibytes of
+slice pair of Eq.~(\ref{eq:memlaw}) in units of $10^6$ bytes (the unit in
+which $c_1$ was fitted), and $M_\text{peak}$ in the MB of
 Sec.~\ref{sec:discipline}:
 \begin{align}
 t_\text{step} &= 2.04 + 33.97\,P + 0.0094\,N \quad[\text{s/step}],\label{eq:timelaw}\\
@@ -1757,7 +1781,8 @@ pass (Fig.~\ref{fig:valcost}) converts between the two.
 \caption{Cost-model accuracy. Fitted on the seven configurations above the
 rule; the row below the rule is the held-out cell whose prediction was
 committed to the repository before the job ran. Streamed deferred mode,
-A100-40GB, medians of three.}
+A100-40GB, medians of three. Memory is in the MB of Sec.~\ref{sec:discipline};
+Eq.~(\ref{eq:memlaw}) is evaluated with $s_v$ in units of $10^6$ bytes.}
 \label{tab:costmodel}
 \centering
 \small
@@ -1860,9 +1885,14 @@ fetching every segment once through the loader takes 3.8~s for the
 segment back into the store takes 0.23~s (14.4~GB/s). Raw 256~MiB copies
 on the same node run at 22.5~GB/s from pageable and 26.6~GB/s from pinned
 host memory, inside the host-link range NVIDIA quotes for the
-A100~\cite{nvidia_a100}. At the measured rates the 34~GB cost about 2.2~s
-on the link plus 1.2~s in the store's host clones, under $12\%$ of the
-28.3~s step. The remaining $88\%$ is synchronous orchestration, and the
+A100~\cite{nvidia_a100}. At the measured rates the 34~GB crossing the link
+costs about 2.0~s (34~GB at ${\sim}17$~GB/s), and the ${\approx}20.9$~GB of
+it that the store also clones on the host on the way in---the weights fetched
+twice ($2{\times}3.35$~GB), the gradients re-fetched (3.35~GB), the optimizer
+sweep's pull of weights and both moments (10.05~GB), and the ${\sim}0.8$~GB of
+records---about 1.2~s at the measured 17.1~GB/s clone rate. Together that is
+${\approx}3.2$~s, about $11\%$ of the
+28.3~s step. The remaining $89\%$ is synchronous orchestration, and the
 measurement names its largest item: on every fetch the loader constructs
 a fresh segment module, which runs the framework's parameter
 initialization over the slice on the CPU before the stored weights
@@ -1879,8 +1909,8 @@ law's 32.3~s prediction, which overshoots the measured 28.3~s by 14\%,
 Sec.~\ref{sec:model}): at 0.84B the per-segment term totals $196 \times 9.4~\text{ms} = 1.8$~s per step,
 the fixed dispatch cost of visiting each segment three times---the term that
 launch-batching mechanisms such as CUDA graphs~\cite{cudagraphs} attack---while the
-parameter-proportional term contributes 28.4~s and contains the ${\sim}3$~s
-of measured transport. The rest of that term is byte-proportional synchronous
+parameter-proportional term contributes 28.4~s and contains the
+${\sim}3.2$~s of measured transport. The rest of that term is byte-proportional synchronous
 work: copies through pageable host memory, including the host-side copy
 the store makes on every fetch, and the small kernels that follow them. The conclusion cuts both ways: the
 measured slowdowns are honest prices for a strict, verifiable residency
@@ -1902,14 +1932,14 @@ boundary}, and we state its arithmetic plainly: at 478~s per step, an
 overnight run is on the order of a hundred steps---suited to bounded
 adaptation on private data, not to long training campaigns. Crucially,
 these wall-clock prices are a property of the framework, not of the
-method: the decomposition above attributes ${\sim}88\%$ of the streamed
+method: the decomposition above attributes ${\sim}89\%$ of the streamed
 step to synchronous orchestration by an engine built for the
-memory-abundant regime, with transport itself measured at about 3~s. The memory
+memory-abundant regime, with transport itself measured at about 3.2~s. The memory
 column of every table is what segmentation guarantees; the time column is
 what today's PyTorch charges to honor it, and it shrinks with runtime
 engineering, not with new mathematics.
 
-\textbf{Segmentation equalizes hardware tiers.} Full-model training at 0.84B is $40\times$ slower on our CPU node than on
+\textbf{Segmentation narrows the gap between hardware tiers.} Full-model training at 0.84B is $40\times$ slower on our CPU node than on
 the A100 (28.8 vs.\ 0.72~s, the anchors of Table~\ref{tab:grid}). In the smallest streamed modes the ratio collapses to roughly $6\times$
 (155.6 vs.\ 28.3~s deferred; 136.2 vs.\ 21.7~s in-backward): once both devices spend most of the step on store traffic
 and orchestration rather than dense math, the accelerator's FLOP advantage
@@ -2006,16 +2036,17 @@ Finally, both laws stop at 6.9B and the granularity curve
 has three points; both can be densified, and energy is unmeasured.
 
 \textbf{The schedulable remainder.} Sec.~\ref{sec:disc} attributes roughly
-$88\%$ of the streamed step to synchronous orchestration rather than
+$89\%$ of the streamed step to synchronous orchestration rather than
 measured transport. A memory-budget-first runtime---segment modules built
 once and refilled from the store instead of reconstructed on every fetch,
 pinned host memory and a memory-mapped
 disk store, asynchronous prefetch under a bounded two-segment residency,
 compute/transfer overlap, cross-segment fusion, budget-aware
-allocation---is therefore the natural successor system, with up to an
-order of magnitude of latent speedup on the table before any algorithmic
-change (the measured transport plus the full-model compute of one step
-sum to about 3~s against the 28.3~s streamed step). We have deliberately reported the strict
+allocation---is therefore the natural successor system. The measured
+transport plus the full-model compute of one step sum to about 3.9~s against
+the 28.3~s streamed step, so the headroom before any algorithmic change is
+up to roughly sevenfold; this is an upper bound from the measured floor, not
+a demonstrated speedup, since no prefetching prototype was built. We have deliberately reported the strict
 one-segment floor; relaxing it is engineering with a predictable payoff.
 
 \textbf{From one device to many.} The interfaces that let us stream
@@ -2053,12 +2084,14 @@ streamed. Everything else is disciplined consequence. The reassembly
 identities make the partition exact. The identity campaign---including a
 control that measures the framework against itself---places every one of 12
 training and 4 inference modes at the fp32 reordering scale of the
-framework itself on both GPU and CPU: forward states for every mode, gradients
-and optimizer steps for the dropout-free ones, and bit-identical results
+framework itself on both GPU and CPU: forward states for every mode, optimizer
+steps for the dropout-free ones and gradients for the deferred among them, and
+bit-identical results
 between update schedules where the hardware allows it. Eight serving pipelines in two
 engines---the segmented engine, the exported model, and six PyTorch-free
-pipelines, three placements on two providers---agree on every one of
-11{,}654 test predictions.
+pipelines, three placements on two providers---return the same exact-match on
+11{,}654 test predictions, five of them compared example by example with zero
+token-level disagreements.
 
 The measured menu is what a memory-constrained device reads. At 0.84B on
 one GPU it spans 11.5~GB at $5.4\times$ the full-model step time to
