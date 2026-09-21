@@ -1005,8 +1005,8 @@ under the same two protocols.}
 Check (scope) & GPU & CPU \\
 \midrule
 Forward hidden state vs.\ ref.\ (12 modes, eval forward) & $1.2{\times}10^{-5}$ & $3.8{\times}10^{-6}$ \\
-Forward hidden state vs.\ ref.\ at 3.1B (resident, recompute, streamed) & $1.9{\times}10^{-5}$ & --- \\
-Forward hidden state vs.\ ref.\ at 6.9B (resident, recompute, streamed) & $2.1{\times}10^{-5}$ & --- \\
+Forward hidden state vs.\ ref.\ at 3.1B (3 forward paths) & $1.9{\times}10^{-5}$ & --- \\
+Forward hidden state vs.\ ref.\ at 6.9B (3 forward paths) & $2.1{\times}10^{-5}$ & --- \\
 Gradient slices vs.\ ref.\ (no-dropout, deferred) & $1.1{\times}10^{-8}$ & $3.5{\times}10^{-9}$ \\
 Params.\ after 1 step vs.\ ref.\ (deferred, clip) & $4.9{\times}10^{-5}$ & $1.4{\times}10^{-5}$ \\
 Params.\ after 4 steps vs.\ ref.\ (deferred, clip) & $4.9{\times}10^{-5}$ & $1.1{\times}10^{-4}$ \\
